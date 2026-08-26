@@ -449,7 +449,7 @@ function reshuffleAndRender() {
 function isValidValue(val) {
   if (!val) return false;
   const clean = String(val).trim().toLowerCase();
-  return clean !== '' && clean !== 'není k dispozici' && clean !== 'n/a' && clean !== 'undefined' && clean !== 'null' && clean !== 'missing';
+  return clean !== '' && clean !== 'není k dispozici' && clean !== 'n/a' && clean !== 'undefined' && clean !== 'null' && clean !== 'missing' && clean !== 'missing_item.svg';
 }
 
 const MONTH_NAMES_MAP = {
@@ -1297,10 +1297,16 @@ function filterData() {
   const query = rawQuery.toLowerCase().trim();
   const selectedCity = document.getElementById('cityFilter')?.value || '';
   const sort = document.getElementById('sortFilter')?.value || 'random';
+  const isAdminUser = checkIsAdmin();
 
   const dateCandidates = parseDateCandidates(rawQuery);
 
   const matchesBase = allTickets.filter(t => {
+    // Nepřihlášený uživatel nesmí vidět položky s prázdným polem SOUBOR_SKEN nebo missing_item.svg
+    if (!isAdminUser && !isValidValue(t.SOUBOR_SKEN)) {
+      return false;
+    }
+
     const locationText = formatLocationText(t).toLowerCase();
     const rawDate = (t.DATUM || '').toLowerCase();
     const formattedDate = formatDisplayDate(t.DATUM).toLowerCase();
