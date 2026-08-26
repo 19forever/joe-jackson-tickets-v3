@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Record Editor - Joe Jackson Archive</title>
+  <title>Memorabilia Editor &amp; GitHub Sync - Joe Jackson Archive</title>
+  
+  <!-- External Stylesheet -->
   <link rel="stylesheet" href="styles.css">
 
   <!-- Viewer.js (Image Inspection & Zoom) -->
@@ -14,129 +16,364 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-client.js"></script>
 
+  <!-- Image Processing & Compression Services -->
   <script src="watermark.js"></script>
   <script src="storage-service.js"></script>
+  <script src="github-service.js"></script>
+
+  <style>
+    /* Internal styles for split view editor */
+    .editor-layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 20px;
+      margin-top: 15px;
+    }
+
+    @media (max-width: 900px) {
+      .editor-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .sidebar-list {
+      background: var(--bg-card, #121824);
+      border: 1px solid var(--border-color, #2a364f);
+      border-radius: 8px;
+      padding: 12px;
+      max-height: calc(100vh - 140px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .search-filter-box {
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .record-item {
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .record-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .record-item.active {
+      border-color: var(--accent-color, #f59e0b);
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .record-item .rec-date {
+      font-weight: 600;
+      color: var(--text-main, #e5e7eb);
+      font-size: 0.9rem;
+    }
+
+    .record-item .rec-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted, #9ca3af);
+      margin-top: 2px;
+    }
+
+    .form-panel {
+      background: var(--bg-card, #121824);
+      border: 1px solid var(--border-color, #2a364f);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .form-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      font-size: 0.8rem;
+      color: var(--text-muted, #9ca3af);
+      font-weight: 500;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      background: #0a0f1c;
+      border: 1px solid var(--border-color, #2a364f);
+      color: #ffffff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent-color, #f59e0b);
+    }
+
+    .form-actions-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .status-badge {
+      font-size: 0.82rem;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color, #2a364f);
+    }
+
+    .scan-preview-wrapper {
+      margin-top: 10px;
+      padding: 10px;
+      background: #0a0f1c;
+      border-radius: 6px;
+      border: 1px dashed var(--border-color, #2a364f);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .scan-preview-thumb {
+      max-width: 120px;
+      max-height: 80px;
+      border-radius: 4px;
+      cursor: pointer;
+      object-fit: cover;
+    }
+
+    .scan-upload-zone {
+      margin-top: 8px;
+      padding: 12px;
+      border: 2px dashed var(--border-color, #2a364f);
+      border-radius: 6px;
+      background: rgba(10, 15, 28, 0.5);
+      text-anchor: middle;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .scan-upload-zone:hover {
+      border-color: var(--accent-color, #f59e0b);
+    }
+  </style>
 </head>
 <body class="edit-page-body">
 
-  <div class="edit-header">
-    <h2>✏️ Supabase Record Editor</h2>
-    <div class="edit-header-actions">
-      <span id="statusIndicator" class="status-badge">⏳ Connecting...</span>
-      <a href="index.html" class="btn-secondary">🔙 Back to Museum</a>
-    </div>
+  <div class="top-header-container">
+    <header>
+      <div class="header-left">
+        <div class="logo">JJ</div>
+        <div class="title-area">
+          <h1>Editor &amp; Sync Dashboard</h1>
+          <p>Edit memorabilia database &amp; commit directly to Supabase</p>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <span id="statusIndicator" class="status-badge">⏳ Initializing...</span>
+        <a href="index.html" class="btn-contribute" title="Return to public museum view">
+          🔙 Museum
+        </a>
+      </div>
+    </header>
   </div>
 
-  <div class="edit-container">
-    <!-- Left panel: List and filters -->
-    <div class="edit-sidebar">
-      <div class="filter-box">
-        <input type="text" id="filterInput" placeholder="🔍 Filter (city, date, venue...)" oninput="applyFilters()">
-        <select id="sortSelect" onchange="applyFilters()">
-          <option value="id_asc">ID (Ascending)</option>
-          <option value="date_asc">Date (Oldest First)</option>
-          <option value="date_desc">Date (Newest First)</option>
-        </select>
-      </div>
-      <div id="recordList" class="record-list"></div>
-    </div>
+  <div style="padding: 0 20px 30px 20px;">
+    <div class="editor-layout">
+      
+      <!-- Left Sidebar: Records List & Search -->
+      <div class="sidebar-list">
+        <div class="search-filter-box">
+          <input type="text" id="filterInput" placeholder="🔍 Search records..." oninput="applyUrlFiltersAndSort()">
+          
+          <div style="display: flex; gap: 6px;">
+            <select id="categoryFilter" onchange="applyUrlFiltersAndSort()" style="flex: 1;">
+              <option value="">All Categories</option>
+              <option value="Tickets">Tickets</option>
+              <option value="Passes">Passes</option>
+              <option value="Programs">Programs</option>
+              <option value="Posters">Posters</option>
+              <option value="T-shirts">T-shirts</option>
+              <option value="Tour Items">Tour Items</option>
+              <option value="Memorabilia">Memorabilia</option>
+            </select>
 
-    <!-- Right panel: Edit Form -->
-    <div class="edit-main">
-      <div class="form-actions-bar">
-        <button type="button" class="btn-primary" onclick="saveRecord()">💾 Save to Supabase</button>
-        <button type="button" class="btn-secondary" onclick="prevRecord()">◄ Previous</button>
-        <button type="button" class="btn-secondary" onclick="nextRecord()">Next ►</button>
+            <select id="sortSelect" onchange="applyUrlFiltersAndSort()" style="flex: 1;">
+              <option value="id_asc">ID (Ascending)</option>
+              <option value="date_asc">Date (Oldest)</option>
+              <option value="date_desc">Date (Newest)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="recordsContainer" style="display: flex; flex-direction: column; gap: 6px;">
+          <!-- Items populated dynamically -->
+        </div>
       </div>
 
-      <form id="ticketEditForm" class="edit-form">
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="f_ID_MEMORABILIA">ID_MEMORABILIA (Primary Key)</label>
-            <input type="text" id="f_ID_MEMORABILIA" readonly style="background: var(--bg-card); opacity: 0.7;">
+      <!-- Right Panel: Record Form -->
+      <div class="form-panel">
+        <div class="form-actions-header">
+          <div>
+            <h3 id="editingRecordTitle" style="margin: 0; color: var(--accent-color, #f59e0b);">Record Details</h3>
+            <span id="recordCounter" style="font-size: 0.8rem; color: var(--text-muted, #9ca3af);">Record 0 of 0</span>
           </div>
-          <div class="form-group">
-            <label for="f_DATUM">DATE (YYYY-MM-DD)</label>
-            <input type="text" id="f_DATUM">
+
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn-secondary" onclick="prevRecord()">◄ Prev</button>
+            <button type="button" class="btn-secondary" onclick="nextRecord()">Next ►</button>
+            <button type="button" class="btn-contribute" style="background: #10b981; color: #fff; border: none;" onclick="commitToGitHub()">
+              💾 Save to Supabase
+            </button>
           </div>
-          <div class="form-group">
-            <label for="f_KATEGORIE">CATEGORY</label>
-            <input type="text" id="f_KATEGORIE" list="dl_KATEGORIE">
-            <datalist id="dl_KATEGORIE"></datalist>
+        </div>
+
+        <form id="ticketEditForm">
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label for="f_ID_MEMORABILIA">ID_MEMORABILIA (Primary Key)</label>
+              <input type="text" id="f_ID_MEMORABILIA" readonly style="opacity: 0.7;">
+            </div>
+
+            <div class="form-group">
+              <label for="f_DATUM">DATUM (YYYY-MM-DD)</label>
+              <input type="text" id="f_DATUM">
+            </div>
+
+            <div class="form-group">
+              <label for="f_KATEGORIE">KATEGORIE</label>
+              <input type="text" id="f_KATEGORIE" list="dl_KATEGORIE">
+              <datalist id="dl_KATEGORIE"></datalist>
+            </div>
+
+            <div class="form-group">
+              <label for="f_MESTO">MESTO (City)</label>
+              <input type="text" id="f_MESTO" list="dl_MESTO">
+              <datalist id="dl_MESTO"></datalist>
+            </div>
+
+            <div class="form-group">
+              <label for="f_STAT">STAT (Country)</label>
+              <input type="text" id="f_STAT" list="dl_STAT">
+              <datalist id="dl_STAT"></datalist>
+            </div>
+
+            <div class="form-group">
+              <label for="f_VENUE">VENUE / MÍSTO KONÁNÍ</label>
+              <input type="text" id="f_VENUE" list="dl_VENUE">
+              <datalist id="dl_VENUE"></datalist>
+            </div>
+
+            <div class="form-group">
+              <label for="f_TOUR_NAME">TOUR_NAME</label>
+              <input type="text" id="f_TOUR_NAME" list="dl_TOUR_NAME">
+              <datalist id="dl_TOUR_NAME"></datalist>
+            </div>
+
+            <div class="form-group">
+              <label for="f_TOUR_ID">TOUR_ID</label>
+              <input type="text" id="f_TOUR_ID">
+            </div>
+
+            <div class="form-group">
+              <label for="f_POCET_SKLADEB">POCET_SKLADEB</label>
+              <input type="number" id="f_POCET_SKLADEB">
+            </div>
           </div>
+
           <div class="form-group">
-            <label for="f_MESTO">CITY</label>
-            <input type="text" id="f_MESTO" list="dl_MESTO">
-            <datalist id="dl_MESTO"></datalist>
-          </div>
-          <div class="form-group">
-            <label for="f_STAT">COUNTRY</label>
-            <input type="text" id="f_STAT" list="dl_STAT">
-            <datalist id="dl_STAT"></datalist>
-          </div>
-          <div class="form-group">
-            <label for="f_VENUE">VENUE</label>
-            <input type="text" id="f_VENUE" list="dl_VENUE">
-            <datalist id="dl_VENUE"></datalist>
-          </div>
-          <div class="form-group">
-            <label for="f_TOUR_NAME">TOUR_NAME</label>
-            <input type="text" id="f_TOUR_NAME" list="dl_TOUR_NAME">
-            <datalist id="dl_TOUR_NAME"></datalist>
-          </div>
-          <div class="form-group">
-            <label for="f_TOUR_ID">TOUR_ID</label>
-            <input type="text" id="f_TOUR_ID">
-          </div>
-          <div class="form-group">
-            <label for="f_SOUBOR_SKEN">SCAN_FILES (comma separated)</label>
+            <label for="f_SOUBOR_SKEN">SOUBOR_SKEN (Filenames separated by comma)</label>
             <input type="text" id="f_SOUBOR_SKEN">
           </div>
-          <div class="form-group">
-            <label for="f_SETLIST_URL">SETLIST_URL</label>
-            <input type="text" id="f_SETLIST_URL">
-          </div>
-          <div class="form-group">
-            <label for="f_YOUTUBE_URL">YOUTUBE_URL</label>
-            <input type="text" id="f_YOUTUBE_URL">
-          </div>
-          <div class="form-group">
-            <label for="f_POCET_SKLADEB">SONG_COUNT</label>
-            <input type="number" id="f_POCET_SKLADEB">
-          </div>
-        </div>
 
-        <div class="form-group full-width">
-          <label for="f_LINEUP">LINEUP (separated by semicolon or slash)</label>
-          <input type="text" id="f_LINEUP">
-        </div>
+          <!-- Scan Image Preview Zone -->
+          <div id="scanPreviewZone" class="scan-preview-wrapper" style="display: none;">
+            <img id="scanPreviewImg" src="" class="scan-preview-thumb" alt="Scan preview">
+            <div style="font-size: 0.82rem; color: var(--text-muted, #9ca3af);">
+              <strong id="scanPreviewFilename" style="color: #fff;">-</strong><br>
+              Click image to inspect full size scan.
+            </div>
+          </div>
 
-        <div class="form-group full-width">
-          <label for="f_SETLIST">SETLIST (songs separated by comma)</label>
-          <textarea id="f_SETLIST" rows="3"></textarea>
-        </div>
+          <div class="form-grid-3" style="margin-top: 12px;">
+            <div class="form-group">
+              <label for="f_SETLIST_URL">SETLIST_URL</label>
+              <input type="text" id="f_SETLIST_URL">
+            </div>
 
-        <div class="form-group full-width">
-          <label for="f_NOTE">NOTE / TRIVIA</label>
-          <textarea id="f_NOTE" rows="3"></textarea>
-        </div>
-      </form>
+            <div class="form-group">
+              <label for="f_YOUTUBE_URL">YOUTUBE_URL</label>
+              <input type="text" id="f_YOUTUBE_URL">
+            </div>
+
+            <div class="form-group">
+              <label for="f_PRISPEVATEL">PRISPEVATEL / CONTRIBUTOR</label>
+              <input type="text" id="f_PRISPEVATEL">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top: 8px;">
+            <label for="f_LINEUP">LINEUP / BAND MEMBERS (Separated by semicolon or slash)</label>
+            <input type="text" id="f_LINEUP">
+          </div>
+
+          <div class="form-group">
+            <label for="f_SETLIST">SETLIST (Song names separated by comma)</label>
+            <textarea id="f_SETLIST" rows="3"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="f_NOTE">NOTE / TRIVIA</label>
+            <textarea id="f_NOTE" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+
     </div>
   </div>
 
   <script>
+    const CSV_FILENAME = 'joe_jackson_tickets_cleaned.csv';
     let fullCsvData = [];
     let filteredRecords = [];
     let currentRecordIndex = 0;
+    let viewerInstance = null;
 
-    function showStatus(text, color = 'white') {
+    function showStatus(msg, color = 'white') {
       const el = document.getElementById('statusIndicator');
       if (el) {
-        el.textContent = text;
+        el.textContent = msg;
         el.style.color = color === 'yellow' ? '#f59e0b' : (color === 'green' ? '#10b981' : (color === 'red' ? '#ef4444' : '#ffffff'));
       }
     }
 
+    // ÚPRAVA 1: Načítání ze Supabase místo CSV souboru
     async function loadCsvData() {
       showStatus('⏳ Loading data from Supabase...', 'yellow');
       try {
@@ -154,21 +391,8 @@
         if (data && data.length > 0) {
           fullCsvData = data;
           populateDatalists(fullCsvData);
-          applyFilters();
-          
-          const urlParams = new URLSearchParams(window.location.search);
-          const reqId = urlParams.get('id');
-          if (reqId) {
-            const foundIdx = fullCsvData.findIndex(r => String(r.ID_MEMORABILIA || r.ID_LISTKU) === String(reqId));
-            if (foundIdx !== -1) {
-              loadRecordByIndex(foundIdx);
-            } else {
-              loadRecordByIndex(0);
-            }
-          } else {
-            loadRecordByIndex(0);
-          }
-
+          applyUrlFiltersAndSort();
+          loadRecordByIndex(0);
           showStatus('✅ Data loaded from Supabase.', 'green');
         } else {
           showStatus('⚠️ Database is empty.', 'yellow');
@@ -197,11 +421,13 @@
       });
     }
 
-    function applyFilters() {
+    function applyUrlFiltersAndSort() {
       const q = (document.getElementById('filterInput')?.value || '').toLowerCase().trim();
+      const cat = document.getElementById('categoryFilter')?.value || '';
       const sort = document.getElementById('sortSelect')?.value || 'id_asc';
 
       filteredRecords = fullCsvData.filter(r => {
+        if (cat && (r.KATEGORIE || '').toLowerCase() !== cat.toLowerCase()) return false;
         if (!q) return true;
         const txt = `${r.ID_MEMORABILIA || ''} ${r.DATUM || ''} ${r.MESTO || ''} ${r.VENUE || ''} ${r.TOUR_NAME || ''} ${r.KATEGORIE || ''}`.toLowerCase();
         return txt.includes(q);
@@ -215,26 +441,26 @@
         filteredRecords.sort((a, b) => String(a.ID_MEMORABILIA || 0).localeCompare(String(b.ID_MEMORABILIA || 0), undefined, {numeric: true}));
       }
 
-      renderRecordList();
+      renderSidebarList();
     }
 
-    function renderRecordList() {
-      const container = document.getElementById('recordList');
+    function renderSidebarList() {
+      const container = document.getElementById('recordsContainer');
       if (!container) return;
       container.innerHTML = '';
 
       filteredRecords.forEach(r => {
         const item = document.createElement('div');
         const isCurrent = fullCsvData[currentRecordIndex] === r;
-        item.className = `record-list-item ${isCurrent ? 'active' : ''}`;
+        item.className = `record-item ${isCurrent ? 'active' : ''}`;
         item.onclick = () => {
           const origIdx = fullCsvData.indexOf(r);
           if (origIdx !== -1) loadRecordByIndex(origIdx);
         };
 
         item.innerHTML = `
-          <div style="font-weight: 600;">${r.DATUM || 'No date'} — ${r.MESTO || 'Unknown city'}</div>
-          <div style="font-size: 0.8rem; color: var(--text-muted);">${r.VENUE || r.TOUR_NAME || ''} (${r.KATEGORIE || 'Ticket'})</div>
+          <div class="rec-date">${r.DATUM || 'No date'} — ${r.MESTO || 'Unknown city'}</div>
+          <div class="rec-sub">${r.VENUE || r.TOUR_NAME || 'Archive Item'} (${r.KATEGORIE || 'Ticket'})</div>
         `;
         container.appendChild(item);
       });
@@ -248,7 +474,7 @@
       const fields = [
         'ID_MEMORABILIA', 'DATUM', 'KATEGORIE', 'MESTO', 'STAT', 'VENUE',
         'TOUR_NAME', 'TOUR_ID', 'SOUBOR_SKEN', 'SETLIST_URL', 'YOUTUBE_URL',
-        'POCET_SKLADEB', 'LINEUP', 'SETLIST', 'NOTE'
+        'POCET_SKLADEB', 'LINEUP', 'SETLIST', 'NOTE', 'PRISPEVATEL'
       ];
 
       fields.forEach(f => {
@@ -258,7 +484,41 @@
         }
       });
 
-      renderRecordList();
+      const titleEl = document.getElementById('editingRecordTitle');
+      if (titleEl) titleEl.textContent = `${r.DATUM || 'No date'} - ${r.MESTO || 'Item'} (${r.ID_MEMORABILIA || '#'})`;
+
+      const counterEl = document.getElementById('recordCounter');
+      if (counterEl) counterEl.textContent = `Record ${currentRecordIndex + 1} of ${fullCsvData.length}`;
+
+      updateScanPreview(r.SOUBOR_SKEN);
+      renderSidebarList();
+    }
+
+    function updateScanPreview(scanStr) {
+      const previewZone = document.getElementById('scanPreviewZone');
+      const previewImg = document.getElementById('scanPreviewImg');
+      const previewFilename = document.getElementById('scanPreviewFilename');
+
+      if (!scanStr || !scanStr.trim()) {
+        if (previewZone) previewZone.style.display = 'none';
+        return;
+      }
+
+      const files = scanStr.split(',').map(s => s.trim()).filter(Boolean);
+      if (files.length > 0) {
+        const firstFile = files[0];
+        if (previewImg) {
+          previewImg.src = `./scans/${firstFile}`;
+          previewImg.onerror = () => { previewZone.style.display = 'none'; };
+          previewImg.onclick = () => {
+            if (viewerInstance) viewerInstance.destroy();
+            viewerInstance = new Viewer(previewImg, { backdrop: 'static' });
+            viewerInstance.show();
+          };
+        }
+        if (previewFilename) previewFilename.textContent = firstFile;
+        if (previewZone) previewZone.style.display = 'flex';
+      }
     }
 
     function saveCurrentFormToMemory() {
@@ -268,7 +528,7 @@
       const fields = [
         'DATUM', 'KATEGORIE', 'MESTO', 'STAT', 'VENUE',
         'TOUR_NAME', 'TOUR_ID', 'SOUBOR_SKEN', 'SETLIST_URL', 'YOUTUBE_URL',
-        'POCET_SKLADEB', 'LINEUP', 'SETLIST', 'NOTE'
+        'POCET_SKLADEB', 'LINEUP', 'SETLIST', 'NOTE', 'PRISPEVATEL'
       ];
 
       fields.forEach(f => {
@@ -279,7 +539,8 @@
       });
     }
 
-    async function saveRecord() {
+    // ÚPRAVA 2: Ukládání přímo do Supabase databáze
+    async function commitToGitHub() {
       saveCurrentFormToMemory();
       showStatus('🚀 Saving changes to Supabase...', 'yellow');
 
@@ -310,15 +571,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      const isAdmin = localStorage.getItem('jj_admin_mode') === 'true' || 
-                      sessionStorage.getItem('jj_admin_mode') === 'true' ||
-                      new URLSearchParams(window.location.search).get('admin') === '1';
-
-      if (!isAdmin) {
-        showStatus('🔒 Access denied. Please login as admin on the main page.', 'red');
-        return;
-      }
-
       loadCsvData();
     });
   </script>
