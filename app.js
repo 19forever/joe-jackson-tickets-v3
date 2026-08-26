@@ -1061,54 +1061,45 @@ function openDirectImagePreview(ticketIndex) {
 
   document.body.appendChild(container);
 
-  activeViewerInstance = new Viewer(container, {
-    backdrop: 'static',
-    hidden: function() {
-      if (activeViewerInstance) {
-        activeViewerInstance.destroy();
-        activeViewerInstance = null;
-      }
-      if (container.parentNode) document.body.removeChild(container);
-    },
-    title: function() {
-      const headerStr = t.DATUM ? formatDisplayDate(t.DATUM) : (t.TOUR_NAME || 'Archive Item');
-      const locStr = formatLocationText(t);
-      return `${headerStr}${locStr ? ` | ${locStr}` : ''} (${getTicketCategory(t)})`;
-    },
-    viewed: function() {
-      setTimeout(() => {
-        const canvasImg = document.querySelector('.viewer-canvas img');
-        if (canvasImg && (canvasImg.src.includes('data:image/svg+xml') || canvasImg.dataset.isMissing === 'true')) {
-          canvasImg.style.cursor = 'pointer';
-          canvasImg.title = 'Click to contribute item/photo for this show';
-          canvasImg.onclick = (e) => {
-            e.stopPropagation();
-            window.location.href = contributeUrl;
-          };
-        }
-      }, 50);
-    },
-    toolbar: {
-      zoomIn: 1,
-      zoomOut: 1,
-      oneToOne: 1,
-      reset: 1,
-      prev: skenFiles.length > 1 ? 1 : 0,
-      next: skenFiles.length > 1 ? 1 : 0,
-      rotateLeft: 1,
-      rotateRight: 1,
-      closeBtn: {
-        show: 1,
-        size: 'large',
-        click: function() {
-          if (this.viewer) {
-            this.viewer.hide();
-          }
+// Příklad úpravy konfigurace ve funkcích openDirectImagePreview / openQuickImageModal:
+
+activeViewerInstance = new Viewer(container, {
+  backdrop: 'static',
+  hidden: function() {
+    if (activeViewerInstance) {
+      activeViewerInstance.destroy();
+      activeViewerInstance = null;
+    }
+    if (container.parentNode) document.body.removeChild(container);
+  },
+  title: function() {
+    const headerStr = t.DATUM ? formatDisplayDate(t.DATUM) : (t.TOUR_NAME || 'Archive Item');
+    const locStr = formatLocationText(t);
+    return `${headerStr}${locStr ? ` | ${locStr}` : ''} (${getTicketCategory(t)})`;
+  },
+  // --- ZDE PŘIDEJTE VLASTNÍ TLAČÍTKO V TOOLBARU ---
+toolbar: {
+    zoomIn: 1,
+    zoomOut: 1,
+    oneToOne: 1,
+    reset: 1,
+    prev: skenFiles.length > 1 ? 1 : 0,
+    next: skenFiles.length > 1 ? 1 : 0,
+    rotateLeft: 1,
+    rotateRight: 1,
+    // Přidání tlačítka "closeBtn":
+    closeBtn: {
+      show: 1,
+      size: 'large',
+      click: function() {
+        if (activeViewerInstance) {
+          activeViewerInstance.hide(); // Zavře viewer a vrátí uživatele na přehled
         }
       }
     }
-  });
-
+  }
+});
+  
   activeViewerInstance.show();
 }
 
@@ -1177,33 +1168,27 @@ function openQuickImageModal(scanFileName, ticketObj) {
         }
       }, 50);
     },
-    toolbar: {
-      zoomIn: 1,
-      zoomOut: 1,
-      oneToOne: 1,
-      reset: 1,
-      prev: skenFiles.length > 1 ? 1 : 0,
-      next: skenFiles.length > 1 ? 1 : 0,
-      rotateLeft: 1,
-      rotateRight: 1,
-      closeBtn: {
-        show: 1,
-        size: 'large',
-        click: function() {
-          if (this.viewer) {
-            this.viewer.hide();
-          }
+ toolbar: {
+    zoomIn: 1,
+    zoomOut: 1,
+    oneToOne: 1,
+    reset: 1,
+    prev: skenFiles.length > 1 ? 1 : 0,
+    next: skenFiles.length > 1 ? 1 : 0,
+    rotateLeft: 1,
+    rotateRight: 1,
+    // Přidání tlačítka "closeBtn":
+    closeBtn: {
+      show: 1,
+      size: 'large',
+      click: function() {
+        if (activeViewerInstance) {
+          activeViewerInstance.hide(); // Zavře viewer a vrátí uživatele na přehled
         }
       }
     }
-  });
-
-  if (typeof quickViewerInstance.view === 'function') {
-    quickViewerInstance.view(0);
-  } else {
-    quickViewerInstance.show();
   }
-}
+});
 
   if (typeof quickViewerInstance.view === 'function') {
     quickViewerInstance.view(0);
