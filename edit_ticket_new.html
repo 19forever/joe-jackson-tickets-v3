@@ -1177,5 +1177,19 @@
       }
     }
   </script>
+
+  // Když uživatel přijde z e-mailu pro nastavení hesla:
+async function handlePasswordReset(newPassword) {
+  const { data, error } = await supabaseClient.auth.updateUser({
+    password: newPassword
+  });
+
+  if (error) {
+    alert('Error setting password: ' + error.message);
+  } else {
+    alert('Password updated successfully! You are now logged in.');
+  }
+}
+  
 </body>
 </html>
