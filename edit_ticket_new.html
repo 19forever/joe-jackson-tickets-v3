@@ -1168,62 +1168,34 @@
       : { file: 'joe_jackson_tickets_cleaned.csv' };
     const targetFile = ghConfig.file || CSV_FILENAME;
 
-    function handleParsedData(data) {
-      if (!data || !Array.isArray(data) || data.length === 0) {
-        useMockFallback('Parsed data array is empty');
-        return;
-      }
-
-      fullCsvData = data.filter(row => row && Object.keys(row).length > 0 && (row.ID_MEMORABILIA || row.DATUM || row.TOUR_NAME || row.MESTO || row.STAT));
-      if (fullCsvData.length === 0) {
-        fullCsvData = data;
-      }
-
-      populateDatalists(fullCsvData);
-
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlTour = urlParams.get('tour') || urlParams.get('tour_name');
-      const tourSelect = document.getElementById('tourFilterSelect');
-      if (urlTour && tourSelect) {
-        const lowerUrlTour = urlTour.trim().toLowerCase();
-        for (let i = 0; i < tourSelect.options.length; i++) {
-          if (tourSelect.options[i].value.toLowerCase() === lowerUrlTour) {
-            tourSelect.selectedIndex = i;
-            break;
-          }
-        }
-      }
-
-      applyUrlFiltersAndSort();
-
-      const targetId = urlParams.get('id');
-      const targetIndex = urlParams.get('index');
-
-      let initialIndex = activeIndices.length > 0 ? activeIndices[0] : 0;
-      if (targetId) {
-        const idx = fullCsvData.findIndex(r => (r.ID_MEMORABILIA || '').trim() === targetId.trim());
-        if (idx !== -1) {
-          initialIndex = idx;
-          if (!activeIndices.includes(idx)) {
-            activeIndices.unshift(idx);
-            filteredIndices = activeIndices;
-            populateRecordSelect();
-          }
-        }
-      } else if (targetIndex !== null && !isNaN(parseInt(targetIndex, 10))) {
-        const pIdx = parseInt(targetIndex, 10);
-        if (pIdx >= 0 && pIdx < fullCsvData.length) {
-          initialIndex = pIdx;
-          if (!activeIndices.includes(pIdx)) {
-            activeIndices.unshift(pIdx);
-            filteredIndices = activeIndices;
-            populateRecordSelect();
-          }
-        }
-      }
-
-      loadRecordByIndex(initialIndex);
+    async function loadCsvData() {
+  showStatus('⏳ Načítám data ze Supabase...', 'yellow');
+  try {
+    if (typeof supabase === 'undefined') {
+      throw new Error("Supabase klient není připojen!");
     }
+
+    const { data, error } = await supabase
+      .from('tickets')
+      .select('*')
+      .order('ID_MEMORABILIA', { ascending: true });
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      fullCsvData = data;
+      populateDatalists(fullCsvData);
+      applyUrlFiltersAndSort();
+      loadRecordByIndex(0);
+      showStatus('✅ Data úspěšně načtena ze Supabase.', 'green');
+    } else {
+      showStatus('⚠️ Databáze je prázdná.', 'yellow');
+    }
+  } catch (err) {
+    console.error('Chyba při načítání ze Supabase:', err);
+    showStatus('❌ Chyba při načítání: ' + err.message, 'red');
+  }
+}
 
     function useMockFallback(reason) {
       console.warn("Using Fallback 3 (Mock/Default Record):", reason);
@@ -2121,31 +2093,25 @@
       showStatus('💾 Downloaded updated CSV file.', 'green');
     }
 
-    async function commitToGitHub() {
-      saveCurrentFormToMemory();
-      const cfg = typeof StorageService !== 'undefined' ? StorageService.getGitHubConfig() : { token: localStorage.getItem('gh_token') || localStorage.getItem('jj_github_pat') };
-      if (!cfg.token) {
-        manageToken();
-        return;
-      }
+    async function commitToGitHub() { 
+  saveCurrentFormToMemory();
+  showStatus('🚀 Ukládám změny do Supabase...', 'yellow');
 
-      showStatus('🚀 Committing changes directly to GitHub repository...', 'yellow');
+  try {
+    const currentRecord = fullCsvData[currentRecordIndex];
 
-      try {
-        const updatedCsvContent = Papa.unparse(fullCsvData);
-        // Přidán flag [skip ci] pro zamezení zdvojeného spouštění workflow
-        const result = await GitHubService.commitFile(updatedCsvContent, "Update ticket metadata via Admin Editor");
+    const { data, error } = await supabase
+      .from('tickets')
+      .upsert(currentRecord);
 
-        if (result.success) {
-          showStatus(result.message || "✅ Saved successfully to GitHub.", 'green');
-        } else {
-          showStatus(result.message || "❌ Failed to commit to GitHub.", 'red');
-        }
-      } catch (err) {
-        console.error("GitHub Commit Error:", err);
-        showStatus('❌ Failed to commit to GitHub: ' + err.message, 'red');
-      }
-    }
+    if (error) throw error;
+
+    showStatus('✅ Záznam okamžitě uložen v Supabase!', 'green');
+  } catch (err) {
+    console.error("Chyba při ukládání do Supabase:", err);
+    showStatus('❌ Chyba ukládání: ' + err.message, 'red');
+  }
+}
 
     function showStatus(msg, color) {
       const el = document.getElementById('statusMessage');
