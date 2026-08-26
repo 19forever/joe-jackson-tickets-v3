@@ -426,15 +426,6 @@
 
     .btn-fetch-setlist:hover { background-color: #0369a1; }
 
-    .validation-hint {
-      font-size: 0.75rem;
-      margin-top: 4px;
-      font-weight: 600;
-    }
-    .validation-hint.error { color: #f87171; }
-    .validation-hint.warning { color: #f59e0b; }
-    .validation-hint.success { color: #10b981; }
-
     .action-bar {
       display: flex;
       gap: 12px;
@@ -492,6 +483,37 @@
   </style>
 </head>
 <body>
+
+  <!-- ADMIN LOGIN GATE MODAL -->
+  <div id="gateModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+    <div style="background: #141414; border: 1px solid #2a2a2a; border-radius: 12px; padding: 30px; width: 100%; max-width: 380px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
+      <div style="text-align: center; font-size: 2rem; margin-bottom: 10px;">🔒</div>
+      <h2 style="text-align: center; color: #fff; margin-bottom: 6px; font-size: 1.25rem;">Admin Sign In</h2>
+      <p style="text-align: center; color: #9ca3af; font-size: 0.8rem; margin-bottom: 20px;">Enter your Supabase credentials to access the Record Editor.</p>
+
+      <form onsubmit="event.preventDefault(); handleSupabaseLogin();">
+        <div style="margin-bottom: 12px;">
+          <label style="display: block; font-size: 0.75rem; color: #9ca3af; margin-bottom: 4px; font-weight: 600;">EMAIL</label>
+          <input type="email" id="loginEmail" placeholder="name@example.com" style="width: 100%; background: #0d0d0d; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 6px; font-size: 0.85rem;" required>
+        </div>
+
+        <div style="margin-bottom: 18px;">
+          <label style="display: block; font-size: 0.75rem; color: #9ca3af; margin-bottom: 4px; font-weight: 600;">PASSWORD</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" style="width: 100%; background: #0d0d0d; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 6px; font-size: 0.85rem;" required>
+        </div>
+
+        <div id="loginError" style="display: none; color: #f87171; font-size: 0.75rem; margin-bottom: 12px; text-align: center;"></div>
+
+        <button type="submit" style="width: 100%; background: #16a34a; color: #fff; border: none; padding: 10px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.85rem;">
+          🔓 Sign In
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 15px;">
+        <a href="index.html" style="color: #f59e0b; text-decoration: none; font-size: 0.8rem; font-weight: 600;">◄ Back to Museum</a>
+      </div>
+    </div>
+  </div>
 
   <header>
     <div class="header-left">
@@ -737,10 +759,60 @@
       return document.getElementById('edit_' + name) || document.getElementById(name);
     }
 
-    function lockAdminSession() {
+    // CHECK AUTHENTICATION SESSION VIA SUPABASE
+    async function checkAuthSession() {
+      const modal = document.getElementById('gateModal');
+      if (typeof supabaseClient === 'undefined' || !supabaseClient.auth) {
+        if (modal) modal.style.display = 'flex';
+        return false;
+      }
+
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        if (modal) modal.style.display = 'none';
+        localStorage.setItem('jj_admin_mode', 'true');
+        return true;
+      } else {
+        if (modal) modal.style.display = 'flex';
+        localStorage.removeItem('jj_admin_mode');
+        return false;
+      }
+    }
+
+    // HANDLE SUPABASE LOGIN SUBMISSION
+    async function handleSupabaseLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+      const errEl = document.getElementById('loginError');
+
+      if (errEl) errEl.style.display = 'none';
+
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+
+      if (error) {
+        if (errEl) {
+          errEl.textContent = '❌ Invalid credentials: ' + error.message;
+          errEl.style.display = 'block';
+        }
+      } else {
+        localStorage.setItem('jj_admin_mode', 'true');
+        await checkAuthSession();
+        await loadDataFromSupabase();
+      }
+    }
+
+    // LOCK ADMIN SESSION AND LOG OUT
+    async function lockAdminSession() {
+      if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
+        await supabaseClient.auth.signOut();
+      }
       if (typeof StorageService !== 'undefined') {
         StorageService.remove('jj_admin_mode');
       }
+      localStorage.removeItem('jj_admin_mode');
       window.location.href = 'index.html';
     }
 
@@ -760,7 +832,27 @@
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
-      // Automatic filename populating for SOUBOR_SKEN
+      // 1. Password reset/invitation handler from email link
+      if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+          if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+            const newPassword = prompt("Please enter your new admin password:");
+            if (newPassword && newPassword.trim() !== '') {
+              const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+              if (error) {
+                showStatus('❌ Error updating password: ' + error.message, 'red');
+              } else {
+                showStatus('✅ Password updated successfully! You are logged in.', 'green');
+              }
+            }
+          }
+        });
+      }
+
+      // 2. Check Auth status
+      const isAuthenticated = await checkAuthSession();
+
+      // 3. Automatic filename population for SOUBOR_SKEN
       const scanInput = document.getElementById('scanFileInput');
       if (scanInput) {
         scanInput.addEventListener('change', function(e) {
@@ -783,7 +875,7 @@
         });
       }
 
-      // Watermark tool setup
+      // 4. Watermark tool setup
       const wmInputEl = document.getElementById('adminWatermarkInput');
       if (wmInputEl) {
         wmInputEl.addEventListener('change', async function(e) {
@@ -808,7 +900,9 @@
         });
       }
 
-      await loadDataFromSupabase();
+      if (isAuthenticated) {
+        await loadDataFromSupabase();
+      }
     });
 
     // LOAD DATA FROM SUPABASE
@@ -1124,7 +1218,7 @@
       }
     }
 
-    // NATIVE CSV EXPORT GENERATION (WITHOUT PAPAPARSE)
+    // NATIVE CSV EXPORT GENERATION
     function downloadCSVExport() {
       saveCurrentFormToMemory();
       if (!fullDbData || fullDbData.length === 0) {
@@ -1177,19 +1271,5 @@
       }
     }
   </script>
-
-  // Když uživatel přijde z e-mailu pro nastavení hesla:
-async function handlePasswordReset(newPassword) {
-  const { data, error } = await supabaseClient.auth.updateUser({
-    password: newPassword
-  });
-
-  if (error) {
-    alert('Error setting password: ' + error.message);
-  } else {
-    alert('Password updated successfully! You are now logged in.');
-  }
-}
-  
 </body>
 </html>
