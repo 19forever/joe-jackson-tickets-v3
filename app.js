@@ -1062,7 +1062,7 @@ function openDirectImagePreview(ticketIndex) {
   document.body.appendChild(container);
 
   activeViewerInstance = new Viewer(container, {
-    backdrop: 'static',
+    backdrop: true,
     hidden: function() {
       if (activeViewerInstance) {
         activeViewerInstance.destroy();
@@ -1141,7 +1141,7 @@ function openQuickImageModal(scanFileName, ticketObj) {
   document.body.appendChild(container);
 
   quickViewerInstance = new Viewer(container, {
-    backdrop: 'static',
+    backdrop: true,
     hidden: function() {
       if (quickViewerInstance) {
         quickViewerInstance.destroy();
