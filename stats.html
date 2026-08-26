@@ -39,6 +39,8 @@
   <!-- Leaflet CSS & JS for World Map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
 
   <style>
     :root {
@@ -406,17 +408,16 @@
     let mapMarkersGroup = null;
     let mapPolyline = null;
 
-    window.addEventListener('DOMContentLoaded', () => {
-      Papa.parse(CSV_FILENAME, {
-        download: true,
-        header: true,
-        skipEmptyLines: true,
-        complete: function(results) {
-          globalRawData = results.data;
-          processAndRenderStats(globalRawData);
-        }
-      });
-    });
+   window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const { data, error } = await supabase.from('tickets').select('*');
+    if (error) throw error;
+    globalRawData = data || [];
+    processAndRenderStats(globalRawData);
+  } catch (err) {
+    console.error("Chyba načítání pro statistiky:", err);
+  }
+});
 
     function isValid(val) {
       if (!val) return false;
