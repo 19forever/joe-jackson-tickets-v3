@@ -110,7 +110,7 @@
 
     <div class="controls">
       <div class="search-input-wrapper">
-        <input type="text" id="searchInput" placeholder="🔍 Search by city, venue, date...">
+        <input type="text" id="searchInput" placeholder="🔍 Search by city, venue, date..." autofocus>
         <button class="search-clear-btn" id="searchClearBtn" title="Clear search">✕</button>
       </div>
 
@@ -124,7 +124,7 @@
         <option value="oldest">Date (Oldest First)</option>
         <option value="newest">Date (Newest First)</option>
         <option value="missing_first" class="admin-only-option">📷 Missing Scans First</option>
-        <option value="missing_only">🔍 Missing Scans Only</option>
+        <option value="missing_only" class="admin-only-option">🔍 Missing Scans Only</option>
         <option value="missing_setlists_only">📝 Missing Setlists Only</option>
         <option value="scans_only" class="admin-only-option">🖼️ With Scans Only</option>
         <option value="missing_setlists" class="admin-only-option">📝 Missing Setlists First</option>
@@ -329,6 +329,24 @@
       }
       window.updateAdminSortAndControls = updateAdminSortAndControls;
 
+      // 5. Automatické skrytí položek bez skenu pro veřejnost
+      const origFilterData = window.filterData;
+      if (typeof origFilterData === 'function') {
+        window.filterData = function() {
+          origFilterData.apply(this, arguments);
+
+          // Pokud uživatel není admin, odfiltrujeme záznamy bez skenu
+          if (!isAdminModeActive() && typeof filteredTickets !== 'undefined' && Array.isArray(filteredTickets)) {
+            window.filteredTickets = window.filteredTickets.filter(t => {
+              const sken = t.SOUBOR_SKEN || t.soubor_sken || '';
+              return typeof sken === 'string' && sken.trim().length > 0;
+            });
+            if (typeof renderTickets === 'function') renderTickets();
+            if (typeof renderPagination === 'function') renderPagination();
+          }
+        };
+      }
+
       function populateTourFilter() {
         const tourSelect = document.getElementById('tourFilter');
         if (!tourSelect) return;
@@ -393,6 +411,12 @@
         }
 
         updateAdminSortAndControls();
+
+        // Automatický focus do vyhledávacího pole
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+          searchInput.focus();
+        }
 
         const tourFilter = document.getElementById('tourFilter');
         if (tourFilter) {
