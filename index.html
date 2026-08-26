@@ -38,10 +38,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Supabase JS Client (Knihovna) -->
+  <!-- Supabase JS Client & Config -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
-  <!-- Supabase Připojení (Váš klient) -->
   <script src="supabase-client.js"></script>
 
   <!-- External Stylesheet -->
@@ -56,7 +54,7 @@
     })();
   </script>
 
-  <!-- External Libraries -->
+  <!-- Viewer.js (Image Inspection) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
 </head>
@@ -174,36 +172,25 @@
     </div>
   </div>
 
-  <!-- Main Application Script -->
+  <!-- Main Application Scripts -->
   <script src="storage-service.js"></script>
   <script src="app.js"></script>
 
   <!-- Tour Filter & Admin Integration Script -->
   <script>
     (function() {
-      // 1. Přihlášení do Admin režimu a přesměrování do editoru
+      // 1. Odkaz na přihlášení (přesměruje do editoru k přihlašovacímu okénku)
       function handleAdminLogin() {
-        if (isAdminModeActive()) {
-          const editQuery = typeof getEditUrlParams === 'function' ? getEditUrlParams() : '';
-          window.location.href = editQuery ? `edit_ticket_new.html?${editQuery}` : 'edit_ticket_new.html';
-          return;
-        }
-
-        if (typeof StorageService !== 'undefined') {
-          StorageService.set('jj_admin_mode', 'true');
-        }
-        try {
-          localStorage.setItem('jj_admin_mode', 'true');
-        } catch(e) {}
-
-        updateAdminSortAndControls();
         const editQuery = typeof getEditUrlParams === 'function' ? getEditUrlParams() : '';
         window.location.href = editQuery ? `edit_ticket_new.html?${editQuery}` : 'edit_ticket_new.html';
       }
       window.handleAdminLogin = handleAdminLogin;
 
-      // 2. Globální funkce pro uzamčení admin relace
-      function lockAdminSession() {
+      // 2. Odhlášení Admin relace ze Supabase i paměti
+      async function lockAdminSession() {
+        if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
+          await supabaseClient.auth.signOut();
+        }
         if (typeof StorageService !== 'undefined') {
           StorageService.remove('jj_admin_mode');
         }
@@ -384,175 +371,19 @@
         updateAdminSortAndControls();
       };
 
-      const origUpdateUrlParams = window.updateUrlParams;
-      window.updateUrlParams = function() {
-        if (typeof origUpdateUrlParams === 'function') {
-          origUpdateUrlParams.apply(this, arguments);
-        }
-        if (typeof window === 'undefined' || !window.history || !window.history.replaceState) return;
-        const params = new URLSearchParams(window.location.search);
-        const tourVal = document.getElementById('tourFilter')?.value?.trim();
-        if (tourVal) {
-          params.set('tour', tourVal);
-          if (typeof safeSetSession === 'function') safeSetSession('jj_museum_tour', tourVal);
-          else sessionStorage.setItem('jj_museum_tour', tourVal);
-        } else {
-          params.delete('tour');
-          params.delete('tour_name');
-          params.delete('tour_id');
-          if (typeof safeRemoveSession === 'function') safeRemoveSession('jj_museum_tour');
-          else sessionStorage.removeItem('jj_museum_tour');
-        }
-        const newQuery = params.toString();
-        const newUrl = newQuery ? `${window.location.pathname}?${newQuery}` : window.location.pathname;
-        window.history.replaceState(null, '', newUrl);
-
-        const adminEditorLink = document.getElementById('adminEditorLink');
-        if (adminEditorLink && typeof getEditUrlParams === 'function') {
-          const editQuery = getEditUrlParams();
-          adminEditorLink.href = editQuery ? `edit_ticket_new.html?${editQuery}` : 'edit_ticket_new.html';
-        }
-      };
-
-      const origGetEditUrlParams = window.getEditUrlParams;
-      window.getEditUrlParams = function(itemId) {
-        let queryStr = (typeof origGetEditUrlParams === 'function') 
-          ? origGetEditUrlParams.apply(this, arguments) 
-          : '';
-        const params = new URLSearchParams(queryStr);
-
-        if (typeof currentCategory !== 'undefined' && currentCategory && currentCategory !== 'ALL') {
-          params.set('category', currentCategory.toLowerCase());
+      document.addEventListener('DOMContentLoaded', async () => {
+        // Skutečné ověření Supabase relace po načtení stránky
+        if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          if (!session) {
+            localStorage.removeItem('jj_admin_mode');
+            if (typeof StorageService !== 'undefined') StorageService.remove('jj_admin_mode');
+          } else {
+            localStorage.setItem('jj_admin_mode', 'true');
+            if (typeof StorageService !== 'undefined') StorageService.set('jj_admin_mode', 'true');
+          }
         }
 
-        const curTour = document.getElementById('tourFilter')?.value?.trim();
-        if (curTour) {
-          params.set('tour', curTour);
-        }
-
-        const curSearch = document.getElementById('searchInput')?.value?.trim();
-        if (curSearch) {
-          params.set('search', curSearch);
-        }
-
-        const curSort = document.getElementById('sortFilter')?.value?.trim();
-        if (curSort) {
-          params.set('sort', curSort);
-        }
-
-        if (itemId) {
-          params.set('id', itemId);
-        }
-
-        return params.toString();
-      };
-
-      window.filterData = function() {
-        const rawQuery = document.getElementById('searchInput')?.value || '';
-        const query = rawQuery.toLowerCase().trim();
-        const selectedYear = document.getElementById('yearFilter')?.value || '';
-        const selectedCity = document.getElementById('cityFilter')?.value || '';
-        const selectedTour = document.getElementById('tourFilter')?.value || '';
-        const sort = document.getElementById('sortFilter')?.value || 'random';
-
-        const dateCandidates = (typeof parseDateCandidates === 'function') ? parseDateCandidates(rawQuery) : [];
-
-        const matchesBase = allTickets.filter(t => {
-          const locationText = (typeof formatLocationText === 'function') ? formatLocationText(t).toLowerCase() : '';
-          const itemYear = (t.DATUM && t.DATUM.length >= 4) ? t.DATUM.substring(0, 4) : '';
-          const rawDate = (t.DATUM || '').toLowerCase();
-          const formattedDate = (typeof formatDisplayDate === 'function') ? formatDisplayDate(t.DATUM).toLowerCase() : '';
-          const venue = (t.VENUE || t.MISTO_KONANI || '').toLowerCase();
-          const city = (t.MESTO || '').toLowerCase();
-          const country = (t.STAT || '').toLowerCase();
-          const contributor = (t.PRISPEVATEL || t.CONTRIBUTOR || '').toLowerCase();
-          const category = (t.KATEGORIE || '').toLowerCase();
-          const supportingAct = (t.SUPPORTING_ACT || '').toLowerCase();
-          const lineup = (t.LINEUP || '').toLowerCase();
-          const setlist = (t.SETLIST || '').toLowerCase();
-          const tourName = (t.TOUR_NAME || '').toLowerCase();
-          const tourId = (t.TOUR_ID || '').toLowerCase();
-
-          const dateMatch = dateCandidates.length > 0 && (typeof matchDateAgainstCandidates === 'function') && matchDateAgainstCandidates(t.DATUM, dateCandidates);
-
-          const textMatch = !query ||
-            locationText.includes(query) ||
-            venue.includes(query) ||
-            city.includes(query) ||
-            country.includes(query) ||
-            contributor.includes(query) ||
-            category.includes(query) ||
-            rawDate.includes(query) ||
-            formattedDate.includes(query) ||
-            supportingAct.includes(query) ||
-            lineup.includes(query) ||
-            setlist.includes(query) ||
-            tourName.includes(query) ||
-            tourId.includes(query);
-
-          const qMatch = !query || dateMatch || textMatch;
-          const yMatch = !selectedYear || String(itemYear) === String(selectedYear);
-          const cMatch = !selectedCity || city === selectedCity.toLowerCase();
-          const tMatch = !selectedTour || tourName === selectedTour.toLowerCase() || tourId === selectedTour.toLowerCase();
-
-          return qMatch && yMatch && cMatch && tMatch;
-        });
-
-        if (typeof renderCategoryTabs === 'function') renderCategoryTabs(matchesBase);
-
-        filteredTickets = matchesBase.filter(t => {
-          if (currentCategory === 'ALL') return true;
-          if (currentCategory === 'Videos') return (typeof isValidValue === 'function') ? isValidValue(t.YOUTUBE_URL) : !!t.YOUTUBE_URL;
-          return getTicketCategory(t).toLowerCase() === currentCategory.toLowerCase();
-        });
-
-        if (sort === 'oldest') {
-          filteredTickets.sort((a, b) => (a.DATUM || '').localeCompare(b.DATUM || ''));
-        } else if (sort === 'newest') {
-          filteredTickets.sort((a, b) => (b.DATUM || '').localeCompare(a.DATUM || ''));
-        } else if (sort === 'missing_first') {
-          filteredTickets.sort((a, b) => {
-            const aHas = (typeof isValidValue === 'function') ? (isValidValue(a.SOUBOR_SKEN) ? 1 : 0) : (a.SOUBOR_SKEN ? 1 : 0);
-            const bHas = (typeof isValidValue === 'function') ? (isValidValue(b.SOUBOR_SKEN) ? 1 : 0) : (b.SOUBOR_SKEN ? 1 : 0);
-            return aHas - bHas;
-          });
-        } else if (sort === 'missing_only') {
-          filteredTickets = filteredTickets.filter(t => (typeof isValidValue === 'function') ? !isValidValue(t.SOUBOR_SKEN) : !t.SOUBOR_SKEN);
-        } else if (sort === 'scans_only') {
-          filteredTickets = filteredTickets.filter(t => (typeof isValidValue === 'function') ? isValidValue(t.SOUBOR_SKEN) : !!t.SOUBOR_SKEN);
-        } else if (sort === 'missing_setlists') {
-          filteredTickets.sort((a, b) => {
-            const aHas = (typeof isValidValue === 'function') ? (isValidValue(a.SETLIST) ? 1 : 0) : (a.SETLIST ? 1 : 0);
-            const bHas = (typeof isValidValue === 'function') ? (isValidValue(b.SETLIST) ? 1 : 0) : (b.SETLIST ? 1 : 0);
-            return aHas - bHas;
-          });
-        } else if (sort === 'incomplete_metadata') {
-          filteredTickets.sort((a, b) => {
-            const getMissingScore = (item) => {
-              let score = 0;
-              if (!item.VENUE && !item.MISTO_KONANI) score++;
-              if (!item.MESTO) score++;
-              if (!item.STAT) score++;
-              if (!item.SOUBOR_SKEN) score++;
-              if (!item.SETLIST) score++;
-              if (!item.TOUR_NAME) score++;
-              return score;
-            };
-            return getMissingScore(b) - getMissingScore(a);
-          });
-        }
-
-        currentPage = 1;
-        if (typeof renderPaginated === 'function') renderPaginated();
-
-        const adminEditorLink = document.getElementById('adminEditorLink');
-        if (adminEditorLink && typeof getEditUrlParams === 'function') {
-          const editQuery = getEditUrlParams();
-          adminEditorLink.href = editQuery ? `edit_ticket_new.html?${editQuery}` : 'edit_ticket_new.html';
-        }
-      };
-
-      document.addEventListener('DOMContentLoaded', () => {
         updateAdminSortAndControls();
 
         const tourFilter = document.getElementById('tourFilter');
@@ -594,12 +425,8 @@
           <h3 id="noteModalHeader" style="font-size: 1.25rem;">Concert Trivia &amp; Notes</h3>
         </div>
       </div>
-      <div class="jj-modal-meta" id="noteModalMeta" style="width: 100%; text-align: left; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; border-bottom: 1px solid var(--border-color, #27272a); padding-bottom: 12px; margin-top: 4px;">
-        <!-- Meta details injected dynamically -->
-      </div>
-      <p class="jj-modal-body" id="noteModalBody" style="width: 100%; text-align: left; white-space: pre-wrap; font-size: 0.95rem; line-height: 1.6; max-height: 350px; overflow-y: auto; margin: 0; padding-right: 4px; color: var(--text-main);">
-        <!-- Full note text injected dynamically -->
-      </p>
+      <div class="jj-modal-meta" id="noteModalMeta" style="width: 100%; text-align: left; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; border-bottom: 1px solid var(--border-color, #27272a); padding-bottom: 12px; margin-top: 4px;"></div>
+      <p class="jj-modal-body" id="noteModalBody" style="width: 100%; text-align: left; white-space: pre-wrap; font-size: 0.95rem; line-height: 1.6; max-height: 350px; overflow-y: auto; margin: 0; padding-right: 4px; color: var(--text-main);"></p>
       <div class="jj-modal-actions" style="margin-top: 8px; justify-content: flex-end; width: 100%;">
         <button class="btn-secondary" onclick="closeNoteModal()" style="max-width: 120px;">Close</button>
       </div>
