@@ -179,14 +179,50 @@
   <!-- Tour Filter & Admin Integration Script -->
   <script>
     (function() {
-      // 1. Odkaz na přihlášení (přesměruje do editoru k přihlašovacímu okénku)
+      // Helper pro kontrolu aktivního Admin módu
+      function isAdminModeActive() {
+        let adminFlag = false;
+        if (typeof StorageService !== 'undefined') {
+          adminFlag = StorageService.get('jj_admin_mode') === 'true';
+        } else {
+          try {
+            adminFlag = localStorage.getItem('jj_admin_mode') === 'true' || sessionStorage.getItem('jj_admin_mode') === 'true';
+          } catch(e) {}
+        }
+        const urlParams = new URLSearchParams(window.location.search);
+        const adminParam = urlParams.get('admin') === '1';
+        return adminFlag || adminParam;
+      }
+      window.isAdminModeActive = isAdminModeActive;
+
+      // PŘEPIS FILTERDATA HNED PO NAČTENÍ SKRIPTU (aby zachytil i první načtení dat z app.js)
+      const originalFilterData = window.filterData;
+      window.filterData = function() {
+        if (typeof originalFilterData === 'function') {
+          originalFilterData.apply(this, arguments);
+        }
+
+        // Pokud UŽIVATEL NENÍ ADMIN, vyfiltrujeme záznamy bez reálného skenu
+        if (!isAdminModeActive() && typeof window.filteredTickets !== 'undefined' && Array.isArray(window.filteredTickets)) {
+          window.filteredTickets = window.filteredTickets.filter(t => {
+            const sken = t.SOUBOR_SKEN || t.soubor_sken || '';
+            if (!sken || typeof sken !== 'string') return false;
+            const cleanSken = sken.trim().toLowerCase();
+            return cleanSken.length > 0 && cleanSken !== 'missing_item.svg';
+          });
+
+          // Znovu vykreslíme přefiltrovaná data pro veřejnost
+          if (typeof renderTickets === 'function') renderTickets();
+          if (typeof renderPagination === 'function') renderPagination();
+        }
+      };
+
       function handleAdminLogin() {
         const editQuery = typeof getEditUrlParams === 'function' ? getEditUrlParams() : '';
         window.location.href = editQuery ? `edit_ticket_new.html?${editQuery}` : 'edit_ticket_new.html';
       }
       window.handleAdminLogin = handleAdminLogin;
 
-      // 2. Odhlášení Admin relace ze Supabase i paměti (kompletní promazání)
       async function lockAdminSession() {
         if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
           try {
@@ -194,7 +230,6 @@
           } catch(e) {}
         }
 
-        // Kompletní vyčištění localStorage i sessionStorage
         try {
           Object.keys(localStorage).forEach(key => {
             if (key.startsWith('sb-') || key.startsWith('jj_')) {
@@ -217,34 +252,16 @@
         }
 
         updateAdminSortAndControls();
-        if (typeof filterData === 'function') filterData();
+        if (typeof window.filterData === 'function') window.filterData();
       }
       window.lockAdminSession = lockAdminSession;
 
-      // 3. Helper pro kontrolu aktivního Admin módu
-      function isAdminModeActive() {
-        let adminFlag = false;
-        if (typeof StorageService !== 'undefined') {
-          adminFlag = StorageService.get('jj_admin_mode') === 'true';
-        } else {
-          try {
-            adminFlag = localStorage.getItem('jj_admin_mode') === 'true' || sessionStorage.getItem('jj_admin_mode') === 'true';
-          } catch(e) {}
-        }
-        const urlParams = new URLSearchParams(window.location.search);
-        const adminParam = urlParams.get('admin') === '1';
-        return adminFlag || adminParam;
-      }
-      window.isAdminModeActive = isAdminModeActive;
-
-      // 4. Správa viditelnosti prvků a filtrů
       let sortOptionsCatalog = null;
 
       function updateAdminSortAndControls() {
         const sortSelect = document.getElementById('sortFilter') || document.getElementById('sortSelect');
         const isAdmin = isAdminModeActive();
 
-        // Tlačítka v hlavičce
         const adminEditorLink = document.getElementById('adminEditorLink');
         const adminLoginLink = document.getElementById('adminLoginLink');
         const adminLockBtn = document.getElementById('adminLockBtn');
@@ -259,7 +276,6 @@
         }
         if (adminLoginLink) adminLoginLink.style.display = isAdmin ? 'none' : 'inline-flex';
 
-        // Možnosti řazení
         if (sortSelect) {
           if (!sortOptionsCatalog) {
             sortOptionsCatalog = Array.from(sortSelect.options).map(opt => ({
@@ -308,11 +324,10 @@
 
           if (targetValue !== currentValue || (!isAdmin && isUrlAdminOnly)) {
             if (typeof updateUrlParams === 'function') updateUrlParams();
-            if (typeof filterData === 'function') filterData();
+            if (typeof window.filterData === 'function') window.filterData();
           }
         }
 
-        // Ovládací prvky pouze pro admina
         document.querySelectorAll('.admin-only-control, .admin-only').forEach(el => {
           el.style.display = isAdmin ? 'inline-block' : 'none';
         });
@@ -328,24 +343,6 @@
         }
       }
       window.updateAdminSortAndControls = updateAdminSortAndControls;
-
-      // 5. Automatické skrytí položek bez skenu pro veřejnost
-      const origFilterData = window.filterData;
-      if (typeof origFilterData === 'function') {
-        window.filterData = function() {
-          origFilterData.apply(this, arguments);
-
-          // Pokud uživatel není admin, odfiltrujeme záznamy bez skenu
-          if (!isAdminModeActive() && typeof filteredTickets !== 'undefined' && Array.isArray(filteredTickets)) {
-            window.filteredTickets = window.filteredTickets.filter(t => {
-              const sken = t.SOUBOR_SKEN || t.soubor_sken || '';
-              return typeof sken === 'string' && sken.trim().length > 0;
-            });
-            if (typeof renderTickets === 'function') renderTickets();
-            if (typeof renderPagination === 'function') renderPagination();
-          }
-        };
-      }
 
       function populateTourFilter() {
         const tourSelect = document.getElementById('tourFilter');
@@ -401,7 +398,6 @@
       };
 
       document.addEventListener('DOMContentLoaded', async () => {
-        // Ověření relace Supabase po načtení stránky
         if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
           const { data: { session } } = await supabaseClient.auth.getSession();
           if (session) {
@@ -412,7 +408,12 @@
 
         updateAdminSortAndControls();
 
-        // Automatický focus do vyhledávacího pole
+        // Spustíme filtraci pro případ, že se data načetla dříve než Supabase Auth
+        if (typeof window.filterData === 'function') {
+          window.filterData();
+        }
+
+        // Focus do vyhledávacího pole
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
           searchInput.focus();
@@ -422,12 +423,13 @@
         if (tourFilter) {
           tourFilter.addEventListener('change', () => {
             if (typeof updateUrlParams === 'function') updateUrlParams();
-            if (typeof filterData === 'function') filterData();
+            if (typeof window.filterData === 'function') window.filterData();
           });
         }
 
         window.addEventListener('storage', () => {
           updateAdminSortAndControls();
+          if (typeof window.filterData === 'function') window.filterData();
         });
       });
     })();
