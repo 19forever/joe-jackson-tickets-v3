@@ -22,9 +22,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-client.js"></script>
 
-  <!-- PapaParse for CSV Export fallback -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-
   <!-- Viewer.js (Image Inspection & Zoom) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
@@ -539,21 +536,44 @@
       </div>
       <div class="thumb-list" id="thumbList"></div>
 
+      <!-- NAHRÁNÍ NOVÉHO OBRÁZKU (PRO SOUBOR_SKEN) -->
+      <div style="margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px;">
+        <h4 style="margin: 0 0 6px 0; font-size: 0.85rem; color: var(--accent-yellow);">
+          📷 Vybrat obrázek pro tento záznam
+        </h4>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; line-height: 1.3;">
+          Vyberte soubor ze složky <code>/scans/</code> na vašem disku. Název se automaticky zapíše do formuláře.
+        </p>
+        <input type="file" id="scanFileInput" accept="image/*" style="font-size: 0.8rem; width: 100%;">
+      </div>
+
       <!-- Admin Watermark Tool -->
-      <div style="margin-top: 20px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px;">
+      <div style="margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px;">
         <h4 style="margin: 0 0 8px 0; font-size: 0.85rem; color: var(--accent-yellow); display: flex; align-items: center; gap: 6px;">
-          <span>🏷️ Watermark Tool (JJ Memorabilia Museum)</span>
+          <span>🏷️ Watermark Tool</span>
         </h4>
         <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
-          Upload a raw scan photo to apply the official <strong>"JJ Memorabilia Museum"</strong> watermark badge before adding it to <code>/scans/</code>.
+          Nahrajte novou fotku pro aplikaci vodoznaku <strong>"JJ Memorabilia Museum"</strong>.
         </p>
         <input type="file" id="adminWatermarkInput" accept="image/*" style="font-size: 0.8rem; width: 100%; margin-bottom: 8px;">
         <div id="adminWatermarkBox" style="display: none; text-align: center; margin-top: 8px;">
           <a id="adminWatermarkDownload" class="nav-btn" style="display: inline-block; background: var(--accent-yellow); color: #000; text-decoration: none; font-weight: 700; font-size: 0.8rem; padding: 6px 12px; border-radius: 4px;" download>
-            💾 Download Watermarked Scan
+            💾 Stáhnout obrázek s vodoznakem
           </a>
         </div>
       </div>
+
+      <!-- KONTROLA NEZAŘAZENÝCH SKENŮ -->
+      <div style="margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px;">
+        <h4 style="margin: 0 0 8px 0; font-size: 0.85rem; color: var(--accent-yellow); display: flex; align-items: center; justify-content: space-between;">
+          <span>📂 Kontrola nepřiřazených skenů</span>
+        </h4>
+        <button type="button" class="btn-token" id="btnCheckMissing" onclick="checkMissingScansInDatabase()" style="width: 100%; margin-top: 4px;">
+          🔍 Zkontrolovat chybějící skeny v DB
+        </button>
+        <div id="missingScansResult" style="margin-top: 8px; font-size: 0.75rem; color: var(--text-muted);"></div>
+      </div>
+
     </div>
 
     <!-- Right Column: Form Panels -->
@@ -740,6 +760,29 @@
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
+      // automatické zapsání vybraného souboru do políčka SOUBOR_SKEN
+      const scanInput = document.getElementById('scanFileInput');
+      if (scanInput) {
+        scanInput.addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          if (file) {
+            const skenField = getField('SOUBOR_SKEN');
+            if (skenField) {
+              const currentVal = skenField.value.trim();
+              if (currentVal) {
+                if (!currentVal.includes(file.name)) {
+                  skenField.value = currentVal + ', ' + file.name;
+                }
+              } else {
+                skenField.value = file.name;
+              }
+              updateImageFromInput();
+              showStatus(`📷 Soubor "${file.name}" byl zapsán do políčka SOUBOR_SKEN. Nepochybujte o nahrání fyzického souboru do složky /scans/ na webu.`, 'green');
+            }
+          }
+        });
+      }
+
       // Watermark tool setup
       const wmInputEl = document.getElementById('adminWatermarkInput');
       if (wmInputEl) {
@@ -749,7 +792,7 @@
           const dlBtn = document.getElementById('adminWatermarkDownload');
           if (!file) { box.style.display = 'none'; return; }
           try {
-            showStatus('🎨 Watermarking image...', 'yellow');
+            showStatus('🎨 Aplikuji vodoznak...', 'yellow');
             const result = await JJWatermark.apply(file, {
               text: 'JJ Memorabilia Museum',
               subtext: 'Joe Jackson Archive • joejackson.band',
@@ -758,9 +801,9 @@
             dlBtn.href = result.url;
             dlBtn.download = `watermarked_${file.name}`;
             box.style.display = 'block';
-            showStatus('✅ Watermark applied successfully!', 'green');
+            showStatus('✅ Vodoznak aplikován! Stáhněte soubor a uložte jej do /scans/', 'green');
           } catch (err) {
-            showStatus('❌ Watermark processing failed: ' + err.message, 'red');
+            showStatus('❌ Chyba vodoznaku: ' + err.message, 'red');
           }
         });
       }
@@ -971,6 +1014,17 @@
       if (countEl) countEl.value = songs.length;
     }
 
+    // KONTROLA CHYBĚJÍCÍCH SKENŮ V DATABÁZI
+    function checkMissingScansInDatabase() {
+      const resultDiv = document.getElementById('missingScansResult');
+      if (!resultDiv) return;
+
+      const totalCount = fullDbData.length;
+      const missingScans = fullDbData.filter(r => !r.SOUBOR_SKEN || !r.SOUBOR_SKEN.trim());
+
+      resultDiv.innerHTML = `Celkem záznamů: <strong>${totalCount}</strong><br>Bez skenu: <strong style="color: var(--accent-yellow);">${missingScans.length}</strong>`;
+    }
+
     // SUPABASE SAVE ACTION
     async function saveCurrentRecordToSupabase() {
       saveCurrentFormToMemory();
@@ -1070,17 +1124,37 @@
       }
     }
 
+    // NATIVNÍ GENEROVÁNÍ A STAŽENÍ CSV (BEZ PAPAPARSE)
     function downloadCSVExport() {
       saveCurrentFormToMemory();
-      const csvStr = Papa.unparse(fullDbData);
-      const blob = new Blob([csvStr], { type: 'text/csv;charset=utf-8;' });
+      if (!fullDbData || fullDbData.length === 0) {
+        showStatus('⚠️ Žádná data ke stažení.', 'yellow');
+        return;
+      }
+
+      const headers = Object.keys(fullDbData[0]);
+      const csvRows = [];
+
+      csvRows.push(headers.join(','));
+
+      fullDbData.forEach(row => {
+        const values = headers.map(header => {
+          let val = row[header] !== undefined && row[header] !== null ? String(row[header]) : '';
+          val = val.replace(/"/g, '""');
+          return `"${val}"`;
+        });
+        csvRows.push(values.join(','));
+      });
+
+      const csvContent = '\uFEFF' + csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = 'joe_jackson_tickets_supabase_export.csv';
       a.click();
       URL.revokeObjectURL(url);
-      showStatus('💾 Stažen CSV export z aktuálních dat.', 'green');
+      showStatus('💾 Stažen CSV export z aktuálních dat (bez závislostí).', 'green');
     }
 
     function showStatus(msg, color) {
