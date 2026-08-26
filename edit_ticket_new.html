@@ -1162,20 +1162,14 @@
     }
   ];
 
-  function loadCsvData() {
-    const ghConfig = typeof StorageService !== 'undefined' && typeof StorageService.getGitHubConfig === 'function'
-      ? StorageService.getGitHubConfig()
-      : { file: 'joe_jackson_tickets_cleaned.csv' };
-    const targetFile = ghConfig.file || CSV_FILENAME;
-
-    async function loadCsvData() {
+  async function loadCsvData() {
   showStatus('⏳ Načítám data ze Supabase...', 'yellow');
   try {
-    if (typeof supabase === 'undefined') {
+    if (typeof supabaseClient === 'undefined') {
       throw new Error("Supabase klient není připojen!");
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('tickets')
       .select('*')
       .order('ID_MEMORABILIA', { ascending: true });
@@ -1196,7 +1190,7 @@
     showStatus('❌ Chyba při načítání: ' + err.message, 'red');
   }
 }
-
+    
     function useMockFallback(reason) {
       console.warn("Using Fallback 3 (Mock/Default Record):", reason);
       showStatus('⚠️ Network load failed. Loaded default placeholder record.', 'yellow');
