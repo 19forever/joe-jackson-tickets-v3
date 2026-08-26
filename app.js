@@ -319,12 +319,12 @@ window.addEventListener('DOMContentLoaded', () => {
   // Funkce pro načtení dat z databáze Supabase
   async function loadDataFromSupabase() {
     try {
-      if (typeof supabase === 'undefined') {
+      if (typeof supabaseClient === 'undefined') {
         throw new Error("Supabase klient není načten! Zkontrolujte import supabase-client.js v HTML.");
       }
 
       // Dotaz na tabulku 'tickets' v Supabase
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('tickets')
         .select('*');
 
