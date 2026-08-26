@@ -186,15 +186,26 @@
       }
       window.handleAdminLogin = handleAdminLogin;
 
-      // 2. Odhlášení Admin relace ze Supabase i paměti
+      // 2. Odhlášení Admin relace ze Supabase i paměti (kompletní promazání)
       async function lockAdminSession() {
         if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
-          await supabaseClient.auth.signOut();
+          try {
+            await supabaseClient.auth.signOut();
+          } catch(e) {}
         }
-        if (typeof StorageService !== 'undefined') {
-          StorageService.remove('jj_admin_mode');
-        }
+
+        // Kompletní vyčištění localStorage i sessionStorage
         try {
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('sb-') || key.startsWith('jj_')) {
+              localStorage.removeItem(key);
+            }
+          });
+          Object.keys(sessionStorage).forEach(key => {
+            if (key.startsWith('sb-') || key.startsWith('jj_')) {
+              sessionStorage.removeItem(key);
+            }
+          });
           localStorage.removeItem('jj_admin_mode');
           sessionStorage.removeItem('jj_admin_mode');
         } catch(e) {}
@@ -372,13 +383,10 @@
       };
 
       document.addEventListener('DOMContentLoaded', async () => {
-        // Skutečné ověření Supabase relace po načtení stránky
+        // Ověření relace Supabase po načtení stránky
         if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
           const { data: { session } } = await supabaseClient.auth.getSession();
-          if (!session) {
-            localStorage.removeItem('jj_admin_mode');
-            if (typeof StorageService !== 'undefined') StorageService.remove('jj_admin_mode');
-          } else {
+          if (session) {
             localStorage.setItem('jj_admin_mode', 'true');
             if (typeof StorageService !== 'undefined') StorageService.set('jj_admin_mode', 'true');
           }
