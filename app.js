@@ -296,7 +296,7 @@ function initFontSwitcher() {
   }
 }
 
-// Initialization
+// Initialization - NAČÍTÁNÍ ZE SUPABASE
 window.addEventListener('DOMContentLoaded', () => {
   initFontSwitcher();
   setupEventListeners();
@@ -316,69 +316,39 @@ window.addEventListener('DOMContentLoaded', () => {
     if (adminLoginLink) adminLoginLink.style.display = 'inline-flex';
   }
 
-// Načítání optimalizovaného JSON souboru namísto CSV
-  import('./joe_jackson_tickets_cleaned.json')
-    .then(module => {
-      const data = module.default;
-      if (!data || !Array.isArray(data) || data.length === 0) {
-        throw new Error("JSON file is empty or missing valid data.");
+  // Funkce pro načtení dat z databáze Supabase
+  async function loadDataFromSupabase() {
+    try {
+      if (typeof supabase === 'undefined') {
+        throw new Error("Supabase klient není načten! Zkontrolujte import supabase-client.js v HTML.");
+      }
+
+      // Dotaz na tabulku 'tickets' v Supabase
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('*');
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        console.warn("Databáze Supabase je prázdná nebo tabulka 'tickets' neobsahuje žádné řádky.");
+        return;
       }
 
       allTickets = shuffleArray(data);
       updateYearBadge();
       populateFilters();
-
       initializeStateFromUrlAndStorage();
-
       filterData();
       checkOnThisDayAnniversary();
-    })
-    .catch(err => {
-      console.error("Error importing JSON file, trying fetch fallback:", err);
-      fetch('./joe_jackson_tickets_cleaned.json')
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-          if (!data || !Array.isArray(data) || data.length === 0) {
-            console.error("JSON file is empty or missing valid data.");
-            return;
-          }
+    } catch (err) {
+      console.error("Chyba při načítání ze Supabase:", err.message);
+    }
+  }
 
-          allTickets = shuffleArray(data);
-          updateYearBadge();
-          populateFilters();
-
-          initializeStateFromUrlAndStorage();
-
-          filterData();
-          checkOnThisDayAnniversary();
-        })
-        .catch(fetchErr => {
-          console.error("Error loading JSON file, trying CSV fallback:", fetchErr);
-          // Fallback na CSV (PapaParse) v případě, že JSON ještě neexistuje
-          if (typeof Papa !== 'undefined') {
-            Papa.parse('./joe_jackson_tickets_cleaned.csv', {
-              download: true,
-              header: true,
-              skipEmptyLines: true,
-              complete: function(results) {
-                if (results.data && results.data.length > 0) {
-                  allTickets = shuffleArray(results.data);
-                  updateYearBadge();
-                  populateFilters();
-                  initializeStateFromUrlAndStorage();
-                  filterData();
-                  checkOnThisDayAnniversary();
-                }
-              }
-            });
-          }
-        });
-    });
+  loadDataFromSupabase();
 });
 
 function setupEventListeners() {
@@ -717,7 +687,6 @@ function openVideoModal(ticketIndex) {
 
   if (!modal || !frameWrapper || !lineupCol || !setlistCol) return;
 
-  // Format concert header (Date — City, Country - Venue) without TOUR_NAME
   const formattedDate = (t && isValidValue(t.DATUM)) ? formatDisplayDate(t.DATUM) : '';
   let locationParts = [];
   if (t && isValidValue(t.MESTO)) locationParts.push(t.MESTO);
@@ -745,7 +714,6 @@ function openVideoModal(ticketIndex) {
     headerElem.innerHTML = `<h4>${headerContent}</h4>`;
   }
 
-  // Determine scan image from ticket
   const rawSken = (t && t.SOUBOR_SKEN && isValidValue(t.SOUBOR_SKEN)) ? t.SOUBOR_SKEN : '';
   const skenFiles = rawSken.split(',').map(s => s.trim()).filter(Boolean);
   const firstImgFile = skenFiles[0] || '';
@@ -846,10 +814,8 @@ function openNoteModal(ticketIndex) {
 
   if (!modal || !headerEl || !metaEl || !bodyEl) return;
 
-  // Format header
   headerEl.textContent = 'Concert Trivia & Notes';
 
-  // Format metadata (Date, Venue, City, Tour Name)
   const displayDate = t.DATUM ? formatDisplayDate(t.DATUM) : '';
   const venue = t.VENUE || t.MISTO_KONANI || '';
   const city = t.MESTO || '';
@@ -878,12 +844,8 @@ function openNoteModal(ticketIndex) {
 
   metaEl.innerHTML = metaHTML;
 
-  // Set body with note, ensuring raw HTML tags are safely rendered as HTML markup
-  // while converting standard newlines to <br> to preserve line breaks.
   let rawNote = String(t.NOTE || '');
-  // Decode escaped brackets if any
   rawNote = rawNote.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-  // Convert newlines to <br> tags
   const formattedNote = rawNote.replace(/\\n/g, '<br>').replace(/\r?\n/g, '<br>');
   bodyEl.innerHTML = formattedNote;
 
@@ -971,11 +933,9 @@ function getRelatedItems(currentRecord) {
     const itemTourName = isValidValue(item.TOUR_NAME) ? String(item.TOUR_NAME).trim().toLowerCase() : 
                           (isValidValue(item.TOUR) ? String(item.TOUR).trim().toLowerCase() : null);
 
-    // 1. Přímá shoda na konkrétní koncert (SHOW_ID)
     const matchShow = !!(currShowId && itemShowId && currShowId === itemShowId);
     if (matchShow) return true;
 
-    // 2. Shoda na turné (zkontroluje TOUR_ID i název TOUR_NAME / TOUR)
     const matchTour = !!(
       (currTourId && itemTourId && currTourId === itemTourId) ||
       (currTourName && itemTourName && currTourName === itemTourName)
@@ -983,15 +943,13 @@ function getRelatedItems(currentRecord) {
 
     if (!matchTour) return false;
 
-    // Pokud položka NEMA datum, jde o všeobecný merch/program/plakát k celému turné -> zobrazí se u všech koncertů daného turné
     const hasItemDate = isValidValue(item.DATUM);
     if (!hasItemDate) {
       const rawCat = (item.KATEGORIE || '').trim().toLowerCase();
       const isTicket = rawCat === 'ticket' || rawCat === 'tickets' || rawCat === 'lístek' || rawCat === 'listek';
-      return !isTicket; // Zobrazí vše kromě samotných lístků bez data
+      return !isTicket;
     }
 
-    // Pokud položka datum MÁ, zobrazí se jen u koncertu se stejným datem
     return hasCurrDate && item.DATUM.trim() === currDate;
   });
 }
@@ -1441,7 +1399,6 @@ function renderTickets(tickets) {
     const globalIndex = filteredTickets.indexOf(t);
     const card = document.createElement('div');
     
-    // Zapojení třídy pro zrušené/přeložené akce na úroveň karty
     const statusVal = isValidValue(t.STATUS) ? t.STATUS.trim().toUpperCase() : '';
     let cardStatusClass = '';
     if (statusVal === 'CANCELLED') cardStatusClass = ' card-cancelled';
@@ -1502,22 +1459,21 @@ function renderTickets(tickets) {
       'Videos': '🎬'
     };
     const catIcon = categoryIconMap[catName] || '🎫';
-    // NOVÝ KÓD
-let singleCat = catName;
-if (catName === 'Passes') {
-  singleCat = 'Pass';
-} else if (catName === 'Tickets') {
-  singleCat = 'Ticket';
-} else if (catName === 'Posters') {
-  singleCat = 'Poster';
-} else if (catName === 'Programs') {
-  singleCat = 'Program';
-} else if (catName.endsWith('s') && !catName.endsWith('ss')) {
-  singleCat = catName.slice(0, -1);
-}
+
+    let singleCat = catName;
+    if (catName === 'Passes') {
+      singleCat = 'Pass';
+    } else if (catName === 'Tickets') {
+      singleCat = 'Ticket';
+    } else if (catName === 'Posters') {
+      singleCat = 'Poster';
+    } else if (catName === 'Programs') {
+      singleCat = 'Program';
+    } else if (catName.endsWith('s') && !catName.endsWith('ss')) {
+      singleCat = catName.slice(0, -1);
+    }
     const displayDate = t.DATUM ? formatDisplayDate(t.DATUM) : (isValidValue(t.TOUR_NAME) ? t.TOUR_NAME : '');
 
-    // Status odznak na 1. řádku
     let statusBadgeHTML = '';
     if (statusVal === 'CANCELLED') {
       statusBadgeHTML = ` <span class="badge-status-cancelled">❌ Cancelled</span>`;
@@ -1526,7 +1482,6 @@ if (catName === 'Passes') {
       statusBadgeHTML = ` <span class="badge-status-rescheduled" title="Rescheduled show${origText}">🔄 Rescheduled</span>`;
     }
 
-    // Line 1: Date on the left, Category & Status badges on the right
     const line1HTML = `
      <div class="card-meta-line1">
        <span class="card-date">${displayDate}</span>
@@ -1537,7 +1492,6 @@ if (catName === 'Passes') {
       </div>
     `;
 
-    // Line 2: Lokace a pripadna poznámka/trivia (NOTE) - Ensure raw HTML tags are safely rendered and any newlines are preserved as breaks
     let rawCardNote = isValidValue(t.NOTE) ? String(t.NOTE).replace(/&lt;/g, '<').replace(/&gt;/g, '>') : '';
     const formattedNote = rawCardNote.replace(/\\n/g, '<br>').replace(/\r?\n/g, '<br>');
     const noteHTML = formattedNote ? `<div class="card-note-line" onclick="event.stopPropagation(); openNoteModal(${globalIndex});">💡 ${formattedNote}</div>` : '';
@@ -1546,10 +1500,8 @@ if (catName === 'Passes') {
       ${noteHTML}
     `;
 
-    // 7-Slot Action Grid Construction
     const relatedItems = getRelatedItems(t);
 
-    // Slot 1: Edit button (Admin only)
     let slot1HTML = '<div class="grid-slot-empty"></div>';
     if (isAdmin && isValidValue(itemId)) {
       const editQuery = getEditUrlParams(itemId);
@@ -1559,7 +1511,6 @@ if (catName === 'Passes') {
         </button>`;
     }
 
-    // Slot 2: Video / Audio badge
     let slot2HTML = '<div class="grid-slot-empty"></div>';
     if (isValidValue(t.YOUTUBE_URL)) {
       slot2HTML = `
@@ -1568,7 +1519,6 @@ if (catName === 'Passes') {
         </button>`;
     }
 
-    // Helper for related items slots
     const buildRelatedSlotBadge = (items, defaultIcon, defaultTitle) => {
       if (!items || items.length === 0) return '<div class="grid-slot-empty"></div>';
       const count = items.length;
@@ -1591,15 +1541,12 @@ if (catName === 'Passes') {
         </button>`;
     };
 
-    // Slot 3: Poster badge
     const posterItems = relatedItems.filter(r => getTicketCategory(r) === 'Posters');
     const slot3HTML = buildRelatedSlotBadge(posterItems, '🖼️', 'Related Posters');
 
-    // Slot 4: Pass badge
     const passItems = relatedItems.filter(r => getTicketCategory(r) === 'Passes');
     const slot4HTML = buildRelatedSlotBadge(passItems, '🪪', 'Related Passes');
 
-    // Slot 5: Merch / Memorabilia badge
     const merchItems = relatedItems.filter(r => {
       const c = getTicketCategory(r);
       return c !== 'Posters' && c !== 'Passes' && c !== 'Tickets';
@@ -1608,7 +1555,6 @@ if (catName === 'Passes') {
     const merchIcon = merchCat === 'T-shirts' ? '👕' : (merchCat === 'Programs' ? '📖' : (merchCat === 'Tour Items' ? '🎸' : '⭐'));
     const slot5HTML = buildRelatedSlotBadge(merchItems, merchIcon, 'Related Memorabilia');
 
-    // Slot 6: Lineup badge
     let slot6HTML = '<div class="grid-slot-empty"></div>';
     if (hasLineup) {
       slot6HTML = `
@@ -1617,7 +1563,6 @@ if (catName === 'Passes') {
         </button>`;
     }
 
-    // Slot 7: Setlist badge
     let slot7HTML = '';
     if (hasSetlist) {
       slot7HTML = `
@@ -1651,7 +1596,7 @@ if (catName === 'Passes') {
 
     card.innerHTML = `
       <div class="card-img-wrapper" title="${isMissingScan ? 'Missing scan - Click to preview' : 'Click to view scan'}">
-        <img src="${imgSrc}"loading="lazy" alt="Joe Jackson Concert ${t.DATUM ? formatDisplayDate(t.DATUM) : (t.TOUR_NAME || 'Archive Item')} - ${locationText || 'Live Performance'} (${catName})" onerror="this.onerror=null; this.src='${MISSING_TICKET_SVG}';">
+        <img src="${imgSrc}" loading="lazy" alt="Joe Jackson Concert ${t.DATUM ? formatDisplayDate(t.DATUM) : (t.TOUR_NAME || 'Archive Item')} - ${locationText || 'Live Performance'} (${catName})" onerror="this.onerror=null; this.src='${MISSING_TICKET_SVG}';">
       </div>
       <div class="card-content">
         ${line1HTML}
