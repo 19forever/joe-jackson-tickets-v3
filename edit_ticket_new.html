@@ -453,7 +453,7 @@
       gap: 6px;
     }
 
-    .input-with-btn input { flex-grow: 1; }
+    .input-with-btn input, .input-with-btn select { flex-grow: 1; }
 
     .btn-fetch-setlist {
       background-color: #0284c7;
@@ -742,11 +742,19 @@
         <div class="grid-2">
           <div class="form-group">
             <label for="edit_TOUR_NAME">Tour Name (TOUR_NAME)</label>
-            <input type="text" id="edit_TOUR_NAME" name="TOUR_NAME" placeholder="e.g. Night and Day Tour" oninput="syncTourId()">
+            <div class="input-with-btn">
+              <input type="text" id="edit_TOUR_NAME" name="TOUR_NAME" placeholder="e.g. Night and Day Tour" oninput="syncTourId()">
+              <select id="existingToursSelect" onchange="selectExistingTour(this.value)" style="max-width: 180px;">
+                <option value="">-- Select Existing --</option>
+              </select>
+            </div>
           </div>
           <div class="form-group">
             <label for="edit_TOUR_ID">Tour ID (TOUR_ID)</label>
-            <input type="text" id="edit_TOUR_ID" name="TOUR_ID" placeholder="tour-night-and-day-tour">
+            <div class="input-with-btn">
+              <input type="text" id="edit_TOUR_ID" name="TOUR_ID" placeholder="tour-night-and-day-tour">
+              <button class="btn-token" type="button" onclick="promptAddNewTour()" title="Create and generate new Tour ID">➕ Add Tour</button>
+            </div>
           </div>
         </div>
 
@@ -1057,20 +1065,86 @@ async function lockAdminSession() {
 
     function populateTourDropdown() {
       const tourSelect = document.getElementById('tourFilterSelect');
-      if (!tourSelect) return;
-      tourSelect.innerHTML = '<option value="">All Tours (Show All)</option>';
+      const existingSelect = document.getElementById('existingToursSelect');
+      if (tourSelect) tourSelect.innerHTML = '<option value="">All Tours (Show All)</option>';
+      if (existingSelect) existingSelect.innerHTML = '<option value="">-- Select Existing --</option>';
 
-      const tours = new Set();
+      const toursMap = new Map();
       fullDbData.forEach(r => {
-        if (r.TOUR_NAME && r.TOUR_NAME.trim()) tours.add(r.TOUR_NAME.trim());
+        if (r.TOUR_NAME && r.TOUR_NAME.trim()) {
+          const tName = r.TOUR_NAME.trim();
+          const tId = r.TOUR_ID ? r.TOUR_ID.trim() : generateTourId(tName);
+          if (!toursMap.has(tName)) {
+            toursMap.set(tName, tId);
+          }
+        }
       });
 
-      Array.from(tours).sort().forEach(t => {
-        const opt = document.createElement('option');
-        opt.value = t;
-        opt.textContent = t;
-        tourSelect.appendChild(opt);
+      Array.from(toursMap.keys()).sort().forEach(tName => {
+        if (tourSelect) {
+          const opt = document.createElement('option');
+          opt.value = tName;
+          opt.textContent = tName;
+          tourSelect.appendChild(opt);
+        }
+        if (existingSelect) {
+          const opt = document.createElement('option');
+          opt.value = tName;
+          opt.dataset.tourId = toursMap.get(tName);
+          opt.textContent = tName;
+          existingSelect.appendChild(opt);
+        }
       });
+    }
+
+    function generateTourId(tourName) {
+      if (!tourName) return '';
+      const slug = tourName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+      return slug ? `tour-${slug}` : '';
+    }
+
+    function syncTourId() {
+      const tourNameInput = getField('TOUR_NAME');
+      const tourIdInput = getField('TOUR_ID');
+      if (tourNameInput && tourIdInput) {
+        tourIdInput.value = generateTourId(tourNameInput.value);
+      }
+    }
+
+    function selectExistingTour(selectedTourName) {
+      if (!selectedTourName) return;
+      const tourNameInput = getField('TOUR_NAME');
+      const tourIdInput = getField('TOUR_ID');
+      const selectEl = document.getElementById('existingToursSelect');
+
+      if (tourNameInput) tourNameInput.value = selectedTourName;
+      
+      if (selectEl && selectEl.selectedIndex >= 0) {
+        const selectedOpt = selectEl.options[selectEl.selectedIndex];
+        const tourId = selectedOpt.dataset.tourId || generateTourId(selectedTourName);
+        if (tourIdInput) tourIdInput.value = tourId;
+      } else {
+        syncTourId();
+      }
+    }
+
+    function promptAddNewTour() {
+      const tourName = prompt("Enter new Tour Name (e.g. Max Tour 2026):");
+      if (tourName && tourName.trim()) {
+        const cleanName = tourName.trim();
+        const generatedId = generateTourId(cleanName);
+        
+        const tourNameInput = getField('TOUR_NAME');
+        const tourIdInput = getField('TOUR_ID');
+        if (tourNameInput) tourNameInput.value = cleanName;
+        if (tourIdInput) tourIdInput.value = generatedId;
+
+        populateTourDropdown();
+        showStatus(`➕ New Tour "${cleanName}" assigned with ID: ${generatedId}`, 'green');
+      }
     }
 
     function applyFilters() {
@@ -1138,6 +1212,11 @@ async function lockAdminSession() {
           el.value = val;
         }
       });
+
+      const existingSelect = document.getElementById('existingToursSelect');
+      if (existingSelect) {
+        existingSelect.value = r.TOUR_NAME ? r.TOUR_NAME.trim() : '';
+      }
 
       updateImageFromInput();
       updateYtPreview();
@@ -1415,6 +1494,7 @@ async function lockAdminSession() {
         if (error) throw error;
 
         fullDbData.push(newRecord);
+        populateTourDropdown();
         applyFilters();
         loadRecordByIndex(fullDbData.length - 1);
         scanUnassignedImages();
@@ -1517,6 +1597,7 @@ async function lockAdminSession() {
         if (error) throw error;
 
         fullDbData.push(newRecord);
+        populateTourDropdown();
         applyFilters();
         loadRecordByIndex(fullDbData.length - 1);
         showStatus(`✅ Created new record ID: ${newId} for show on ${sourceRecord.DATUM || 'N/A'}`, 'green');
@@ -1541,6 +1622,7 @@ async function lockAdminSession() {
 
         if (error) throw error;
 
+        populateTourDropdown();
         showStatus('✅ Record successfully saved to Supabase!', 'green');
       } catch (err) {
         console.error("Save error:", err);
@@ -1564,6 +1646,7 @@ async function lockAdminSession() {
         if (error) throw error;
 
         fullDbData.push(newRecord);
+        populateTourDropdown();
         applyFilters();
         loadRecordByIndex(fullDbData.length - 1);
         showStatus(`✅ Created new record ID: ${newId}`, 'green');
@@ -1590,6 +1673,7 @@ async function lockAdminSession() {
         if (error) throw error;
 
         fullDbData.push(clone);
+        populateTourDropdown();
         applyFilters();
         loadRecordByIndex(fullDbData.length - 1);
         showStatus(`✅ Duplicated as new record ID: ${newId}`, 'green');
@@ -1616,6 +1700,7 @@ async function lockAdminSession() {
         if (error) throw error;
 
         fullDbData.splice(currentRecordIndex, 1);
+        populateTourDropdown();
         applyFilters();
         loadRecordByIndex(Math.max(0, currentRecordIndex - 1));
         showStatus(`🗑️ Record ${recId} was successfully deleted from Supabase.`, 'green');
