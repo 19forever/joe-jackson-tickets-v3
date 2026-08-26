@@ -1827,20 +1827,27 @@ header {
   box-sizing: border-box !important;
 }
 
-/* ==========================================
-   Vlastní tlačítko Back / Close v Viewer.js
-   ========================================== */
+/* Vlastní tlačítko Back / Close ve Viewer.js */
+.viewer-toolbar > li[data-viewer-action="closeBtn"],
 .viewer-toolbar > li.viewer-closeBtn {
-  display: inline-block;
+  background-color: rgba(245, 158, 11, 0.2);
+  border: 1px solid var(--accent-yellow, #f59e0b);
+  border-radius: 4px;
+  width: auto !important;
+  min-width: 65px;
+  height: 24px;
+  margin-left: 8px;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.viewer-closeBtn::before {
+.viewer-toolbar > li[data-viewer-action="closeBtn"]::before,
+.viewer-toolbar > li.viewer-closeBtn::before {
   content: "✖ Back";
-  font-family: var(--font-family, -apple-system, sans-serif);
+  font-family: var(--font-primary, -apple-system, sans-serif);
   font-size: 11px;
   font-weight: 700;
-  color: #fff;
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1850,7 +1857,13 @@ header {
   white-space: nowrap;
 }
 
-.viewer-closeBtn:hover {
-  background-color: rgba(239, 68, 68, 0.8) !important;
-  border-radius: 4px;
+.viewer-toolbar > li[data-viewer-action="closeBtn"]:hover,
+.viewer-toolbar > li.viewer-closeBtn:hover {
+  background-color: var(--accent-yellow, #f59e0b) !important;
+  color: #000000 !important;
+}
+
+.viewer-toolbar > li[data-viewer-action="closeBtn"]:hover::before,
+.viewer-toolbar > li.viewer-closeBtn:hover::before {
+  color: #000000;
 }
