@@ -1226,6 +1226,8 @@ function renderCategoryTabs(matchesBeforeCategoryFilter) {
   if (!tabsContainer) return;
   tabsContainer.innerHTML = '';
 
+  const isAdmin = checkIsAdmin();
+
   const counts = { 
     'Tickets': 0, 'Passes': 0, 'Programs': 0, 'Posters': 0, 
     'T-shirts': 0, 'Tour Items': 0, 'Memorabilia': 0, 'Videos': 0, 'ALL': matchesBeforeCategoryFilter.length 
@@ -1237,7 +1239,11 @@ function renderCategoryTabs(matchesBeforeCategoryFilter) {
     if (isValidValue(t.YOUTUBE_URL)) counts['Videos']++;
   });
 
-  const categoryOrder = ['Tickets', 'Passes', 'Programs', 'Posters', 'T-shirts', 'Tour Items', 'Memorabilia', 'Videos', 'ALL'];
+  // Pokud je uživatel Admin, zobrazí se všechny záložky. V opačném případě pouze 'Tickets'.
+  const categoryOrder = isAdmin 
+    ? ['Tickets', 'Passes', 'Programs', 'Posters', 'T-shirts', 'Tour Items', 'Memorabilia', 'Videos', 'ALL']
+    : ['Tickets'];
+
   const categoryLabels = { 
     'Tickets': '🎫 Tickets', 'Passes': '🪪 Passes', 'Programs': '📖 Programs', 
     'Posters': '🖼️ Posters', 'T-shirts': '🎽 T-shirts', 'Tour Items': '🎸 Tour Items',
