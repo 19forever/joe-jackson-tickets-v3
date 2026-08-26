@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Joe Jackson Memorabilia Museum - Concert Tickets, Tour Archive &amp; Setlists (1978–2026)</title>
+  
+  <meta name="description" content="Explore the comprehensive digital archive and museum dedicated to Joe Jackson's live concert history from 1978 to 2026. Discover vintage ticket stubs, tour dates, venues, setlists, and memorabilia.">
+  <meta name="keywords" content="Joe Jackson, Joe Jackson concert tickets, Joe Jackson tour history, Joe Jackson setlists, live music archive, memorabilia museum, Look Sharp, Night and Day, live concerts, tour dates">
+  <meta name="author" content="Joe Jackson Memorabilia Museum">
+  <meta name="theme-color" content="#f59e0b">
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://joejackson.band/">
+
+  <!-- Open Graph / Facebook / WhatsApp -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Joe Jackson Memorabilia Museum">
+  <meta property="og:url" content="https://joejackson.band/">
+  <meta property="og:title" content="Joe Jackson Memorabilia Museum - Concert Tickets, Tour Archive &amp; Setlists">
+  <meta property="og:description" content="Comprehensive digital archive and museum dedicated to Joe Jackson's live concert history from 1978 to 2026. Discover ticket stubs, setlists, and memorabilia.">
+  <meta property="og:image" content="https://joejackson.band/favicon.svg">
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://joejackson.band/">
+  <meta name="twitter:title" content="Joe Jackson Memorabilia Museum - Concert Tickets, Tour Archive &amp; Setlists">
+  <meta name="twitter:description" content="Comprehensive digital archive and museum dedicated to Joe Jackson's live concert history from 1978 to 2026. Discover ticket stubs, setlists, and memorabilia.">
+  <meta name="twitter:image" content="https://joejackson.band/favicon.svg">
+
+  <!-- Favicon (JJ Icon) -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate icon" type="image/x-icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="favicon.svg">
+
+  <!-- Google Fonts for Live Typography Switcher -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- External Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+
+  <script>
+    (function() {
+      try {
+        var f = localStorage.getItem('jj_selected_font') || 'font-default';
+        if (f) document.documentElement.classList.add(f);
+      } catch(e) {}
+    })();
+  </script>
+
+  <!-- External Libraries -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
+</head>
+<body>
+
+  <div class="top-header-container">
+    <header>
+      <div class="header-left">
+        <div class="logo">JJ</div>
+        <div class="title-area">
+          <h1>Joe Jackson´s Memorabilia Museum <span class="year-badge" id="yearBadge">...</span></h1>
+          <p>Historical archive of Joe Jackson´s concert tickets, venues & memorabilia</p>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <select id="fontSwitcher" class="font-switcher-select" title="Preview Typography Theme">
+          <option value="font-default">🔤 Font: Default (Inter)</option>
+          <option value="font-condensed">🔤 Font: Tall &amp; Condensed (Barlow)</option>
+          <option value="font-light">🔤 Font: Light &amp; Elegant (Slim)</option>
+        </select>
+        <a href="stats.html" class="btn-contribute" title="View tour map & museum analytics">
+          📊 Stats & Map
+        </a>
+        <button id="adminLockBtn" class="btn-contribute" style="display: none; background: #dc2626; color: #ffffff; border: none; cursor: pointer; font-family: inherit;" onclick="lockAdminSession()" title="Lock Admin Session and return to Public Mode">
+          🔒 Lock Admin
+        </button>
+        <a href="edit_ticket_new.html" id="adminEditorLink" class="btn-contribute" style="display: none;" title="Open Ticket Editor">
+          ✏️ Editor
+        </a>
+        <button type="button" id="adminLoginLink" class="btn-contribute" style="background: transparent; border: 1px solid var(--border-color-light, #333); cursor: pointer; font-family: inherit;" onclick="handleAdminLogin()" title="Admin Login Gate">
+          🔒 Admin
+        </button>
+        <a href="ticket_form.html" class="btn-contribute" title="Share your concert ticket, pass, or poster with us">
+          ➕ Contribute your item
+        </a>
+      </div>
+    </header>
+
+    <!-- On This Day Banner -->
+    <div class="on-this-day-banner" id="otdBanner">
+      <div class="otd-left">
+        <div class="otd-icon">📅</div>
+        <div class="otd-text">
+          <h4>On This Day In History</h4>
+          <p id="otdTitle">...</p>
+        </div>
+      </div>
+      <button class="otd-btn" id="otdBtn">🎫 View Anniversary Show</button>
+    </div>
+
+    <div class="category-tabs" id="categoryTabs"></div>
+
+    <div class="controls">
+      <div class="search-input-wrapper">
+        <input type="text" id="searchInput" placeholder="🔍 Search by city, venue, date...">
+        <button class="search-clear-btn" id="searchClearBtn" title="Clear search">✕</button>
+      </div>
+
+      <select id="tourFilter" class="admin-only-control" title="Filter by Concert Tour">
+        <option value="">All Tours</option>
+      </select>
+
+      <select id="cityFilter"><option value="">All Cities</option></select>
+      <select id="sortFilter" title="Sort and filter tickets">
+        <option value="random">🎲 Random / Shuffled</option>
+        <option value="oldest">Date (Oldest First)</option>
+        <option value="newest">Date (Newest First)</option>
+        <option value="missing_first" class="admin-only-option">📷 Missing Scans First</option>
+        <option value="missing_only">🔍 Missing Scans Only</option>
+        <option value="missing_setlists_only">📝 Missing Setlists Only</option>
+        <option value="scans_only" class="admin-only-option">🖼️ With Scans Only</option>
+        <option value="missing_setlists" class="admin-only-option">📝 Missing Setlists First</option>
+        <option value="incomplete_metadata" class="admin-only-option">⚠️ Incomplete Metadata First</option>
+      </select>
+
+      <div class="action-buttons-group">
+        <button class="surprise-btn" id="reshuffleBtn" title="Reshuffle current results">🎲</button>
+        <button class="surprise-btn" id="surpriseBtn" title="Surprise me! (Random item)">✨</button>
+      </div>
+
+      <select id="pageSizeFilter">
+        <option value="25">25 / page</option>
+        <option value="50" selected>50 / page</option>
+        <option value="100">100 / page</option>
+        <option value="ALL">ALL</option>
+      </select>
+      <div class="layout-toggles">
+        <button class="toggle-btn active" id="btnGrid">⊞</button>
+        <button class="toggle-btn" id="btnList">≡</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="ticketsContainer" class="tickets-container grid-view"></div>
+  <div id="paginationContainer" class="pagination-container"></div>
+
+  <!-- Video Modal Layout -->
+  <div id="videoModal">
+    <div class="video-modal-container">
+      <button class="jj-close-btn" id="videoModalCloseBtn">✕</button>
+      
+      <!-- Left: Lineup -->
+      <div class="jj-video-side-col" id="videoLineupCol"></div>
+
+      <!-- Center: Video Frame -->
+      <div class="jj-video-center">
+        <div class="jj-video-frame-wrapper">
+          <iframe id="videoIframe" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+      </div>
+
+      <!-- Right: Setlist -->
+      <div class="jj-video-side-col" id="videoSetlistCol"></div>
+    </div>
+  </div>
+
+  <!-- Main Application Script -->
+  <script src="storage-service.js"></script>
+  <script src="app.js"></script>
+
+  <!-- Tour Filter & Admin Integration Script -->
+  <script>
+    (function() {
+      // 1. Přihlášení do Admin režimu přes prompt
+      function handleAdminLogin() {
+        if (isAdminModeActive()) {
+          const editQuery = typeof getEditUrlParams === 'function' ? getEditUrlParams() : '';
+          window.location.href = editQuery ? `edit_ticket_new.html?${editQuery}` : 'edit_ticket_new.html';
+          return;
+        }
+
+        const token = prompt('Zadejte váš GitHub Personal Access Token (PAT) pro přihlášení do Admin módu:');
+        if (token && token.trim().length > 0) {
+          const cleanToken = token.trim();
+          if (typeof StorageService !== 'undefined') {
+            StorageService.setGitHubConfig({ token: cleanToken });
+            StorageService.set('jj_admin_mode', 'true');
+          }
+          try {
+            localStorage.setItem('gh_token', cleanToken);
+            localStorage.setItem('jj_github_pat', cleanToken);
+            localStorage.setItem('jj_admin_mode', 'true');
+          } catch(e) {}
+
+          alert('✅ Admin režim aktivován!');
+          updateAdminSortAndControls();
+          if (typeof filterData === 'function') filterData();
+        } else if (token !== null) {
+          window.location.href = 'edit_ticket_new.html';
+        }
+      }
+      window.handleAdminLogin = handleAdminLogin;
+
+      // 2. Globální funkce pro uzamčení admin relace
+      function lockAdminSession() {
+        if (typeof StorageService !== 'undefined') {
+          StorageService.setGitHubConfig({ token: '' });
+          StorageService.remove('jj_admin_mode');
+        }
+        try {
+          localStorage.removeItem('gh_token');
+          localStorage.removeItem('jj_github_pat');
+          localStorage.removeItem('jj_admin_mode');
+          sessionStorage.removeItem('jj_admin_mode');
+        } catch(e) {}
+
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('admin')) {
+          url.searchParams.delete('admin');
+          window.history.replaceState(null, '', url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : ''));
+        }
+
+        updateAdminSortAndControls();
+        if (typeof filterData === 'function') filterData();
+      }
+      window.lockAdminSession = lockAdminSession;
+
+      // 3. Helper pro kontrolu aktivního Admin módu
+      function isAdminModeActive() {
+        let adminFlag = false;
+        let hasPat = false;
+        if (typeof StorageService !== 'undefined') {
+          adminFlag = StorageService.get('jj_admin_mode') === 'true';
+          const pat = StorageService.get('gh_token') || StorageService.get('jj_github_pat');
+          hasPat = !!(pat && pat.trim().length > 0);
+        } else {
+          try {
+            adminFlag = localStorage.getItem('jj_admin_mode') === 'true' || sessionStorage.getItem('jj_admin_mode') === 'true';
+            const pat = localStorage.getItem('gh_token') || localStorage.getItem('jj_github_pat');
+            hasPat = !!(pat && pat.trim().length > 0);
+          } catch(e) {}
+        }
+        const urlParams = new URLSearchParams(window.location.search);
+        const adminParam = urlParams.get('admin') === '1';
+        return adminFlag || hasPat || adminParam;
+      }
+      window.isAdminModeActive = isAdminModeActive;
+
+      // 4. Správa viditelnosti prvků a filtrů
+      let sortOptionsCatalog = null;
+
+      function updateAdminSortAndControls() {
+        const sortSelect = document.getElementById('sortFilter') || document.getElementById('sortSelect');
+        const isAdmin = isAdminModeActive();
+
+        // Tlačítka v hlavičce
+        const adminEditorLink = document.getElementById('adminEditorLink');
+        const adminLoginLink = document.getElementById('adminLoginLink');
+        const adminLockBtn = document.getElementById('adminLockBtn');
+
+        if (adminLockBtn) adminLockBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+        if (adminEditorLink) {
+          adminEditorLink.style.display = isAdmin ? 'inline-flex' : 'none';
+          if (typeof getEditUrlParams === 'function') {
+            const editQuery = getEditUrlParams();
+            adminEditorLink.href = editQuery ? `edit_ticket_new.html?${editQuery}` : 'edit_ticket_new.html';
+          }
+        }
+        if (adminLoginLink) adminLoginLink.style.display = isAdmin ? 'none' : 'inline-flex';
+
+        // Možnosti řazení
+        if (sortSelect) {
+          if (!sortOptionsCatalog) {
+            sortOptionsCatalog = Array.from(sortSelect.options).map(opt => ({
+              value: opt.value,
+              text: opt.textContent,
+              isAdminOnly: opt.classList.contains('admin-only-option') || ['missing_first', 'missing_only', 'scans_only', 'missing_setlists', 'incomplete_metadata'].includes(opt.value)
+            }));
+          }
+
+          const currentValue = sortSelect.value;
+          const urlParams = new URLSearchParams(window.location.search);
+          const urlSort = urlParams.get('sort');
+          const isCurrentAdminOnly = sortOptionsCatalog.find(o => o.value === currentValue)?.isAdminOnly;
+          const isUrlAdminOnly = urlSort && sortOptionsCatalog.find(o => o.value === urlSort)?.isAdminOnly;
+
+          sortSelect.innerHTML = '';
+          sortOptionsCatalog.forEach(optData => {
+            if (!optData.isAdminOnly || isAdmin) {
+              const opt = document.createElement('option');
+              opt.value = optData.value;
+              opt.textContent = optData.text;
+              if (optData.isAdminOnly) {
+                opt.classList.add('admin-only-option');
+              }
+              sortSelect.appendChild(opt);
+            }
+          });
+
+          let targetValue = currentValue;
+          if (!isAdmin && (isCurrentAdminOnly || isUrlAdminOnly)) {
+            targetValue = 'newest';
+          }
+
+          let found = false;
+          for (let i = 0; i < sortSelect.options.length; i++) {
+            if (sortSelect.options[i].value === targetValue) {
+              sortSelect.selectedIndex = i;
+              found = true;
+              break;
+            }
+          }
+          if (!found && sortSelect.options.length > 0) {
+            sortSelect.selectedIndex = 0;
+            targetValue = sortSelect.value;
+          }
+
+          if (targetValue !== currentValue || (!isAdmin && isUrlAdminOnly)) {
+            if (typeof updateUrlParams === 'function') updateUrlParams();
+            if (typeof filterData === 'function') filterData();
+          }
+        }
+
+        // Ovládací prvky pouze pro admina
+        document.querySelectorAll('.admin-only-control, .admin-only').forEach(el => {
+          el.style.display = isAdmin ? 'inline-block' : 'none';
+        });
+
+        const tourFilter = document.getElementById('tourFilter');
+        if (tourFilter) {
+          if (isAdmin) {
+            tourFilter.style.display = 'inline-block';
+          } else {
+            tourFilter.style.display = 'none';
+            if (tourFilter.value) tourFilter.value = '';
+          }
+        }
+      }
+      window.updateAdminSortAndControls = updateAdminSortAndControls;
+
+      function populateTourFilter() {
+        const tourSelect = document.getElementById('tourFilter');
+        if (!tourSelect) return;
+
+        const currentSelected = tourSelect.value;
+        const toursSet = new Set();
+
+        if (typeof allTickets !== 'undefined' && Array.isArray(allTickets)) {
+          allTickets.forEach(t => {
+            if (!t) return;
+            const tourName = t.TOUR_NAME || t.tour_name || '';
+            const valid = (typeof isValidValue === 'function') ? isValidValue(tourName) : (tourName && tourName.trim().length > 0);
+            if (valid) {
+              toursSet.add(tourName.trim());
+            }
+          });
+        }
+
+        tourSelect.innerHTML = '<option value="">All Tours</option>';
+        const sortedTours = Array.from(toursSet).sort((a, b) => a.localeCompare(b));
+        sortedTours.forEach(tour => {
+          const opt = document.createElement('option');
+          opt.value = tour;
+          opt.textContent = tour;
+          tourSelect.appendChild(opt);
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlTour = urlParams.get('tour') || urlParams.get('tour_name') || urlParams.get('tour_id');
+        const savedTour = (typeof safeGetSession === 'function') ? safeGetSession('jj_museum_tour') : sessionStorage.getItem('jj_museum_tour');
+        const targetTour = urlTour || savedTour || currentSelected;
+
+        if (targetTour) {
+          const targetLower = targetTour.trim().toLowerCase();
+          for (let i = 0; i < tourSelect.options.length; i++) {
+            const opt = tourSelect.options[i];
+            if (opt.value.toLowerCase() === targetLower) {
+              tourSelect.selectedIndex = i;
+              break;
+            }
+          }
+        }
+      }
+
+      const origPopulateFilters = window.populateFilters;
+      window.populateFilters = function() {
+        if (typeof origPopulateFilters === 'function') {
+          origPopulateFilters.apply(this, arguments);
+        }
+        populateTourFilter();
+        updateAdminSortAndControls();
+      };
+
+      const origUpdateUrlParams = window.updateUrlParams;
+      window.updateUrlParams = function() {
+        if (typeof origUpdateUrlParams === 'function') {
+          origUpdateUrlParams.apply(this, arguments);
+        }
+        if (typeof window === 'undefined' || !window.history || !window.history.replaceState) return;
+        const params = new URLSearchParams(window.location.search);
+        const tourVal = document.getElementById('tourFilter')?.value?.trim();
+        if (tourVal) {
+          params.set('tour', tourVal);
+          if (typeof safeSetSession === 'function') safeSetSession('jj_museum_tour', tourVal);
+          else sessionStorage.setItem('jj_museum_tour', tourVal);
+        } else {
+          params.delete('tour');
+          params.delete('tour_name');
+          params.delete('tour_id');
+          if (typeof safeRemoveSession === 'function') safeRemoveSession('jj_museum_tour');
+          else sessionStorage.removeItem('jj_museum_tour');
+        }
+        const newQuery = params.toString();
+        const newUrl = newQuery ? `${window.location.pathname}?${newQuery}` : window.location.pathname;
+        window.history.replaceState(null, '', newUrl);
+
+        const adminEditorLink = document.getElementById('adminEditorLink');
+        if (adminEditorLink && typeof getEditUrlParams === 'function') {
+          const editQuery = getEditUrlParams();
+          adminEditorLink.href = editQuery ? `edit_ticket_new.html?${editQuery}` : 'edit_ticket_new.html';
+        }
+      };
+
+      const origGetEditUrlParams = window.getEditUrlParams;
+      window.getEditUrlParams = function(itemId) {
+        let queryStr = (typeof origGetEditUrlParams === 'function') 
+          ? origGetEditUrlParams.apply(this, arguments) 
+          : '';
+        const params = new URLSearchParams(queryStr);
+
+        if (typeof currentCategory !== 'undefined' && currentCategory && currentCategory !== 'ALL') {
+          params.set('category', currentCategory.toLowerCase());
+        }
+
+        const curTour = document.getElementById('tourFilter')?.value?.trim();
+        if (curTour) {
+          params.set('tour', curTour);
+        }
+
+        const curSearch = document.getElementById('searchInput')?.value?.trim();
+        if (curSearch) {
+          params.set('search', curSearch);
+        }
+
+        const curSort = document.getElementById('sortFilter')?.value?.trim();
+        if (curSort) {
+          params.set('sort', curSort);
+        }
+
+        if (itemId) {
+          params.set('id', itemId);
+        }
+
+        return params.toString();
+      };
+
+      window.filterData = function() {
+        const rawQuery = document.getElementById('searchInput')?.value || '';
+        const query = rawQuery.toLowerCase().trim();
+        const selectedYear = document.getElementById('yearFilter')?.value || '';
+        const selectedCity = document.getElementById('cityFilter')?.value || '';
+        const selectedTour = document.getElementById('tourFilter')?.value || '';
+        const sort = document.getElementById('sortFilter')?.value || 'random';
+
+        const dateCandidates = (typeof parseDateCandidates === 'function') ? parseDateCandidates(rawQuery) : [];
+
+        const matchesBase = allTickets.filter(t => {
+          const locationText = (typeof formatLocationText === 'function') ? formatLocationText(t).toLowerCase() : '';
+          const itemYear = (t.DATUM && t.DATUM.length >= 4) ? t.DATUM.substring(0, 4) : '';
+          const rawDate = (t.DATUM || '').toLowerCase();
+          const formattedDate = (typeof formatDisplayDate === 'function') ? formatDisplayDate(t.DATUM).toLowerCase() : '';
+          const venue = (t.VENUE || t.MISTO_KONANI || '').toLowerCase();
+          const city = (t.MESTO || '').toLowerCase();
+          const country = (t.STAT || '').toLowerCase();
+          const contributor = (t.PRISPEVATEL || t.CONTRIBUTOR || '').toLowerCase();
+          const category = (t.KATEGORIE || '').toLowerCase();
+          const supportingAct = (t.SUPPORTING_ACT || '').toLowerCase();
+          const lineup = (t.LINEUP || '').toLowerCase();
+          const setlist = (t.SETLIST || '').toLowerCase();
+          const tourName = (t.TOUR_NAME || '').toLowerCase();
+          const tourId = (t.TOUR_ID || '').toLowerCase();
+
+          const dateMatch = dateCandidates.length > 0 && (typeof matchDateAgainstCandidates === 'function') && matchDateAgainstCandidates(t.DATUM, dateCandidates);
+
+          const textMatch = !query ||
+            locationText.includes(query) ||
+            venue.includes(query) ||
+            city.includes(query) ||
+            country.includes(query) ||
+            contributor.includes(query) ||
+            category.includes(query) ||
+            rawDate.includes(query) ||
+            formattedDate.includes(query) ||
+            supportingAct.includes(query) ||
+            lineup.includes(query) ||
+            setlist.includes(query) ||
+            tourName.includes(query) ||
+            tourId.includes(query);
+
+          const qMatch = !query || dateMatch || textMatch;
+          const yMatch = !selectedYear || String(itemYear) === String(selectedYear);
+          const cMatch = !selectedCity || city === selectedCity.toLowerCase();
+          const tMatch = !selectedTour || tourName === selectedTour.toLowerCase() || tourId === selectedTour.toLowerCase();
+
+          return qMatch && yMatch && cMatch && tMatch;
+        });
+
+        if (typeof renderCategoryTabs === 'function') renderCategoryTabs(matchesBase);
+
+        filteredTickets = matchesBase.filter(t => {
+          if (currentCategory === 'ALL') return true;
+          if (currentCategory === 'Videos') return (typeof isValidValue === 'function') ? isValidValue(t.YOUTUBE_URL) : !!t.YOUTUBE_URL;
+          return getTicketCategory(t).toLowerCase() === currentCategory.toLowerCase();
+        });
+
+        if (sort === 'oldest') {
+          filteredTickets.sort((a, b) => (a.DATUM || '').localeCompare(b.DATUM || ''));
+        } else if (sort === 'newest') {
+          filteredTickets.sort((a, b) => (b.DATUM || '').localeCompare(a.DATUM || ''));
+        } else if (sort === 'missing_first') {
+          filteredTickets.sort((a, b) => {
+            const aHas = (typeof isValidValue === 'function') ? (isValidValue(a.SOUBOR_SKEN) ? 1 : 0) : (a.SOUBOR_SKEN ? 1 : 0);
+            const bHas = (typeof isValidValue === 'function') ? (isValidValue(b.SOUBOR_SKEN) ? 1 : 0) : (b.SOUBOR_SKEN ? 1 : 0);
+            return aHas - bHas;
+          });
+        } else if (sort === 'missing_only') {
+          filteredTickets = filteredTickets.filter(t => (typeof isValidValue === 'function') ? !isValidValue(t.SOUBOR_SKEN) : !t.SOUBOR_SKEN);
+        } else if (sort === 'scans_only') {
+          filteredTickets = filteredTickets.filter(t => (typeof isValidValue === 'function') ? isValidValue(t.SOUBOR_SKEN) : !!t.SOUBOR_SKEN);
+        } else if (sort === 'missing_setlists') {
+          filteredTickets.sort((a, b) => {
+            const aHas = (typeof isValidValue === 'function') ? (isValidValue(a.SETLIST) ? 1 : 0) : (a.SETLIST ? 1 : 0);
+            const bHas = (typeof isValidValue === 'function') ? (isValidValue(b.SETLIST) ? 1 : 0) : (b.SETLIST ? 1 : 0);
+            return aHas - bHas;
+          });
+        } else if (sort === 'incomplete_metadata') {
+          filteredTickets.sort((a, b) => {
+            const getMissingScore = (item) => {
+              let score = 0;
+              if (!item.VENUE && !item.MISTO_KONANI) score++;
+              if (!item.MESTO) score++;
+              if (!item.STAT) score++;
+              if (!item.SOUBOR_SKEN) score++;
+              if (!item.SETLIST) score++;
+              if (!item.TOUR_NAME) score++;
+              return score;
+            };
+            return getMissingScore(b) - getMissingScore(a);
+          });
+        }
+
+        currentPage = 1;
+        if (typeof renderPaginated === 'function') renderPaginated();
+
+        const adminEditorLink = document.getElementById('adminEditorLink');
+        if (adminEditorLink && typeof getEditUrlParams === 'function') {
+          const editQuery = getEditUrlParams();
+          adminEditorLink.href = editQuery ? `edit_ticket_new.html?${editQuery}` : 'edit_ticket_new.html';
+        }
+      };
+
+      document.addEventListener('DOMContentLoaded', () => {
+        updateAdminSortAndControls();
+
+        const tourFilter = document.getElementById('tourFilter');
+        if (tourFilter) {
+          tourFilter.addEventListener('change', () => {
+            if (typeof updateUrlParams === 'function') updateUrlParams();
+            if (typeof filterData === 'function') filterData();
+          });
+        }
+
+        window.addEventListener('storage', () => {
+          updateAdminSortAndControls();
+        });
+      });
+    })();
+  </script>
+
+  <footer class="jj-museum-footer">
+    <div class="footer-container">
+      <p class="disclaimer-title">📜 Legal Disclaimer & Fair Use Notice</p>
+      <p class="disclaimer-text">
+        Joe Jackson's Memorabilia Museum is a non-commercial, educational fan archival project. 
+        All trademarks, logos, artist names, and media rights belong exclusively to Joe Jackson and their respective copyright holders. 
+        Digital ticket stubs, posters, and memorabilia scans are preserved for historical documentation purposes through private donor contributions.
+      </p>
+      <p class="disclaimer-contact">
+        If you are a copyright owner and wish to request content removal, please contact us at <a href="mailto:archive@joejackson.band">archive@joejackson.band</a>.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Note/Trivia Modal -->
+  <div id="noteModal" class="jj-modal-backdrop">
+    <div class="jj-modal-card note-modal-card">
+      <button class="jj-modal-close-btn" onclick="closeNoteModal()">✕</button>
+      <div class="jj-modal-header" style="align-items: flex-start; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="jj-modal-icon" style="font-size: 1.5rem;">💡</span>
+          <h3 id="noteModalHeader" style="font-size: 1.25rem;">Concert Trivia &amp; Notes</h3>
+        </div>
+      </div>
+      <div class="jj-modal-meta" id="noteModalMeta" style="width: 100%; text-align: left; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; border-bottom: 1px solid var(--border-color, #27272a); padding-bottom: 12px; margin-top: 4px;">
+        <!-- Meta details injected dynamically -->
+      </div>
+      <p class="jj-modal-body" id="noteModalBody" style="width: 100%; text-align: left; white-space: pre-wrap; font-size: 0.95rem; line-height: 1.6; max-height: 350px; overflow-y: auto; margin: 0; padding-right: 4px; color: var(--text-main);">
+        <!-- Full note text injected dynamically -->
+      </p>
+      <div class="jj-modal-actions" style="margin-top: 8px; justify-content: flex-end; width: 100%;">
+        <button class="btn-secondary" onclick="closeNoteModal()" style="max-width: 120px;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Setlist.fm Exit Confirmation Modal -->
+  <div id="setlistExitModal" class="jj-modal-backdrop">
+    <div class="jj-modal-card">
+      <button class="jj-modal-close-btn" onclick="closeSetlistExitModal()">✕</button>
+      <div class="jj-modal-header">
+        <span class="jj-modal-icon">🎵</span>
+        <h3>Add Setlist on Setlist.fm</h3>
+      </div>
+      <p class="jj-modal-body">
+        You are about to open an external page on <strong>Setlist.fm</strong> to view or contribute songs for this concert.
+      </p>
+      <div class="jj-modal-actions">
+        <button class="btn-secondary" onclick="closeSetlistExitModal()">Cancel</button>
+        <a id="setlistExitConfirmBtn" href="#" target="_blank" rel="noopener noreferrer" class="otd-btn" onclick="closeSetlistExitModal()">
+          Continue to Setlist.fm ↗
+        </a>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
