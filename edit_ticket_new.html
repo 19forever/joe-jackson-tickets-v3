@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Editor památek - Joe Jackson Archive</title>
+  <title>Record Editor - Joe Jackson Archive</title>
   <link rel="stylesheet" href="styles.css">
 
   <!-- Viewer.js (Image Inspection & Zoom) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
 
-  <!-- Supabase JS Client & Připojení -->
+  <!-- Supabase JS Client & Connection -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-client.js"></script>
 
@@ -20,33 +20,33 @@
 <body class="edit-page-body">
 
   <div class="edit-header">
-    <h2>✏️ Editor záznamů Supabase</h2>
+    <h2>✏️ Supabase Record Editor</h2>
     <div class="edit-header-actions">
-      <span id="statusIndicator" class="status-badge">⏳ Připojování...</span>
-      <a href="index.html" class="btn-secondary">🔙 Zpět na muzeum</a>
+      <span id="statusIndicator" class="status-badge">⏳ Connecting...</span>
+      <a href="index.html" class="btn-secondary">🔙 Back to Museum</a>
     </div>
   </div>
 
   <div class="edit-container">
-    <!-- Levý panel: Seznam a filtry -->
+    <!-- Left panel: List and filters -->
     <div class="edit-sidebar">
       <div class="filter-box">
-        <input type="text" id="filterInput" placeholder="🔍 Filtrovat (město, datum, venue...)" oninput="applyFilters()">
+        <input type="text" id="filterInput" placeholder="🔍 Filter (city, date, venue...)" oninput="applyFilters()">
         <select id="sortSelect" onchange="applyFilters()">
-          <option value="id_asc">ID (Vzestupně)</option>
-          <option value="date_asc">Datum (Nejstarší)</option>
-          <option value="date_desc">Datum (Nejnovější)</option>
+          <option value="id_asc">ID (Ascending)</option>
+          <option value="date_asc">Date (Oldest First)</option>
+          <option value="date_desc">Date (Newest First)</option>
         </select>
       </div>
       <div id="recordList" class="record-list"></div>
     </div>
 
-    <!-- Pravý panel: Formulář pro úpravu -->
+    <!-- Right panel: Edit Form -->
     <div class="edit-main">
       <div class="form-actions-bar">
-        <button type="button" class="btn-primary" onclick="saveRecord()">💾 Uložit do Supabase</button>
-        <button type="button" class="btn-secondary" onclick="prevRecord()">◄ Předchozí</button>
-        <button type="button" class="btn-secondary" onclick="nextRecord()">Následující ►</button>
+        <button type="button" class="btn-primary" onclick="saveRecord()">💾 Save to Supabase</button>
+        <button type="button" class="btn-secondary" onclick="prevRecord()">◄ Previous</button>
+        <button type="button" class="btn-secondary" onclick="nextRecord()">Next ►</button>
       </div>
 
       <form id="ticketEditForm" class="edit-form">
@@ -56,26 +56,26 @@
             <input type="text" id="f_ID_MEMORABILIA" readonly style="background: var(--bg-card); opacity: 0.7;">
           </div>
           <div class="form-group">
-            <label for="f_DATUM">DATUM (YYYY-MM-DD)</label>
+            <label for="f_DATUM">DATE (YYYY-MM-DD)</label>
             <input type="text" id="f_DATUM">
           </div>
           <div class="form-group">
-            <label for="f_KATEGORIE">KATEGORIE</label>
+            <label for="f_KATEGORIE">CATEGORY</label>
             <input type="text" id="f_KATEGORIE" list="dl_KATEGORIE">
             <datalist id="dl_KATEGORIE"></datalist>
           </div>
           <div class="form-group">
-            <label for="f_MESTO">MESTO</label>
+            <label for="f_MESTO">CITY</label>
             <input type="text" id="f_MESTO" list="dl_MESTO">
             <datalist id="dl_MESTO"></datalist>
           </div>
           <div class="form-group">
-            <label for="f_STAT">STAT</label>
+            <label for="f_STAT">COUNTRY</label>
             <input type="text" id="f_STAT" list="dl_STAT">
             <datalist id="dl_STAT"></datalist>
           </div>
           <div class="form-group">
-            <label for="f_VENUE">VENUE / MÍSTO KONÁNÍ</label>
+            <label for="f_VENUE">VENUE</label>
             <input type="text" id="f_VENUE" list="dl_VENUE">
             <datalist id="dl_VENUE"></datalist>
           </div>
@@ -89,7 +89,7 @@
             <input type="text" id="f_TOUR_ID">
           </div>
           <div class="form-group">
-            <label for="f_SOUBOR_SKEN">SOUBOR_SKEN (oddělené čárkou)</label>
+            <label for="f_SOUBOR_SKEN">SCAN_FILES (comma separated)</label>
             <input type="text" id="f_SOUBOR_SKEN">
           </div>
           <div class="form-group">
@@ -101,18 +101,18 @@
             <input type="text" id="f_YOUTUBE_URL">
           </div>
           <div class="form-group">
-            <label for="f_POCET_SKLADEB">POCET_SKLADEB</label>
+            <label for="f_POCET_SKLADEB">SONG_COUNT</label>
             <input type="number" id="f_POCET_SKLADEB">
           </div>
         </div>
 
         <div class="form-group full-width">
-          <label for="f_LINEUP">LINEUP / OBSAZENÍ (oddělené středníkem nebo lomítkem)</label>
+          <label for="f_LINEUP">LINEUP (separated by semicolon or slash)</label>
           <input type="text" id="f_LINEUP">
         </div>
 
         <div class="form-group full-width">
-          <label for="f_SETLIST">SETLIST (písničky oddělené čárkou)</label>
+          <label for="f_SETLIST">SETLIST (songs separated by comma)</label>
           <textarea id="f_SETLIST" rows="3"></textarea>
         </div>
 
@@ -138,10 +138,10 @@
     }
 
     async function loadCsvData() {
-      showStatus('⏳ Načítám data ze Supabase...', 'yellow');
+      showStatus('⏳ Loading data from Supabase...', 'yellow');
       try {
         if (typeof supabaseClient === 'undefined') {
-          throw new Error("Supabase klient není připojen!");
+          throw new Error("Supabase client is not connected!");
         }
 
         const { data, error } = await supabaseClient
@@ -169,13 +169,13 @@
             loadRecordByIndex(0);
           }
 
-          showStatus('✅ Data načtena ze Supabase.', 'green');
+          showStatus('✅ Data loaded from Supabase.', 'green');
         } else {
-          showStatus('⚠️ Databáze je prázdná.', 'yellow');
+          showStatus('⚠️ Database is empty.', 'yellow');
         }
       } catch (err) {
-        console.error('Chyba při načítání ze Supabase:', err);
-        showStatus('❌ Chyba načítání: ' + err.message, 'red');
+        console.error('Error loading from Supabase:', err);
+        showStatus('❌ Error loading: ' + err.message, 'red');
       }
     }
 
@@ -233,7 +233,7 @@
         };
 
         item.innerHTML = `
-          <div style="font-weight: 600;">${r.DATUM || 'Bez data'} — ${r.MESTO || 'Neznámé město'}</div>
+          <div style="font-weight: 600;">${r.DATUM || 'No date'} — ${r.MESTO || 'Unknown city'}</div>
           <div style="font-size: 0.8rem; color: var(--text-muted);">${r.VENUE || r.TOUR_NAME || ''} (${r.KATEGORIE || 'Ticket'})</div>
         `;
         container.appendChild(item);
@@ -281,7 +281,7 @@
 
     async function saveRecord() {
       saveCurrentFormToMemory();
-      showStatus('🚀 Ukládám změny do Supabase...', 'yellow');
+      showStatus('🚀 Saving changes to Supabase...', 'yellow');
 
       try {
         const currentRecord = fullCsvData[currentRecordIndex];
@@ -292,10 +292,10 @@
 
         if (error) throw error;
 
-        showStatus('✅ Záznam okamžitě uložen do Supabase!', 'green');
+        showStatus('✅ Record saved to Supabase!', 'green');
       } catch (err) {
-        console.error("Chyba při ukládání do Supabase:", err);
-        showStatus('❌ Chyba ukládání: ' + err.message, 'red');
+        console.error("Error saving to Supabase:", err);
+        showStatus('❌ Error saving: ' + err.message, 'red');
       }
     }
 
@@ -315,7 +315,7 @@
                       new URLSearchParams(window.location.search).get('admin') === '1';
 
       if (!isAdmin) {
-        showStatus('🔒 Přístup omezen. Přihlaste se jako admin na hlavní stránce.', 'red');
+        showStatus('🔒 Access denied. Please login as admin on the main page.', 'red');
         return;
       }
 
