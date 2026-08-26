@@ -536,13 +536,13 @@
       </div>
       <div class="thumb-list" id="thumbList"></div>
 
-      <!-- NAHRÁNÍ NOVÉHO OBRÁZKU (PRO SOUBOR_SKEN) -->
+      <!-- SELECT IMAGE FOR SOUBOR_SKEN -->
       <div style="margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px;">
         <h4 style="margin: 0 0 6px 0; font-size: 0.85rem; color: var(--accent-yellow);">
-          📷 Vybrat obrázek pro tento záznam
+          📷 Select Scan File for Record
         </h4>
         <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; line-height: 1.3;">
-          Vyberte soubor ze složky <code>/scans/</code> na vašem disku. Název se automaticky zapíše do formuláře.
+          Choose an image file matching your local <code>/scans/</code> folder. The filename will be assigned automatically.
         </p>
         <input type="file" id="scanFileInput" accept="image/*" style="font-size: 0.8rem; width: 100%;">
       </div>
@@ -553,23 +553,23 @@
           <span>🏷️ Watermark Tool</span>
         </h4>
         <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
-          Nahrajte novou fotku pro aplikaci vodoznaku <strong>"JJ Memorabilia Museum"</strong>.
+          Upload a raw scan photo to apply the official <strong>"JJ Memorabilia Museum"</strong> watermark badge.
         </p>
         <input type="file" id="adminWatermarkInput" accept="image/*" style="font-size: 0.8rem; width: 100%; margin-bottom: 8px;">
         <div id="adminWatermarkBox" style="display: none; text-align: center; margin-top: 8px;">
           <a id="adminWatermarkDownload" class="nav-btn" style="display: inline-block; background: var(--accent-yellow); color: #000; text-decoration: none; font-weight: 700; font-size: 0.8rem; padding: 6px 12px; border-radius: 4px;" download>
-            💾 Stáhnout obrázek s vodoznakem
+            💾 Download Watermarked Image
           </a>
         </div>
       </div>
 
-      <!-- KONTROLA NEZAŘAZENÝCH SKENŮ -->
+      <!-- CHECK UNASSIGNED SCANS -->
       <div style="margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px;">
         <h4 style="margin: 0 0 8px 0; font-size: 0.85rem; color: var(--accent-yellow); display: flex; align-items: center; justify-content: space-between;">
-          <span>📂 Kontrola nepřiřazených skenů</span>
+          <span>📂 Missing Scans Check</span>
         </h4>
         <button type="button" class="btn-token" id="btnCheckMissing" onclick="checkMissingScansInDatabase()" style="width: 100%; margin-top: 4px;">
-          🔍 Zkontrolovat chybějící skeny v DB
+          🔍 Check Records Without Scans
         </button>
         <div id="missingScansResult" style="margin-top: 8px; font-size: 0.75rem; color: var(--text-muted);"></div>
       </div>
@@ -711,7 +711,7 @@
 
       <div class="action-bar">
         <button class="btn-submit" type="button" onclick="downloadCSVExport()">💾 Download CSV Export</button>
-        <button class="btn-github" type="button" onclick="saveCurrentRecordToSupabase()">🚀 Uložit do Supabase</button>
+        <button class="btn-github" type="button" onclick="saveCurrentRecordToSupabase()">🚀 Save to Supabase</button>
       </div>
 
       <div id="statusMessage"></div>
@@ -760,7 +760,7 @@
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
-      // automatické zapsání vybraného souboru do políčka SOUBOR_SKEN
+      // Automatic filename populating for SOUBOR_SKEN
       const scanInput = document.getElementById('scanFileInput');
       if (scanInput) {
         scanInput.addEventListener('change', function(e) {
@@ -777,7 +777,7 @@
                 skenField.value = file.name;
               }
               updateImageFromInput();
-              showStatus(`📷 Soubor "${file.name}" byl zapsán do políčka SOUBOR_SKEN. Nepochybujte o nahrání fyzického souboru do složky /scans/ na webu.`, 'green');
+              showStatus(`📷 Filename "${file.name}" assigned to SOUBOR_SKEN field. Remember to upload the file to /scans/ on your server.`, 'green');
             }
           }
         });
@@ -792,7 +792,7 @@
           const dlBtn = document.getElementById('adminWatermarkDownload');
           if (!file) { box.style.display = 'none'; return; }
           try {
-            showStatus('🎨 Aplikuji vodoznak...', 'yellow');
+            showStatus('🎨 Applying watermark...', 'yellow');
             const result = await JJWatermark.apply(file, {
               text: 'JJ Memorabilia Museum',
               subtext: 'Joe Jackson Archive • joejackson.band',
@@ -801,9 +801,9 @@
             dlBtn.href = result.url;
             dlBtn.download = `watermarked_${file.name}`;
             box.style.display = 'block';
-            showStatus('✅ Vodoznak aplikován! Stáhněte soubor a uložte jej do /scans/', 'green');
+            showStatus('✅ Watermark applied! Download the file and upload it to /scans/', 'green');
           } catch (err) {
-            showStatus('❌ Chyba vodoznaku: ' + err.message, 'red');
+            showStatus('❌ Watermark processing error: ' + err.message, 'red');
           }
         });
       }
@@ -811,12 +811,12 @@
       await loadDataFromSupabase();
     });
 
-    // NAČTENÍ DAT ZE SUPABASE
+    // LOAD DATA FROM SUPABASE
     async function loadDataFromSupabase() {
-      showStatus('🔄 Načítám data ze Supabase...', 'yellow');
+      showStatus('🔄 Loading data from Supabase...', 'yellow');
       try {
         if (typeof supabaseClient === 'undefined') {
-          throw new Error("Supabase klient není správně inicializován v supabase-client.js!");
+          throw new Error("Supabase client is not properly initialized in supabase-client.js!");
         }
 
         const { data, error } = await supabaseClient
@@ -827,9 +827,9 @@
 
         fullDbData = data || [];
         if (fullDbData.length === 0) {
-          showStatus('⚠️ Databáze je prázdná.', 'yellow');
+          showStatus('⚠️ Database is empty.', 'yellow');
         } else {
-          showStatus(`✅ Načteno ${fullDbData.length} záznamů ze Supabase.`, 'green');
+          showStatus(`✅ Loaded ${fullDbData.length} records from Supabase.`, 'green');
         }
 
         populateTourDropdown();
@@ -846,8 +846,8 @@
 
         loadRecordByIndex(initialIndex);
       } catch (err) {
-        console.error("Chyba Supabase:", err);
-        showStatus('❌ Chyba načítání ze Supabase: ' + err.message, 'red');
+        console.error("Supabase Error:", err);
+        showStatus('❌ Error loading from Supabase: ' + err.message, 'red');
       }
     }
 
@@ -888,7 +888,7 @@
       if (activeIndices.length > 0) {
         loadRecordByIndex(activeIndices[0]);
       } else {
-        showStatus('⚠️ Žádné záznamy neodpovídají zvolené tour.', 'yellow');
+        showStatus('⚠️ No records match the selected tour.', 'yellow');
       }
     }
 
@@ -1014,7 +1014,7 @@
       if (countEl) countEl.value = songs.length;
     }
 
-    // KONTROLA CHYBĚJÍCÍCH SKENŮ V DATABÁZI
+    // CHECK RECORDS WITHOUT SCANS IN DATABASE
     function checkMissingScansInDatabase() {
       const resultDiv = document.getElementById('missingScansResult');
       if (!resultDiv) return;
@@ -1022,7 +1022,7 @@
       const totalCount = fullDbData.length;
       const missingScans = fullDbData.filter(r => !r.SOUBOR_SKEN || !r.SOUBOR_SKEN.trim());
 
-      resultDiv.innerHTML = `Celkem záznamů: <strong>${totalCount}</strong><br>Bez skenu: <strong style="color: var(--accent-yellow);">${missingScans.length}</strong>`;
+      resultDiv.innerHTML = `Total Records: <strong>${totalCount}</strong><br>Without Scan: <strong style="color: var(--accent-yellow);">${missingScans.length}</strong>`;
     }
 
     // SUPABASE SAVE ACTION
@@ -1031,7 +1031,7 @@
       const record = fullDbData[currentRecordIndex];
       if (!record) return;
 
-      showStatus('🚀 Ukládám do Supabase databáze...', 'yellow');
+      showStatus('🚀 Saving to Supabase database...', 'yellow');
 
       try {
         const { data, error } = await supabaseClient
@@ -1041,10 +1041,10 @@
 
         if (error) throw error;
 
-        showStatus('✅ Záznam úspěšně uložen do Supabase!', 'green');
+        showStatus('✅ Record successfully saved to Supabase!', 'green');
       } catch (err) {
-        console.error("Chyba při ukládání:", err);
-        showStatus('❌ Chyba při ukládání do Supabase: ' + err.message, 'red');
+        console.error("Save error:", err);
+        showStatus('❌ Error saving to Supabase: ' + err.message, 'red');
       }
     }
 
@@ -1054,7 +1054,7 @@
       const newId = `TICKET_${String(Date.now()).slice(-6)}`;
       const newRecord = { ID_MEMORABILIA: newId, KATEGORIE: 'Tickets' };
 
-      showStatus('➕ Vytvářím nový záznam v Supabase...', 'yellow');
+      showStatus('➕ Creating new record in Supabase...', 'yellow');
       try {
         const { data, error } = await supabaseClient
           .from('tickets')
@@ -1066,9 +1066,9 @@
         fullDbData.push(newRecord);
         applyFilters();
         loadRecordByIndex(fullDbData.length - 1);
-        showStatus(`✅ Vytvořen nový záznam ID: ${newId}`, 'green');
+        showStatus(`✅ Created new record ID: ${newId}`, 'green');
       } catch (err) {
-        showStatus('❌ Chyba při vytváření záznamu: ' + err.message, 'red');
+        showStatus('❌ Error creating record: ' + err.message, 'red');
       }
     }
 
@@ -1081,7 +1081,7 @@
       const newId = `TICKET_${String(Date.now()).slice(-6)}`;
       const clone = { ...current, ID_MEMORABILIA: newId, SOUBOR_SKEN: '' };
 
-      showStatus('📋 Duplikuji záznam v Supabase...', 'yellow');
+      showStatus('📋 Duplicating record in Supabase...', 'yellow');
       try {
         const { error } = await supabaseClient
           .from('tickets')
@@ -1092,9 +1092,9 @@
         fullDbData.push(clone);
         applyFilters();
         loadRecordByIndex(fullDbData.length - 1);
-        showStatus(`✅ Duplikováno jako nový záznam ID: ${newId}`, 'green');
+        showStatus(`✅ Duplicated as new record ID: ${newId}`, 'green');
       } catch (err) {
-        showStatus('❌ Chyba při duplikaci: ' + err.message, 'red');
+        showStatus('❌ Error duplicating record: ' + err.message, 'red');
       }
     }
 
@@ -1104,9 +1104,9 @@
       const record = fullDbData[currentRecordIndex];
       const recId = record.ID_MEMORABILIA || record.ID_LISTKU;
 
-      if (!confirm(`Opravdu chcete SMAZAT záznam ${recId} ze Supabase databáze?`)) return;
+      if (!confirm(`Are you sure you want to DELETE record ${recId} from Supabase database?`)) return;
 
-      showStatus(`🗑️ Mažu záznam ${recId}...`, 'yellow');
+      showStatus(`🗑️ Deleting record ${recId}...`, 'yellow');
       try {
         const { error } = await supabaseClient
           .from('tickets')
@@ -1118,17 +1118,17 @@
         fullDbData.splice(currentRecordIndex, 1);
         applyFilters();
         loadRecordByIndex(Math.max(0, currentRecordIndex - 1));
-        showStatus(`🗑️ Záznam ${recId} byl úspěšně smazán ze Supabase.`, 'green');
+        showStatus(`🗑️ Record ${recId} was successfully deleted from Supabase.`, 'green');
       } catch (err) {
-        showStatus('❌ Chyba při mazání záznamu: ' + err.message, 'red');
+        showStatus('❌ Error deleting record: ' + err.message, 'red');
       }
     }
 
-    // NATIVNÍ GENEROVÁNÍ A STAŽENÍ CSV (BEZ PAPAPARSE)
+    // NATIVE CSV EXPORT GENERATION (WITHOUT PAPAPARSE)
     function downloadCSVExport() {
       saveCurrentFormToMemory();
       if (!fullDbData || fullDbData.length === 0) {
-        showStatus('⚠️ Žádná data ke stažení.', 'yellow');
+        showStatus('⚠️ No data to download.', 'yellow');
         return;
       }
 
@@ -1154,7 +1154,7 @@
       a.download = 'joe_jackson_tickets_supabase_export.csv';
       a.click();
       URL.revokeObjectURL(url);
-      showStatus('💾 Stažen CSV export z aktuálních dat (bez závislostí).', 'green');
+      showStatus('💾 Downloaded CSV export of current records.', 'green');
     }
 
     function showStatus(msg, color) {
