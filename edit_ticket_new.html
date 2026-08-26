@@ -480,6 +480,46 @@
 
     .yt-preview { margin-top: 4px; font-size: 0.8rem; }
     .yt-preview a { color: var(--accent-yellow); text-decoration: none; font-weight: 600; }
+
+    /* Missing Scans Modal Styling */
+    .missing-modal-card {
+      background: #141414;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      width: 95%;
+      max-width: 850px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      overflow: hidden;
+    }
+    .missing-modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #2a2a2a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .missing-modal-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+    .missing-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0d0d0d;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      gap: 12px;
+    }
+    .missing-item-row:hover {
+      border-color: #333;
+    }
   </style>
 </head>
 <body>
@@ -511,6 +551,21 @@
 
       <div style="text-align: center; margin-top: 15px;">
         <a href="index.html" style="color: #f59e0b; text-decoration: none; font-size: 0.8rem; font-weight: 600;">◄ Back to Museum</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MISSING SCANS MODAL -->
+  <div id="missingScansModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); align-items: center; justify-content: center; z-index: 9998;">
+    <div class="missing-modal-card">
+      <div class="missing-modal-header">
+        <h3 style="color: var(--accent-yellow); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+          📂 Records Without Scans (<span id="missingScansModalCount">0</span>)
+        </h3>
+        <button type="button" onclick="closeMissingScansModal()" style="background: none; border: none; color: #9ca3af; font-size: 1.4rem; cursor: pointer; line-height: 1;">✖</button>
+      </div>
+      <div class="missing-modal-body" id="missingScansModalList">
+        <!-- Dynamic content filled by JS -->
       </div>
     </div>
   </div>
@@ -1108,15 +1163,105 @@
       if (countEl) countEl.value = songs.length;
     }
 
-    // CHECK RECORDS WITHOUT SCANS IN DATABASE
+    // CHECK RECORDS WITHOUT SCANS IN DATABASE - WITH POP-UP MODAL
     function checkMissingScansInDatabase() {
-      const resultDiv = document.getElementById('missingScansResult');
-      if (!resultDiv) return;
-
-      const totalCount = fullDbData.length;
       const missingScans = fullDbData.filter(r => !r.SOUBOR_SKEN || !r.SOUBOR_SKEN.trim());
+      const modal = document.getElementById('missingScansModal');
+      const listEl = document.getElementById('missingScansModalList');
+      const countEl = document.getElementById('missingScansModalCount');
 
-      resultDiv.innerHTML = `Total Records: <strong>${totalCount}</strong><br>Without Scan: <strong style="color: var(--accent-yellow);">${missingScans.length}</strong>`;
+      if (!modal || !listEl) return;
+
+      countEl.textContent = missingScans.length;
+      listEl.innerHTML = '';
+
+      if (missingScans.length === 0) {
+        listEl.innerHTML = '<p style="text-align: center; color: #4ade80; padding: 20px;">🎉 All records in the database have assigned scans!</p>';
+      } else {
+        missingScans.forEach(row => {
+          const globalIdx = fullDbData.indexOf(row);
+          const div = document.createElement('div');
+          div.className = 'missing-item-row';
+          
+          const dateStr = row.DATUM || 'YYYY-MM-DD';
+          const cityStr = row.MESTO || row.STAT || 'Unknown City';
+          const venueStr = row.VENUE ? ` (${row.VENUE})` : '';
+          const catStr = row.KATEGORIE || 'Tickets';
+          const recId = row.ID_MEMORABILIA || row.ID_LISTKU || 'No ID';
+
+          div.innerHTML = `
+            <div>
+              <div style="font-weight: 700; color: #fff; font-size: 0.85rem;">
+                [${dateStr}] ${cityStr}${venueStr}
+              </div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                ID: <span style="color: var(--accent-yellow);">${recId}</span> | Category: ${catStr}
+              </div>
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn-token" onclick="jumpToMissingRecord(${globalIdx})" title="Edit this record">
+                ✏️ Edit
+              </button>
+              <button type="button" class="btn-add-new" onclick="createAdditionalRecordForShow(${globalIdx})" title="Add another category/item for this concert date">
+                ➕ New Record for Show
+              </button>
+            </div>
+          `;
+          listEl.appendChild(div);
+        });
+      }
+
+      modal.style.display = 'flex';
+    }
+
+    function closeMissingScansModal() {
+      const modal = document.getElementById('missingScansModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function jumpToMissingRecord(idx) {
+      closeMissingScansModal();
+      loadRecordByIndex(idx);
+    }
+
+    // ADD NEW RECORD FOR AN EXISTING SHOW/DATE
+    async function createAdditionalRecordForShow(idx) {
+      closeMissingScansModal();
+      saveCurrentFormToMemory();
+
+      const sourceRecord = fullDbData[idx] || {};
+      const newId = `TICKET_${String(Date.now()).slice(-6)}`;
+      
+      const newRecord = {
+        ID_MEMORABILIA: newId,
+        SHOW_ID: sourceRecord.SHOW_ID || '',
+        TOUR_ID: sourceRecord.TOUR_ID || '',
+        TOUR_NAME: sourceRecord.TOUR_NAME || '',
+        DATUM: sourceRecord.DATUM || '',
+        MESTO: sourceRecord.MESTO || '',
+        STAT: sourceRecord.STAT || '',
+        VENUE: sourceRecord.VENUE || '',
+        LINEUP: sourceRecord.LINEUP || '',
+        KATEGORIE: 'Tickets'
+      };
+
+      showStatus(`➕ Creating additional record for show ${sourceRecord.DATUM || ''}...`, 'yellow');
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('tickets')
+          .insert([newRecord])
+          .select();
+
+        if (error) throw error;
+
+        fullDbData.push(newRecord);
+        applyFilters();
+        loadRecordByIndex(fullDbData.length - 1);
+        showStatus(`✅ Created new record ID: ${newId} for show on ${sourceRecord.DATUM || 'N/A'}`, 'green');
+      } catch (err) {
+        showStatus('❌ Error creating record: ' + err.message, 'red');
+      }
     }
 
     // SUPABASE SAVE ACTION
