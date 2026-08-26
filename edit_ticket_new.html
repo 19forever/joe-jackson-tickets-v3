@@ -947,7 +947,7 @@
       // 1. Password reset/invitation handler from email link
       if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
-          if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+          if (event === 'PASSWORD_RECOVERY') {
             const newPassword = prompt("Please enter your new admin password:");
             if (newPassword && newPassword.trim() !== '') {
               const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
