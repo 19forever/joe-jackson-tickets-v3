@@ -181,7 +181,7 @@
   <!-- Tour Filter & Admin Integration Script -->
   <script>
     (function() {
-      // 1. Přihlášení do Admin režimu přes prompt
+      // 1. Přihlášení do Admin režimu a přesměrování do editoru
       function handleAdminLogin() {
         if (isAdminModeActive()) {
           const editQuery = typeof getEditUrlParams === 'function' ? getEditUrlParams() : '';
@@ -189,37 +189,25 @@
           return;
         }
 
-        const token = prompt('Zadejte váš GitHub Personal Access Token (PAT) pro přihlášení do Admin módu:');
-        if (token && token.trim().length > 0) {
-          const cleanToken = token.trim();
-          if (typeof StorageService !== 'undefined') {
-            StorageService.setGitHubConfig({ token: cleanToken });
-            StorageService.set('jj_admin_mode', 'true');
-          }
-          try {
-            localStorage.setItem('gh_token', cleanToken);
-            localStorage.setItem('jj_github_pat', cleanToken);
-            localStorage.setItem('jj_admin_mode', 'true');
-          } catch(e) {}
-
-          alert('✅ Admin režim aktivován!');
-          updateAdminSortAndControls();
-          if (typeof filterData === 'function') filterData();
-        } else if (token !== null) {
-          window.location.href = 'edit_ticket_new.html';
+        if (typeof StorageService !== 'undefined') {
+          StorageService.set('jj_admin_mode', 'true');
         }
+        try {
+          localStorage.setItem('jj_admin_mode', 'true');
+        } catch(e) {}
+
+        updateAdminSortAndControls();
+        const editQuery = typeof getEditUrlParams === 'function' ? getEditUrlParams() : '';
+        window.location.href = editQuery ? `edit_ticket_new.html?${editQuery}` : 'edit_ticket_new.html';
       }
       window.handleAdminLogin = handleAdminLogin;
 
       // 2. Globální funkce pro uzamčení admin relace
       function lockAdminSession() {
         if (typeof StorageService !== 'undefined') {
-          StorageService.setGitHubConfig({ token: '' });
           StorageService.remove('jj_admin_mode');
         }
         try {
-          localStorage.removeItem('gh_token');
-          localStorage.removeItem('jj_github_pat');
           localStorage.removeItem('jj_admin_mode');
           sessionStorage.removeItem('jj_admin_mode');
         } catch(e) {}
@@ -238,21 +226,16 @@
       // 3. Helper pro kontrolu aktivního Admin módu
       function isAdminModeActive() {
         let adminFlag = false;
-        let hasPat = false;
         if (typeof StorageService !== 'undefined') {
           adminFlag = StorageService.get('jj_admin_mode') === 'true';
-          const pat = StorageService.get('gh_token') || StorageService.get('jj_github_pat');
-          hasPat = !!(pat && pat.trim().length > 0);
         } else {
           try {
             adminFlag = localStorage.getItem('jj_admin_mode') === 'true' || sessionStorage.getItem('jj_admin_mode') === 'true';
-            const pat = localStorage.getItem('gh_token') || localStorage.getItem('jj_github_pat');
-            hasPat = !!(pat && pat.trim().length > 0);
           } catch(e) {}
         }
         const urlParams = new URLSearchParams(window.location.search);
         const adminParam = urlParams.get('admin') === '1';
-        return adminFlag || hasPat || adminParam;
+        return adminFlag || adminParam;
       }
       window.isAdminModeActive = isAdminModeActive;
 
