@@ -2,7 +2,7 @@
 
 ## Nápady
 - Nástroj v Editoru (Rychlý odkaz na smazání): Přímo do edit_ticket_new.html lze případně přidat malé tlačítko "Otevřít soubor na GitHubu", které vás po kliknutí přesměruje přímo na konkrétní stranu daného obrázku na GitHubu, kde už jen kliknete na ikonu koše a potvrzujete smazání. Nebude potřeba žádný token a ušetříte hledání.
-- 
+- small icon with number of images within item
 
 ## Overview
 An interactive digital museum and archive dedicated to Joe Jackson's live concert tour history (1978–2026), ticket stubs, venue metadata, setlists, and memorabilia.
