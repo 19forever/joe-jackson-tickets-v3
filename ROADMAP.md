@@ -1,5 +1,8 @@
 # 🗺️ Joe Jackson Ticket Museum — Roadmap & Project Plan
 
+## Opravy
+- nefunguje Fetch na Setlist.fm - opravit podle starého edit_ticket_new.html
+
 ## Nápady
 - Nástroj v Editoru (Rychlý odkaz na smazání): Přímo do edit_ticket_new.html lze případně přidat malé tlačítko "Otevřít soubor na GitHubu", které vás po kliknutí přesměruje přímo na konkrétní stranu daného obrázku na GitHubu, kde už jen kliknete na ikonu koše a potvrzujete smazání. Nebude potřeba žádný token a ušetříte hledání.
 - small icon with number of images within item
