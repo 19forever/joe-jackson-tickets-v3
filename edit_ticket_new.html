@@ -1207,13 +1207,22 @@ async function lockAdminSession() {
       document.getElementById('prevBtn').disabled = (posInActive <= 0);
       document.getElementById('nextBtn').disabled = (posInActive >= activeIndices.length - 1);
 
-      fields.forEach(f => {
-        const el = getField(f);
-        if (el) {
-          let val = r[f] !== undefined && r[f] !== null ? String(r[f]).trim() : '';
+fields.forEach(f => {
+      const el = getField(f);
+      if (el) {
+        let val = r[f] !== undefined && r[f] !== null ? String(r[f]).trim() : '';
+        
+        // Speciální ošetření pro <select> KATEGORIE (case-insensitive)
+        if (f === 'KATEGORIE' && el.tagName === 'SELECT') {
+          const matchingOpt = Array.from(el.options).find(opt => 
+            opt.value.toLowerCase() === val.toLowerCase()
+          );
+          el.value = matchingOpt ? matchingOpt.value : (val || 'Tickets');
+        } else {
           el.value = val;
         }
-      });
+      }
+    });
 
       const existingSelect = document.getElementById('existingToursSelect');
       if (existingSelect) {
