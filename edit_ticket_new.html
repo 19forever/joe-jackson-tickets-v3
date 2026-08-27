@@ -758,14 +758,15 @@
           </div>
         </div>
 
+        <input type="hidden" id="edit_SHOW_ID" name="SHOW_ID">
         <div class="grid-2">
           <div class="form-group">
             <label for="edit_DATUM">Concert Date (DATUM - YYYY-MM-DD)</label>
-            <input type="text" id="edit_DATUM" name="DATUM" placeholder="YYYY-MM-DD">
+            <input type="text" id="edit_DATUM" name="DATUM" placeholder="YYYY-MM-DD" oninput="syncShowId()">
           </div>
           <div class="form-group">
             <label for="edit_MESTO">City (MESTO)</label>
-            <input type="text" id="edit_MESTO" name="MESTO" placeholder="e.g. Groningen">
+            <input type="text" id="edit_MESTO" name="MESTO" placeholder="e.g. Groningen" oninput="syncShowId()">
           </div>
         </div>
 
@@ -1239,8 +1240,25 @@ async function lockAdminSession() {
       }
     }
 
+    function generateShowId(datum, mesto) {
+      if (!datum || !datum.trim()) return '';
+      const cleanDatum = datum.trim();
+      const cleanMesto = (mesto || '').trim().toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+      return cleanMesto ? `SHOW_${cleanDatum}_${cleanMesto}` : `SHOW_${cleanDatum}`;
+    }
+
+    function syncShowId() {
+      const datumVal = getField('DATUM')?.value || '';
+      const mestoVal = getField('MESTO')?.value || '';
+      const showIdInput = getField('SHOW_ID');
+      if (showIdInput) {
+        showIdInput.value = generateShowId(datumVal, mestoVal);
+      }
+    }
+
     function saveCurrentFormToMemory() {
       if (currentRecordIndex < 0 || !fullDbData[currentRecordIndex]) return;
+      syncShowId();
       fields.forEach(f => {
         const el = getField(f);
         if (el) {
