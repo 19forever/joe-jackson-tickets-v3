@@ -1033,7 +1033,8 @@ async function lockAdminSession() {
 
         const { data, error } = await supabaseClient
           .from('tickets')
-          .select('*');
+          .select('*')
+          .order('ID_MEMORABILIA', { ascending: true });
 
         if (error) throw error;
 
