@@ -561,17 +561,16 @@
     }
 
     function initMap() {
-      if (leafletMap) return;
-      leafletMap = L.map('worldMap').setView([30.0, 10.0], 2);
+  if (leafletMap) return;
+  leafletMap = L.map('worldMap').setView([30.0, 10.0], 2);
 
-      L.tileLayer('https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 18
-      }).addTo(leafletMap);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19
+  }).addTo(leafletMap);
 
-      mapMarkersGroup = L.layerGroup().addTo(leafletMap);
-    }
+  mapMarkersGroup = L.layerGroup().addTo(leafletMap);
+}
     
     function updateMapTour() {
       if (!leafletMap) return;
