@@ -1,12 +1,37 @@
 # 🗺️ Joe Jackson Ticket Museum — Roadmap & Project Plan
 
-## Opravy
-- nefunguje Fetch na Setlist.fm - opravit podle starého edit_ticket_new.html
+## Corrections 
+- Error: harmonize legal disclaimer in stats.html with index.html (placing into styles?)
+- Error: stats.html required API key for virtual map but working
+- CHECK: log in/out Admin mode is not working properly - test it!
+  - when refactored Admin mode buttons, loading data is longer - check
+- Q: how to handle Contributors/Donors?
+  - get rid of completely?
+  - if keep - show them or not?
+  - maintaining Rolf´s info?
+  - what about ebay/internet source?
+  - what about anonymouses / nicks?
+  - what about NULL or multiple source
+    - because there more images for one show, but just one Donor Line
+    - maybe like images - comma separated with the same order like images
+- Q: added Support Band field or just text into NOTES
+- Q: get rid of Ticket button with it´s number (all buttons showe up when admin mode)
+- Q: is searching by cities (countries) necessary? what other search shortcuts would be useful?
+- NEW FEATURE: check setlist.fm for existing setlist and fill-in URL and songs
+- DONE: not working Fetch from Setlist.fm
+- DONE: new ticket-like logo
+- DONE: paging is holding the last page within search scope
+- DONE: focus into search line after reloading - quick quesry writing works
+- Q: when rafactoring?
+- LAUNCH: don´t forget to make archive@joejackson.band address alive
 
-## Nápady
-- přidat support band?
-- Nástroj v Editoru (Rychlý odkaz na smazání): Přímo do edit_ticket_new.html lze případně přidat malé tlačítko "Otevřít soubor na GitHubu", které vás po kliknutí přesměruje přímo na konkrétní stranu daného obrázku na GitHubu, kde už jen kliknete na ikonu koše a potvrzujete smazání. Nebude potřeba žádný token a ušetříte hledání.
-- small icon with number of images within item
+## New Ideas
+- DELETE SCAN: Nástroj v Editoru (Rychlý odkaz na smazání): Přímo do edit_ticket_new.html lze případně přidat malé tlačítko "Otevřít soubor na GitHubu", které vás po kliknutí přesměruje přímo na konkrétní stranu daného obrázku na GitHubu, kde už jen kliknete na ikonu koše a potvrzujete smazání. Nebude potřeba žádný token a ušetříte hledání.
+- MAIN PAGE: small icon with number of images within item
+- MAIN UX: add switch for dark / light modes
+- Consert of the Day:
+  - if there are more shows on this date, let it scroll right to left like in TV headlines?
+  - get rid of "view anniversary show"?
 
 ## Overview
 An interactive digital museum and archive dedicated to Joe Jackson's live concert tour history (1978–2026), ticket stubs, venue metadata, setlists, and memorabilia.
