@@ -166,19 +166,40 @@ header {
   gap: 15px;
 }
 
+/* Koncertní lístek - Logo */
 .logo {
   background-color: var(--accent-yellow);
   color: #000;
   width: 44px;
-  height: 44px;
-  border-radius: 6px;
+  height: 40px;
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 900;
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   letter-spacing: -1px;
   flex-shrink: 0;
+  position: relative;
+  padding-right: 4px;
+  
+  /* Půlkruhové výřezy (notches) po stranách lístku */
+  mask: radial-gradient(circle at 0 50%, #0000 5px, #000 6px) 0 0 / 100% 100%,
+        radial-gradient(circle at 100% 50%, #0000 5px, #000 6px) 0 0 / 100% 100%;
+  mask-composite: intersect;
+  -webkit-mask: radial-gradient(circle at 0 50%, #0000 5px, #000 6px),
+                radial-gradient(circle at 100% 50%, #0000 5px, #000 6px);
+  -webkit-mask-composite: destination-in;
+}
+
+/* Vertikální perforační čára na lístku */
+.logo::after {
+  content: "";
+  position: absolute;
+  right: 7px;
+  top: 4px;
+  bottom: 4px;
+  border-right: 1.5px dashed rgba(0, 0, 0, 0.35);
 }
 
 .title-area h1 {
@@ -540,10 +561,10 @@ header {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;           /* Dostatečný vnitřní prostor */
-  white-space: nowrap;         /* Zamezí nechtěnému zalomení */
-  max-width: none !important;  /* Zruší případný pevný limit šířky */
-  overflow: visible;           /* Povolí zobrazení celého textu */
+  padding: 3px 8px;
+  white-space: nowrap;
+  max-width: none !important;
+  overflow: visible;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -1326,16 +1347,16 @@ header {
     white-space: nowrap !important;
     -webkit-overflow-scrolling: touch !important;
     gap: 8px !important;
-    padding-bottom: 8px !important; /* Premium negative space for scroll bar track */
-    scrollbar-width: none !important; /* Hide scrollbar Firefox */
+    padding-bottom: 8px !important;
+    scrollbar-width: none !important;
   }
 
   .category-tabs::-webkit-scrollbar {
-    display: none !important; /* Hide scrollbar Chrome/Safari */
+    display: none !important;
   }
 
   .tab-btn {
-    flex-shrink: 0 !important; /* Prevent tabs from shrinking or clipping */
+    flex-shrink: 0 !important;
     white-space: nowrap !important;
   }
 
@@ -1343,7 +1364,7 @@ header {
   .controls {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
-    flex-direction: unset !important; /* Override vertical flex stack from 768px */
+    flex-direction: unset !important;
     gap: 8px !important;
     padding: 8px !important;
   }
@@ -1438,7 +1459,7 @@ header {
     width: 100% !important;
     height: auto !important;
     line-height: 1.4 !important;
-    white-space: normal !important; /* Override white-space: nowrap from desktop */
+    white-space: normal !important;
     overflow: visible !important;
     text-overflow: clip !important;
     font-size: 0.8rem !important;
@@ -1451,7 +1472,7 @@ header {
     grid-template-columns: repeat(7, 1fr) !important;
     max-width: 280px !important;
     width: 100% !important;
-    margin-left: auto !important; /* Push cleanly to the right */
+    margin-left: auto !important;
     gap: 4px !important;
     height: auto !important;
   }
@@ -1715,7 +1736,7 @@ header {
 .tickets-container.list-view .card-content {
   display: flex !important;
   flex-direction: row !important;
-  flex-wrap: wrap !important; /* Důležité pro odskok rozbaleného bloku dolů */
+  flex-wrap: wrap !important;
   align-items: center !important;
   justify-content: space-between !important;
   flex: 1 !important;
@@ -1761,7 +1782,7 @@ header {
   margin-left: auto !important;
   flex-shrink: 0 !important;
   width: auto !important;
-  height: auto !important; /* Dovolí rozbalenému obsahu vyskočit z řádku tlačítek */
+  height: auto !important;
 }
 
 /* Skryté prázdné sloty */
@@ -1816,7 +1837,7 @@ header {
 
 /* Oprava: Rozbalený blok (Lineup i Setlist) skočí dolů a roztáhne se přes celou šířku */
 .tickets-container.list-view .collapsible-content {
-  grid-column: 1 / -1 !important; /* Roztáhne se přes všech 7 sloupců mřížky */
+  grid-column: 1 / -1 !important;
   width: 100% !important;
   flex-basis: 100% !important;
   margin-top: 8px !important;
