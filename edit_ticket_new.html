@@ -737,8 +737,8 @@
             <label for="edit_LINEUP">Lineup / Band</label>
             <div class="input-with-btn">
               <input type="text" id="edit_LINEUP" name="LINEUP" placeholder="e.g. Joe Jackson (vocals, piano)...">
-              <select id="existingLineupsSelect" onchange="selectExistingLineup(this.value)" style="max-width: 200px;">
-              <option value="">-- Select Lineup --</option>
+              <select id="existingLineupsSelect" onchange="selectExistingLineup(this.value)" style="max-width: 180px;">
+                <option value="">-- Select Lineup --</option>
               </select>
             </div>
           </div>
@@ -930,33 +930,30 @@
       }
     }
 
-   // LOCK ADMIN SESSION AND LOG OUT
-async function lockAdminSession() {
-  if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
-    await supabaseClient.auth.signOut();
-  }
-  
-  // Smazání všech uživatelských i Supabase klíčů z localStorage
-  if (typeof StorageService !== 'undefined') {
-    StorageService.remove('jj_admin_mode');
-  }
-  
-  localStorage.removeItem('jj_admin_mode');
-  localStorage.removeItem('sb-access-token');
-  localStorage.removeItem('sb-refresh-token');
+    // LOCK ADMIN SESSION AND LOG OUT
+    async function lockAdminSession() {
+      if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
+        await supabaseClient.auth.signOut();
+      }
+      
+      if (typeof StorageService !== 'undefined') {
+        StorageService.remove('jj_admin_mode');
+      }
+      
+      localStorage.removeItem('jj_admin_mode');
+      localStorage.removeItem('sb-access-token');
+      localStorage.removeItem('sb-refresh-token');
 
-  // Vyčištění kompletního localStorage (pro jistotu smazání všech Supabase auth klíčů)
-  Object.keys(localStorage).forEach(key => {
-    if (key.startsWith('sb-') || key.startsWith('jj_')) {
-      localStorage.removeItem(key);
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('sb-') || key.startsWith('jj_')) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      window.location.href = 'index.html';
     }
-  });
-
-  window.location.href = 'index.html';
-}
     
     window.addEventListener('DOMContentLoaded', async () => {
-      // 1. Password reset/invitation handler from email link
       if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
           if (event === 'PASSWORD_RECOVERY') {
@@ -973,10 +970,8 @@ async function lockAdminSession() {
         });
       }
 
-      // 2. Check Auth status
       const isAuthenticated = await checkAuthSession();
 
-      // 3. Automatic filename population for SOUBOR_SKEN
       const scanInput = document.getElementById('scanFileInput');
       if (scanInput) {
         scanInput.addEventListener('change', function(e) {
@@ -999,7 +994,6 @@ async function lockAdminSession() {
         });
       }
 
-      // 4. Watermark tool setup
       const wmInputEl = document.getElementById('adminWatermarkInput');
       if (wmInputEl) {
         wmInputEl.addEventListener('change', async function(e) {
@@ -1104,6 +1098,69 @@ async function lockAdminSession() {
       });
     }
 
+    function populateLineupDropdown() {
+      const selectEl = document.getElementById('existingLineupsSelect');
+      if (!selectEl) return;
+
+      const currentTour = (getField('TOUR_NAME')?.value || '').trim().toLowerCase();
+      selectEl.innerHTML = '<option value="">-- Select Lineup --</option>';
+
+      const tourSpecificLineups = new Set();
+      const allOtherLineups = new Set();
+
+      if (Array.isArray(fullDbData)) {
+        fullDbData.forEach(r => {
+          const lineup = (r.LINEUP || '').trim();
+          const tour = (r.TOUR_NAME || '').trim().toLowerCase();
+
+          if (lineup) {
+            if (currentTour && tour === currentTour) {
+              tourSpecificLineups.add(lineup);
+            } else {
+              allOtherLineups.add(lineup);
+            }
+          }
+        });
+      }
+
+      if (tourSpecificLineups.size > 0) {
+        const groupTour = document.createElement('optgroup');
+        groupTour.label = '⭐ Lineups from current Tour';
+        Array.from(tourSpecificLineups).sort().forEach(lineup => {
+          const opt = document.createElement('option');
+          opt.value = lineup;
+          opt.textContent = lineup.length > 55 ? lineup.substring(0, 52) + '...' : lineup;
+          opt.title = lineup;
+          groupTour.appendChild(opt);
+        });
+        selectEl.appendChild(groupTour);
+      }
+
+      if (allOtherLineups.size > 0) {
+        const groupAll = document.createElement('optgroup');
+        groupAll.label = '🌐 All Other Lineups';
+        Array.from(allOtherLineups).sort().forEach(lineup => {
+          if (!tourSpecificLineups.has(lineup)) {
+            const opt = document.createElement('option');
+            opt.value = lineup;
+            opt.textContent = lineup.length > 55 ? lineup.substring(0, 52) + '...' : lineup;
+            opt.title = lineup;
+            groupAll.appendChild(opt);
+          }
+        });
+        selectEl.appendChild(groupAll);
+      }
+    }
+
+    function selectExistingLineup(selectedLineup) {
+      if (!selectedLineup) return;
+      const lineupInput = getField('LINEUP');
+      if (lineupInput) {
+        lineupInput.value = selectedLineup;
+        lineupInput.focus();
+      }
+    }
+
     function generateTourId(tourName) {
       if (!tourName) return '';
       const slug = tourName
@@ -1119,6 +1176,7 @@ async function lockAdminSession() {
       if (tourNameInput && tourIdInput) {
         tourIdInput.value = generateTourId(tourNameInput.value);
       }
+      populateLineupDropdown();
     }
 
     function selectExistingTour(selectedTourName) {
@@ -1136,6 +1194,8 @@ async function lockAdminSession() {
       } else {
         syncTourId();
       }
+
+      populateLineupDropdown();
     }
 
     function promptAddNewTour() {
@@ -1150,6 +1210,7 @@ async function lockAdminSession() {
         if (tourIdInput) tourIdInput.value = generatedId;
 
         populateTourDropdown();
+        populateLineupDropdown();
         showStatus(`➕ New Tour "${cleanName}" assigned with ID: ${generatedId}`, 'green');
       }
     }
@@ -1212,22 +1273,21 @@ async function lockAdminSession() {
       document.getElementById('prevBtn').disabled = (posInActive <= 0);
       document.getElementById('nextBtn').disabled = (posInActive >= activeIndices.length - 1);
 
-fields.forEach(f => {
-      const el = getField(f);
-      if (el) {
-        let val = r[f] !== undefined && r[f] !== null ? String(r[f]).trim() : '';
-        
-        // Speciální ošetření pro <select> KATEGORIE (case-insensitive)
-        if (f === 'KATEGORIE' && el.tagName === 'SELECT') {
-          const matchingOpt = Array.from(el.options).find(opt => 
-            opt.value.toLowerCase() === val.toLowerCase()
-          );
-          el.value = matchingOpt ? matchingOpt.value : (val || 'Tickets');
-        } else {
-          el.value = val;
+      fields.forEach(f => {
+        const el = getField(f);
+        if (el) {
+          let val = r[f] !== undefined && r[f] !== null ? String(r[f]).trim() : '';
+          
+          if (f === 'KATEGORIE' && el.tagName === 'SELECT') {
+            const matchingOpt = Array.from(el.options).find(opt => 
+              opt.value.toLowerCase() === val.toLowerCase()
+            );
+            el.value = matchingOpt ? matchingOpt.value : (val || 'Tickets');
+          } else {
+            el.value = val;
+          }
         }
-      }
-    });
+      });
 
       const existingSelect = document.getElementById('existingToursSelect');
       if (existingSelect) {
@@ -1236,6 +1296,7 @@ fields.forEach(f => {
 
       updateImageFromInput();
       updateYtPreview();
+      populateLineupDropdown();
     }
 
     function navigateRecord(delta) {
@@ -1712,15 +1773,12 @@ fields.forEach(f => {
       }
     }
 
-    // SUPABASE SAVE ACTION (OPRAVENO)
+    // SUPABASE SAVE ACTION
     async function saveCurrentRecordToSupabase() {
-      // 1. Vynucení zápisu aktuálních hodnot z HTML formuláře do paměťového objektu
       saveCurrentFormToMemory();
-
       const record = fullDbData[currentRecordIndex];
       if (!record) return;
 
-      // 2. Explicitní přečtení a pojistka pro KATEGORIE přímo z HTML prvku
       const katEl = getField('KATEGORIE');
       if (katEl) {
         record.KATEGORIE = katEl.value.trim();
@@ -1736,7 +1794,6 @@ fields.forEach(f => {
 
         if (error) throw error;
 
-        // Aktualizujeme záznam v paměti vrácenými daty ze Supabase
         if (data && data.length > 0) {
           fullDbData[currentRecordIndex] = data[0];
         }
