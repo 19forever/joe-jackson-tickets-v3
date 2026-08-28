@@ -1325,6 +1325,79 @@ fields.forEach(f => {
       if (countEl) countEl.value = songs.length;
     }
 
+    // === SETLIST.FM INTEGRATION (Cloudflare Worker Proxy) ===
+    function extractSetlistId(urlOrId) {
+      if (!urlOrId) return '';
+      const trimmed = urlOrId.trim();
+      const match = trimmed.match(/([a-fA-F0-9]+)(?:\.html)?(?:[?#].*)?$/i);
+      if (match && match[1]) {
+        return match[1];
+      }
+      return trimmed;
+    }
+
+    async function fetchSetlistSongs() {
+      const urlInput = getField('SETLIST_URL');
+      const url = urlInput ? urlInput.value.trim() : '';
+      if (!url) {
+        showStatus('⚠️ Please enter a valid Setlist.fm URL or Setlist ID first.', 'yellow');
+        return;
+      }
+
+      const setlistId = extractSetlistId(url);
+      if (!setlistId) {
+        showStatus('❌ Could not extract a valid Setlist ID from the provided URL.', 'red');
+        return;
+      }
+
+      showStatus('⚡ Fetching songs via Cloudflare Worker...', 'yellow');
+
+      try {
+        const workerUrl = `https://jj-setlist-proxy.marek-kraus.workers.dev/setlist/${setlistId}`;
+        const res = await fetch(workerUrl, { headers: { 'Accept': 'application/json' } });
+        
+        if (!res.ok) {
+          throw new Error(`Worker HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        const songs = [];
+
+        if (data.sets && data.sets.set) {
+          const sets = Array.isArray(data.sets.set) ? data.sets.set : [data.sets.set];
+          sets.forEach(s => {
+            if (!s) return;
+            const songList = Array.isArray(s.song) ? s.song : (s.song ? [s.song] : []);
+            songList.forEach(songItem => {
+              if (songItem && songItem.name && typeof songItem.name === 'string') {
+                if (!songItem.tape) {
+                  songs.push(songItem.name.trim());
+                }
+              }
+            });
+          });
+        }
+
+        if (songs.length > 0) {
+          const setlistEl = getField('SETLIST');
+          if (setlistEl) setlistEl.value = songs.join(', ');
+          
+          const countEl = getField('POCET_SKLADEB');
+          if (countEl) countEl.value = songs.length;
+          
+          recalculateSongCount();
+          showStatus(`✅ Successfully fetched ${songs.length} songs via Setlist.fm API!`, 'green');
+        } else {
+          showStatus('⚠️ No songs found in this setlist on Setlist.fm.', 'yellow');
+        }
+
+      } catch (err) {
+        console.error('Fetch Setlist Error:', err);
+        showStatus('❌ Failed to fetch setlist: ' + err.message, 'red');
+      }
+    }
+    window.fetchSetlistSongs = fetchSetlistSongs;
+    
     /* INBOX SCANS VIA GITHUB API + SUPABASE CROSS-CHECK */
     function showInboxHoverPopover(e, imgSrc, filename) {
       let popover = document.getElementById('inboxScanHoverPopover');
