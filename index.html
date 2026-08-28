@@ -85,9 +85,9 @@
         <a href="edit_ticket_new.html" id="adminEditorLink" class="btn-contribute" style="display: none;" title="Open Ticket Editor">
           ✏️ Editor
         </a>
-       <button type="button" id="adminLoginLink" class="btn-contribute" style="background: transparent; border: 1px solid var(--border-color-light, #333); cursor: pointer; font-family: inherit;" onclick="handleAdminLogin()" title="Admin Login Gate">
-  🔒 Admin
-</button>
+        <button type="button" id="adminLoginLink" class="btn-contribute" style="background: transparent; border: 1px solid var(--border-color-light, #333); cursor: pointer; font-family: inherit;" onclick="handleAdminLogin()" title="Admin Login Gate">
+          🔒 Admin
+        </button>
         <a href="ticket_form.html" class="btn-contribute" title="Share your concert ticket, pass, or poster with us">
           ➕ Contribute your item
         </a>
@@ -191,7 +191,7 @@
       }
       window.isAdminModeActive = isAdminModeActive;
 
-      // PŘEPIS FILTERDATA HNED PO NAČTENÍ SKRIPTU
+      // PŘEPIS FILTERDATA
       const originalFilterData = window.filterData;
       window.filterData = function(keepSavedPage) {
         if (typeof originalFilterData === 'function') {
@@ -212,51 +212,39 @@
         }
       };
 
+      // PRESMĚROVÁNÍ PŘI KLIKNUTÍ NA TLAČÍTKO ADMIN
       function handleAdminLogin() {
-  const editQuery = typeof getEditUrlParams === 'function' ? getEditUrlParams() : '';
-  window.location.href = editQuery ? `edit_ticket_new.html?${editQuery}` : 'edit_ticket_new.html';
-}
-window.handleAdminLogin = handleAdminLogin;
-      
-      async function lockAdminSession() {
-  // 1. Odhlášení ze Supabase Auth
-  if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
-    try {
-      await supabaseClient.auth.signOut();
-    } catch(e) {}
-  }
-
-  // 2. Vyčištění paměti prohlížeče
-  try {
-    if (typeof StorageService !== 'undefined') {
-      StorageService.setGitHubConfig({ token: '' });
-      StorageService.remove('jj_admin_mode');
-    }
-    localStorage.removeItem('jj_admin_mode');
-    localStorage.removeItem('jj_github_pat');
-    localStorage.removeItem('gh_token');
-    sessionStorage.removeItem('jj_admin_mode');
-
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith('sb-') || key.startsWith('jj_admin')) {
-        localStorage.removeItem(key);
+        const editQuery = typeof getEditUrlParams === 'function' ? getEditUrlParams() : '';
+        window.location.href = editQuery ? `edit_ticket_new.html?${editQuery}` : 'edit_ticket_new.html';
       }
-    });
-  } catch(e) {}
+      window.handleAdminLogin = handleAdminLogin;
 
-  // 3. Přesměrování na čisté index.html bez admin parametrů
-  window.location.href = 'index.html';
-}
-window.lockAdminSession = lockAdminSession;
-      
-        const url = new URL(window.location.href);
-        if (url.searchParams.has('admin')) {
-          url.searchParams.delete('admin');
-          window.history.replaceState(null, '', url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : ''));
+      // ODHLÁŠENÍ S ODSTRANĚNÍM PAMĚTI A OBNOVENÍM
+      async function lockAdminSession() {
+        if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
+          try {
+            await supabaseClient.auth.signOut();
+          } catch(e) {}
         }
 
-        updateAdminSortAndControls();
-        if (typeof window.filterData === 'function') window.filterData(true);
+        try {
+          if (typeof StorageService !== 'undefined') {
+            StorageService.setGitHubConfig({ token: '' });
+            StorageService.remove('jj_admin_mode');
+          }
+          localStorage.removeItem('jj_admin_mode');
+          localStorage.removeItem('jj_github_pat');
+          localStorage.removeItem('gh_token');
+          sessionStorage.removeItem('jj_admin_mode');
+
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('sb-') || key.startsWith('jj_admin')) {
+              localStorage.removeItem(key);
+            }
+          });
+        } catch(e) {}
+
+        window.location.href = 'index.html';
       }
       window.lockAdminSession = lockAdminSession;
 
