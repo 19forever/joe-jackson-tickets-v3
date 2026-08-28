@@ -1105,53 +1105,72 @@
       const currentTour = (getField('TOUR_NAME')?.value || '').trim().toLowerCase();
       selectEl.innerHTML = '<option value="">-- Select Lineup --</option>';
 
-      const tourSpecificLineups = new Set();
-      const allOtherLineups = new Set();
+      // Slovníky pro uložení unikátních sestav a k nim přiřazených roků/turné
+      const tourSpecificLineupsWithTours = new Map();
+      const allOtherLineupsWithTours = new Map();
 
       if (Array.isArray(fullDbData)) {
         fullDbData.forEach(r => {
           const lineup = (r.LINEUP || '').trim();
-          const tour = (r.TOUR_NAME || '').trim().toLowerCase();
+          const tour = (r.TOUR_NAME || '').trim();
+          const year = (r.DATUM || '').trim().substring(0, 4);
+          
+          if (!lineup) return;
 
-          if (lineup) {
-            if (currentTour && tour === currentTour) {
-              tourSpecificLineups.add(lineup);
-            } else {
-              allOtherLineups.add(lineup);
-            }
+          // Vytvořit štítek např. "2019 Four Decade Tour" nebo "Night and Day Tour"
+          let tourLabel = '';
+          if (year && tour) {
+            tourLabel = tour.includes(year) ? tour : `${year} ${tour}`;
+          } else {
+            tourLabel = tour || year || '';
+          }
+
+          const lowerTour = tour.toLowerCase();
+          if (currentTour && lowerTour === currentTour) {
+            if (!tourSpecificLineupsWithTours.has(lineup)) tourSpecificLineupsWithTours.set(lineup, new Set());
+            if (tourLabel) tourSpecificLineupsWithTours.get(lineup).add(tourLabel);
+          } else {
+            if (!allOtherLineupsWithTours.has(lineup)) allOtherLineupsWithTours.set(lineup, new Set());
+            if (tourLabel) allOtherLineupsWithTours.get(lineup).add(tourLabel);
           }
         });
       }
 
-      if (tourSpecificLineups.size > 0) {
+      // 1. Sestavy z aktuálního turné
+      if (tourSpecificLineupsWithTours.size > 0) {
         const groupTour = document.createElement('optgroup');
         groupTour.label = '⭐ Lineups from current Tour';
-        Array.from(tourSpecificLineups).sort().forEach(lineup => {
+        Array.from(tourSpecificLineupsWithTours.keys()).sort().forEach(lineup => {
           const opt = document.createElement('option');
           opt.value = lineup;
-          opt.textContent = lineup.length > 55 ? lineup.substring(0, 52) + '...' : lineup;
+          opt.textContent = lineup.length > 60 ? lineup.substring(0, 57) + '...' : lineup;
           opt.title = lineup;
           groupTour.appendChild(opt);
         });
         selectEl.appendChild(groupTour);
       }
 
-      if (allOtherLineups.size > 0) {
+      // 2. Ostatní sestavy z historie (doplněné o název turné / rok)
+      if (allOtherLineupsWithTours.size > 0) {
         const groupAll = document.createElement('optgroup');
-        groupAll.label = '🌐 All Other Lineups';
-        Array.from(allOtherLineups).sort().forEach(lineup => {
-          if (!tourSpecificLineups.has(lineup)) {
+        groupAll.label = '🌐 All Other Lineups (by Tour / Year)';
+        Array.from(allOtherLineupsWithTours.keys()).sort().forEach(lineup => {
+          if (!tourSpecificLineupsWithTours.has(lineup)) {
+            const toursSet = allOtherLineupsWithTours.get(lineup);
+            const tourPrefix = toursSet.size > 0 ? `[${Array.from(toursSet).join(', ')}] ` : '';
+            
+            const displayText = `${tourPrefix}${lineup}`;
             const opt = document.createElement('option');
-            opt.value = lineup;
-            opt.textContent = lineup.length > 55 ? lineup.substring(0, 52) + '...' : lineup;
-            opt.title = lineup;
+            opt.value = lineup; // Vkládá do formuláře čistý kód sestavy
+            opt.textContent = displayText.length > 70 ? displayText.substring(0, 67) + '...' : displayText;
+            opt.title = displayText;
             groupAll.appendChild(opt);
           }
         });
         selectEl.appendChild(groupAll);
       }
     }
-
+    
     function selectExistingLineup(selectedLineup) {
       if (!selectedLineup) return;
       const lineupInput = getField('LINEUP');
