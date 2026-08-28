@@ -470,6 +470,20 @@
 
     .btn-fetch-setlist:hover { background-color: #0369a1; }
 
+    .btn-search-setlist {
+      background-color: #16a34a;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 0.2s;
+    }
+    .btn-search-setlist:hover { background-color: #15803d; }
+
     .action-bar {
       display: flex;
       gap: 12px;
@@ -844,7 +858,8 @@
             <label for="edit_SETLIST_URL">Setlist.fm URL</label>
             <div class="input-with-btn">
               <input type="text" id="edit_SETLIST_URL" name="SETLIST_URL" placeholder="https://www.setlist.fm/setlist/joe-jackson/...">
-              <button class="btn-fetch-setlist" type="button" onclick="fetchSetlistSongs()">⚡ Fetch Songs</button>
+              <button class="btn-search-setlist" type="button" onclick="autoSearchSetlistByDate()" title="Automatically find setlist on Setlist.fm by date">🔍 Auto-Find Setlist</button>
+              <button class="btn-fetch-setlist" type="button" onclick="fetchSetlistSongs()" title="Fetch songs from current URL">⚡ Fetch Songs</button>
             </div>
           </div>
           <div class="form-group">
@@ -1487,6 +1502,7 @@
       return trimmed;
     }
 
+    // 1. STÁHNUTÍ PÍSNÍ Z ZADANÉ URL
     async function fetchSetlistSongs() {
       const urlInput = getField('SETLIST_URL');
       const url = urlInput ? urlInput.value.trim() : '';
@@ -1548,6 +1564,89 @@
       }
     }
     window.fetchSetlistSongs = fetchSetlistSongs;
+
+    // 2. INTELIGENTNÍ AUTO-FIND SETLIST PODLE DATA S POTVRZENÍM
+    async function autoSearchSetlistByDate() {
+      const datumVal = (getField('DATUM')?.value || '').trim();
+      if (!datumVal || !/^\d{4}-\d{2}-\d{2}$/.test(datumVal)) {
+        showStatus('⚠️ Please enter a valid Concert Date (YYYY-MM-DD) before searching Setlist.fm.', 'yellow');
+        return;
+      }
+
+      const localCity = (getField('MESTO')?.value || '').trim();
+      const localCountry = (getField('STAT')?.value || '').trim();
+      const localVenue = (getField('VENUE')?.value || '').trim();
+
+      showStatus(`🔍 Searching Setlist.fm for concert on ${datumVal}...`, 'yellow');
+
+      try {
+        const workerUrl = `https://jj-setlist-proxy.marek-kraus.workers.dev/search?date=${datumVal}`;
+        const res = await fetch(workerUrl, { headers: { 'Accept': 'application/json' } });
+
+        if (res.status === 404) {
+          showStatus(`⚠️ Nenašel jsem žádný setlist pro datum ${datumVal} na Setlist.fm.`, 'yellow');
+          alert(`⚠️ No setlist found on Setlist.fm for date ${datumVal}.`);
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error(`Worker HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        if (!data.found) {
+          showStatus(`⚠️ Nenašel jsem žádný setlist pro datum ${datumVal}.`, 'yellow');
+          alert(`⚠️ No setlist found on Setlist.fm for date ${datumVal}.`);
+          return;
+        }
+
+        // Porovnání dat s našimi poli v databázi
+        const matchCity = localCity.toLowerCase() === (data.cityName || '').toLowerCase();
+        const matchCountry = localCountry.toLowerCase() === (data.countryName || '').toLowerCase();
+        const matchVenue = localVenue.toLowerCase() === (data.venueName || '').toLowerCase();
+
+        let warningMsg = "";
+        let isPerfectMatch = matchCity && matchCountry && matchVenue;
+
+        if (!isPerfectMatch) {
+          warningMsg += "\n\n⚠️ UPOZORNĚNÍ: Nalezená data se liší od vašeho formuláře!\n";
+          if (!matchCity) warningMsg += `• Město: Formulář "${localCity || 'prázdné'}" vs. Setlist.fm "${data.cityName}"\n`;
+          if (!matchCountry) warningMsg += `• Stát: Formulář "${localCountry || 'prázdné'}" vs. Setlist.fm "${data.countryName}"\n`;
+          if (!matchVenue) warningMsg += `• Venue: Formulář "${localVenue || 'prázdné'}" vs. Setlist.fm "${data.venueName}"\n`;
+        } else {
+          warningMsg += "\n\n✅ Všechny údaje (Město, Stát, Venue) se přesně shodují z vaším záznamem!";
+        }
+
+        const confirmMsg = `🎵 Našel jsem setlist na Setlist.fm!\n` +
+          `-----------------------------------------\n` +
+          `• Datum: ${data.eventDate}\n` +
+          `• Místo: ${data.venueName}, ${data.cityName}, ${data.countryName}\n` +
+          `• Počet skladeb: ${data.songCount}\n` +
+          `• ID Setlistu: ${data.id}\n` +
+          warningMsg + `\n-----------------------------------------\n` +
+          `Chcete tento setlist a URL zapsat do formuláře?`;
+
+        if (confirm(confirmMsg)) {
+          const urlField = getField('SETLIST_URL');
+          const setlistField = getField('SETLIST');
+          const songCountField = getField('POCET_SKLADEB');
+
+          if (urlField) urlField.value = data.url;
+          if (setlistField) setlistField.value = data.songs.join(', ');
+          if (songCountField) songCountField.value = data.songCount;
+
+          recalculateSongCount();
+          showStatus(`✅ Successfully imported ${data.songCount} songs from Setlist.fm!`, 'green');
+        } else {
+          showStatus('ℹ️ Import setlistu byl zrušen.', 'yellow');
+        }
+
+      } catch (err) {
+        console.error('Auto-Search Setlist Error:', err);
+        showStatus('❌ Failed to search Setlist.fm: ' + err.message, 'red');
+      }
+    }
+    window.autoSearchSetlistByDate = autoSearchSetlistByDate;
     
     /* INBOX SCANS VIA GITHUB API + SUPABASE CROSS-CHECK */
     function showInboxHoverPopover(e, imgSrc, filename) {
