@@ -119,17 +119,16 @@
       </select>
 
       <select id="cityFilter"><option value="">All Cities</option></select>
-      <select id="sortFilter" title="Sort and filter tickets">
-        <option value="random">🎲 Random / Shuffled</option>
-        <option value="oldest">Date (Oldest First)</option>
-        <option value="newest">Date (Newest First)</option>
-        <option value="missing_first" class="admin-only-option">📷 Missing Scans First</option>
-        <option value="missing_only" class="admin-only-option">🔍 Missing Scans Only</option>
-        <option value="missing_setlists_only">📝 Missing Setlists Only</option>
-        <option value="scans_only" class="admin-only-option">🖼️ With Scans Only</option>
-        <option value="missing_setlists" class="admin-only-option">📝 Missing Setlists First</option>
-        <option value="incomplete_metadata" class="admin-only-option">⚠️ Incomplete Metadata First</option>
-      </select>
+      <select id="sortFilter" class="select-sort" onchange="handleSortFilterChange()">
+  <option value="random">🎲 Random / Shuffled</option>
+  <option value="oldest" selected>Date (Oldest First)</option>
+  <option value="newest">Date (Newest First)</option>
+  
+  <!-- Admin / Specific Filters -->
+  <option value="missing_scans">📷 Missing Scans Only</option>
+  <option value="missing_setlists">📝 Missing Setlists Only</option>
+  <!--<option value="missing_setlist_urls">🔗 Missing Setlist URLs</option> -->
+</select>
 
       <div class="action-buttons-group">
         <button class="surprise-btn" id="reshuffleBtn" title="Reshuffle current results">🎲</button>
