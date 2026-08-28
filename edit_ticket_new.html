@@ -1105,83 +1105,77 @@
       const currentTour = (getField('TOUR_NAME')?.value || '').trim().toLowerCase();
       selectEl.innerHTML = '<option value="">-- Select Lineup --</option>';
 
-      // Slovníky pro uložení unikátních sestav a k nim přiřazených roků/turné
-      const tourSpecificLineupsWithTours = new Map();
-      const allOtherLineupsWithTours = new Map();
+      // Mapy pro uložení unikátních sestav a k nim přiřazených roků (Set<number>)
+      const tourSpecificLineupsWithYears = new Map();
+      const allOtherLineupsWithYears = new Map();
 
       if (Array.isArray(fullDbData)) {
         fullDbData.forEach(r => {
           const lineup = (r.LINEUP || '').trim();
           const tour = (r.TOUR_NAME || '').trim();
-          const year = (r.DATUM || '').trim().substring(0, 4);
+          const dateStr = (r.DATUM || '').trim();
           
           if (!lineup) return;
 
-          // Vytvořit štítek např. "2019 Four Decade Tour" nebo "Night and Day Tour"
-          let tourLabel = '';
-          if (year && tour) {
-            tourLabel = tour.includes(year) ? tour : `${year} ${tour}`;
-          } else {
-            tourLabel = tour || year || '';
-          }
+          // Extrakce všech 4místných ročníků z pole DATUM i TOUR_NAME (např. 2019, 1982)
+          const combinedText = `${dateStr} ${tour}`;
+          const foundYears = combinedText.match(/\b(19\d\d|20\d\d)\b/g) || [];
+          const years = foundYears.map(y => parseInt(y, 10));
 
           const lowerTour = tour.toLowerCase();
           if (currentTour && lowerTour === currentTour) {
-            if (!tourSpecificLineupsWithTours.has(lineup)) tourSpecificLineupsWithTours.set(lineup, new Set());
-            if (tourLabel) tourSpecificLineupsWithTours.get(lineup).add(tourLabel);
+            if (!tourSpecificLineupsWithYears.has(lineup)) tourSpecificLineupsWithYears.set(lineup, new Set());
+            years.forEach(y => tourSpecificLineupsWithYears.get(lineup).add(y));
           } else {
-            if (!allOtherLineupsWithTours.has(lineup)) allOtherLineupsWithTours.set(lineup, new Set());
-            if (tourLabel) allOtherLineupsWithTours.get(lineup).add(tourLabel);
+            if (!allOtherLineupsWithYears.has(lineup)) allOtherLineupsWithYears.set(lineup, new Set());
+            years.forEach(y => allOtherLineupsWithYears.get(lineup).add(y));
           }
         });
       }
 
       // 1. Sestavy z aktuálního turné
-      if (tourSpecificLineupsWithTours.size > 0) {
+      if (tourSpecificLineupsWithYears.size > 0) {
         const groupTour = document.createElement('optgroup');
         groupTour.label = '⭐ Lineups from current Tour';
-        Array.from(tourSpecificLineupsWithTours.keys()).sort().forEach(lineup => {
+        Array.from(tourSpecificLineupsWithYears.keys()).sort().forEach(lineup => {
           const opt = document.createElement('option');
           opt.value = lineup;
-          opt.textContent = lineup.length > 60 ? lineup.substring(0, 57) + '...' : lineup;
+          opt.textContent = `Current Tour: ${lineup.length > 50 ? lineup.substring(0, 47) + '...' : lineup}`;
           opt.title = lineup;
           groupTour.appendChild(opt);
         });
         selectEl.appendChild(groupTour);
       }
 
-      // 2. Ostatní sestavy seřazené podle roku (od nejnovějších po nejstarší)
-      if (allOtherLineupsWithTours.size > 0) {
+      // 2. Ostatní sestavy z historie (ZOBRAZÍ POUZE ROKY: e.g. "2019 | 2018 | 2015")
+      if (allOtherLineupsWithYears.size > 0) {
         const groupAll = document.createElement('optgroup');
-        groupAll.label = '🌐 All Other Lineups (by Year)';
+        groupAll.label = '🌐 Historical Lineups (Select by Years)';
 
-        // Převod na pole s dopočítaným nejvyšším rokem pro řazení
-        const otherItems = Array.from(allOtherLineupsWithTours.keys())
-          .filter(lineup => !tourSpecificLineupsWithTours.has(lineup))
+        const otherItems = Array.from(allOtherLineupsWithYears.keys())
+          .filter(lineup => !tourSpecificLineupsWithYears.has(lineup))
           .map(lineup => {
-            const toursSet = allOtherLineupsWithTours.get(lineup);
-            const tourPrefix = toursSet.size > 0 ? `[${Array.from(toursSet).join(', ')}] ` : '';
+            const yearsSet = allOtherLineupsWithYears.get(lineup);
+            const sortedYears = Array.from(yearsSet).sort((a, b) => b - a); // od nejnovějšího po nejstarší
             
-            // Extrakce 4místného roku pro porovnání (např. 2019)
-            const matchYear = tourPrefix.match(/\b(19\d\d|20\d\d)\b/);
-            const maxYear = matchYear ? parseInt(matchYear[1], 10) : 0;
+            const maxYear = sortedYears.length > 0 ? sortedYears[0] : 0;
+            const yearsString = sortedYears.length > 0 ? sortedYears.join(' | ') : 'Unknown Years';
 
             return {
               lineup,
-              tourPrefix,
               maxYear,
-              displayText: `${tourPrefix}${lineup}`
+              displayText: yearsString
             };
           });
 
-        // Seřazení podle roku sestupně (od nejnovějšího roku po nejstarší)
+        // Seřazení chronologicky od nejnovějších roků
         otherItems.sort((a, b) => b.maxYear - a.maxYear || a.displayText.localeCompare(b.displayText));
 
         otherItems.forEach(item => {
           const opt = document.createElement('option');
-          opt.value = item.lineup; // Vkládá do formuláře čistý kód sestavy
-          opt.textContent = item.displayText.length > 70 ? item.displayText.substring(0, 67) + '...' : item.displayText;
-          opt.title = item.displayText;
+          opt.value = item.lineup; // Po kliknutí se do formuláře vloží jména muzikantů
+          opt.textContent = item.displayText;
+          opt.title = `Years: ${item.displayText}\n\nLineup: ${item.lineup}`;
           groupAll.appendChild(opt);
         });
 
