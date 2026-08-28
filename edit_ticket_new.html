@@ -1707,11 +1707,19 @@ fields.forEach(f => {
       }
     }
 
-    // SUPABASE SAVE ACTION
+    // SUPABASE SAVE ACTION (OPRAVENO)
     async function saveCurrentRecordToSupabase() {
+      // 1. Vynucení zápisu aktuálních hodnot z HTML formuláře do paměťového objektu
       saveCurrentFormToMemory();
+
       const record = fullDbData[currentRecordIndex];
       if (!record) return;
+
+      // 2. Explicitní přečtení a pojistka pro KATEGORIE přímo z HTML prvku
+      const katEl = getField('KATEGORIE');
+      if (katEl) {
+        record.KATEGORIE = katEl.value.trim();
+      }
 
       showStatus('🚀 Saving to Supabase database...', 'yellow');
 
@@ -1722,6 +1730,11 @@ fields.forEach(f => {
           .select();
 
         if (error) throw error;
+
+        // Aktualizujeme záznam v paměti vrácenými daty ze Supabase
+        if (data && data.length > 0) {
+          fullDbData[currentRecordIndex] = data[0];
+        }
 
         populateTourDropdown();
         showStatus('✅ Record successfully saved to Supabase!', 'green');
