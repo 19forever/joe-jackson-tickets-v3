@@ -219,27 +219,36 @@
       window.handleAdminLogin = handleAdminLogin;
 
       async function lockAdminSession() {
-        if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
-          try {
-            await supabaseClient.auth.signOut();
-          } catch(e) {}
-        }
+  // 1. Odhlášení ze Supabase Auth
+  if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
+    try {
+      await supabaseClient.auth.signOut();
+    } catch(e) {}
+  }
 
-        try {
-          Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('sb-') || key.startsWith('jj_')) {
-              localStorage.removeItem(key);
-            }
-          });
-          Object.keys(sessionStorage).forEach(key => {
-            if (key.startsWith('sb-') || key.startsWith('jj_')) {
-              sessionStorage.removeItem(key);
-            }
-          });
-          localStorage.removeItem('jj_admin_mode');
-          sessionStorage.removeItem('jj_admin_mode');
-        } catch(e) {}
+  // 2. Vyčištění paměti prohlížeče
+  try {
+    if (typeof StorageService !== 'undefined') {
+      StorageService.setGitHubConfig({ token: '' });
+      StorageService.remove('jj_admin_mode');
+    }
+    localStorage.removeItem('jj_admin_mode');
+    localStorage.removeItem('jj_github_pat');
+    localStorage.removeItem('gh_token');
+    sessionStorage.removeItem('jj_admin_mode');
 
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('sb-') || key.startsWith('jj_admin')) {
+        localStorage.removeItem(key);
+      }
+    });
+  } catch(e) {}
+
+  // 3. Přesměrování na čisté index.html bez admin parametrů
+  window.location.href = 'index.html';
+}
+window.lockAdminSession = lockAdminSession;
+      
         const url = new URL(window.location.href);
         if (url.searchParams.has('admin')) {
           url.searchParams.delete('admin');
