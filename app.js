@@ -1,7 +1,11 @@
 let allTickets = [];
 let filteredTickets = [];
 let currentLayout = 'grid';
-let currentPage = 1;
+
+// Načtení uložené stránky z paměti (defaultně 1)
+const savedPage = safeGetStorage('jj_museum_page');
+let currentPage = savedPage ? parseInt(savedPage, 10) : 1;
+
 let pageSize = 50;
 let currentCategory = 'Tickets';
 
@@ -341,7 +345,7 @@ window.addEventListener('DOMContentLoaded', () => {
       updateYearBadge();
       populateFilters();
       initializeStateFromUrlAndStorage();
-      filterData();
+      filterData(true); // Ponechat uložení stránky při prvním načtení
       checkOnThisDayAnniversary();
     } catch (err) {
       console.error("Chyba při načítání ze Supabase:", err.message);
@@ -363,14 +367,14 @@ function setupEventListeners() {
   document.getElementById('searchClearBtn')?.addEventListener('click', clearSearchInput);
   (document.getElementById('reshuffleBtn') || document.getElementById('btnReshuffle'))?.addEventListener('click', reshuffleAndRender);
   (document.getElementById('surpriseBtn') || document.getElementById('btnSurprise'))?.addEventListener('click', openSurpriseTicket);
-  document.getElementById('cityFilter')?.addEventListener('change', filterData);
+  document.getElementById('cityFilter')?.addEventListener('change', () => filterData(false));
   
   const sortSelect = document.getElementById('sortFilter');
   if (sortSelect) {
     sortSelect.addEventListener('change', () => {
       safeSetStorage('jj_museum_sort', sortSelect.value);
       updateUrlParams();
-      filterData();
+      filterData(false);
     });
   }
 
@@ -443,7 +447,7 @@ function reshuffleAndRender() {
     safeSetStorage('jj_museum_sort', 'random');
   }
   updateUrlParams();
-  filterData();
+  filterData(false);
 }
 
 function isValidValue(val) {
@@ -889,7 +893,7 @@ function handleSearchInput() {
   safeSetSession('jj_museum_search', val);
   if (clearBtn) clearBtn.style.display = val.trim().length > 0 ? 'block' : 'none';
   updateUrlParams();
-  filterData();
+  filterData(false); // Resetovat na 1. stránku při psaní vyhledávání
 }
 
 function clearSearchInput() {
@@ -899,7 +903,7 @@ function clearSearchInput() {
   safeRemoveSession('jj_museum_search');
   if (clearBtn) clearBtn.style.display = 'none';
   updateUrlParams();
-  filterData();
+  filterData(false); // Resetovat na 1. stránku při vymazání hledání
 }
 
 function openSurpriseTicket() {
@@ -997,7 +1001,7 @@ function checkOnThisDayAnniversary() {
         const cityFilter = document.getElementById('cityFilter');
         if (cityFilter) cityFilter.value = '';
         currentCategory = 'ALL';
-        filterData();
+        filterData(false);
         setTimeout(() => {
           openDirectImagePreview(filteredTickets.indexOf(selected));
         }, 100);
@@ -1249,7 +1253,6 @@ function renderCategoryTabs(matchesBeforeCategoryFilter) {
     if (isValidValue(t.YOUTUBE_URL)) counts['Videos']++;
   });
 
-  // Pokud je uživatel Admin, zobrazí se všechny záložky. V opačném případě pouze 'Tickets'.
   const categoryOrder = isAdmin 
     ? ['Tickets', 'Passes', 'Programs', 'Posters', 'T-shirts', 'Tour Items', 'Memorabilia', 'Videos', 'ALL']
     : ['Tickets'];
@@ -1269,7 +1272,7 @@ function renderCategoryTabs(matchesBeforeCategoryFilter) {
       btn.onclick = () => { 
         currentCategory = catKey; 
         updateUrlParams();
-        filterData(); 
+        filterData(false); 
       };
       tabsContainer.appendChild(btn);
     }
@@ -1299,10 +1302,11 @@ function changePageSize() {
   const val = document.getElementById('pageSizeFilter').value;
   pageSize = val === 'ALL' ? 'ALL' : parseInt(val, 10);
   currentPage = 1;
+  safeSetStorage('jj_museum_page', 1);
   renderPaginated();
 }
 
-function filterData() {
+function filterData(keepSavedPage = false) {
   const rawQuery = document.getElementById('searchInput')?.value || '';
   const query = rawQuery.toLowerCase().trim();
   const selectedCity = document.getElementById('cityFilter')?.value || '';
@@ -1312,7 +1316,6 @@ function filterData() {
   const dateCandidates = parseDateCandidates(rawQuery);
 
   const matchesBase = allTickets.filter(t => {
-    // Nepřihlášený uživatel nesmí vidět položky s prázdným polem SOUBOR_SKEN nebo missing_item.svg
     if (!isAdminUser && !isValidValue(t.SOUBOR_SKEN)) {
       return false;
     }
@@ -1390,7 +1393,12 @@ function filterData() {
     filteredTickets = filteredTickets.filter(t => isValidValue(t.SOUBOR_SKEN));
   }
 
-  currentPage = 1;
+  // Pokud keepSavedPage NENÍ true, zresetuje se stránka na 1
+  if (!keepSavedPage) {
+    currentPage = 1;
+    safeSetStorage('jj_museum_page', 1);
+  }
+
   renderPaginated();
 
   const adminEditorLink = document.getElementById('adminEditorLink');
@@ -1652,7 +1660,12 @@ function renderPaginationControls() {
   prevBtn.className = 'page-btn'; 
   prevBtn.textContent = '◄ Prev';
   prevBtn.disabled = currentPage === 1;
-  prevBtn.onclick = () => { currentPage--; renderPaginated(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  prevBtn.onclick = () => { 
+    currentPage--; 
+    safeSetStorage('jj_museum_page', currentPage);
+    renderPaginated(); 
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+  };
   container.appendChild(prevBtn);
 
   for (let i = 1; i <= totalPages; i++) {
@@ -1668,7 +1681,12 @@ function renderPaginationControls() {
     const pageBtn = document.createElement('button');
     pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`; 
     pageBtn.textContent = i;
-    pageBtn.onclick = () => { currentPage = i; renderPaginated(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    pageBtn.onclick = () => { 
+      currentPage = i; 
+      safeSetStorage('jj_museum_page', currentPage);
+      renderPaginated(); 
+      window.scrollTo({ top: 0, behavior: 'smooth' }); 
+    };
     container.appendChild(pageBtn);
   }
 
@@ -1676,7 +1694,12 @@ function renderPaginationControls() {
   nextBtn.className = 'page-btn'; 
   nextBtn.textContent = 'Next ►';
   nextBtn.disabled = currentPage === totalPages;
-  nextBtn.onclick = () => { currentPage++; renderPaginated(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  nextBtn.onclick = () => { 
+    currentPage++; 
+    safeSetStorage('jj_museum_page', currentPage);
+    renderPaginated(); 
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+  };
   container.appendChild(nextBtn);
 }
 
