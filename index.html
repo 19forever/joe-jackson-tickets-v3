@@ -191,9 +191,9 @@
       }
       window.isAdminModeActive = isAdminModeActive;
 
-      // PŘEPIS FILTERDATA HNED PO NAČTENÍ SKRIPTU (aby zachytil i první načtení dat z app.js)
+      // PŘEPIS FILTERDATA HNED PO NAČTENÍ SKRIPTU
       const originalFilterData = window.filterData;
-      window.filterData = function() {
+      window.filterData = function(keepSavedPage) {
         if (typeof originalFilterData === 'function') {
           originalFilterData.apply(this, arguments);
         }
@@ -208,8 +208,7 @@
           });
 
           // Znovu vykreslíme přefiltrovaná data pro veřejnost
-          if (typeof renderTickets === 'function') renderTickets();
-          if (typeof renderPagination === 'function') renderPagination();
+          if (typeof renderPaginated === 'function') renderPaginated();
         }
       };
 
@@ -248,7 +247,7 @@
         }
 
         updateAdminSortAndControls();
-        if (typeof window.filterData === 'function') window.filterData();
+        if (typeof window.filterData === 'function') window.filterData(true);
       }
       window.lockAdminSession = lockAdminSession;
 
@@ -320,7 +319,7 @@
 
           if (targetValue !== currentValue || (!isAdmin && isUrlAdminOnly)) {
             if (typeof updateUrlParams === 'function') updateUrlParams();
-            if (typeof window.filterData === 'function') window.filterData();
+            if (typeof window.filterData === 'function') window.filterData(true);
           }
         }
 
@@ -404,9 +403,9 @@
 
         updateAdminSortAndControls();
 
-        // Spustíme filtraci pro případ, že se data načetla dříve než Supabase Auth
+        // Spustíme filtraci se zachováním uložené stránky
         if (typeof window.filterData === 'function') {
-          window.filterData();
+          window.filterData(true);
         }
 
         // Focus do vyhledávacího pole
@@ -419,13 +418,13 @@
         if (tourFilter) {
           tourFilter.addEventListener('change', () => {
             if (typeof updateUrlParams === 'function') updateUrlParams();
-            if (typeof window.filterData === 'function') window.filterData();
+            if (typeof window.filterData === 'function') window.filterData(false);
           });
         }
 
         window.addEventListener('storage', () => {
           updateAdminSortAndControls();
-          if (typeof window.filterData === 'function') window.filterData();
+          if (typeof window.filterData === 'function') window.filterData(true);
         });
       });
     })();
