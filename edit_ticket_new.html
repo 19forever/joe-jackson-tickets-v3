@@ -735,7 +735,12 @@
           </div>
           <div class="form-group">
             <label for="edit_LINEUP">Lineup / Band</label>
-            <input type="text" id="edit_LINEUP" name="LINEUP" placeholder="e.g. Joe Jackson (vocals, piano)...">
+            <div class="input-with-btn">
+              <input type="text" id="edit_LINEUP" name="LINEUP" placeholder="e.g. Joe Jackson (vocals, piano)...">
+              <select id="existingLineupsSelect" onchange="selectExistingLineup(this.value)" style="max-width: 200px;">
+              <option value="">-- Select Lineup --</option>
+              </select>
+            </div>
           </div>
         </div>
 
