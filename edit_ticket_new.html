@@ -1150,23 +1150,41 @@
         selectEl.appendChild(groupTour);
       }
 
-      // 2. Ostatní sestavy z historie (doplněné o název turné / rok)
+      // 2. Ostatní sestavy seřazené podle roku (od nejnovějších po nejstarší)
       if (allOtherLineupsWithTours.size > 0) {
         const groupAll = document.createElement('optgroup');
-        groupAll.label = '🌐 All Other Lineups (by Tour / Year)';
-        Array.from(allOtherLineupsWithTours.keys()).sort().forEach(lineup => {
-          if (!tourSpecificLineupsWithTours.has(lineup)) {
+        groupAll.label = '🌐 All Other Lineups (by Year)';
+
+        // Převod na pole s dopočítaným nejvyšším rokem pro řazení
+        const otherItems = Array.from(allOtherLineupsWithTours.keys())
+          .filter(lineup => !tourSpecificLineupsWithTours.has(lineup))
+          .map(lineup => {
             const toursSet = allOtherLineupsWithTours.get(lineup);
             const tourPrefix = toursSet.size > 0 ? `[${Array.from(toursSet).join(', ')}] ` : '';
             
-            const displayText = `${tourPrefix}${lineup}`;
-            const opt = document.createElement('option');
-            opt.value = lineup; // Vkládá do formuláře čistý kód sestavy
-            opt.textContent = displayText.length > 70 ? displayText.substring(0, 67) + '...' : displayText;
-            opt.title = displayText;
-            groupAll.appendChild(opt);
-          }
+            // Extrakce 4místného roku pro porovnání (např. 2019)
+            const matchYear = tourPrefix.match(/\b(19\d\d|20\d\d)\b/);
+            const maxYear = matchYear ? parseInt(matchYear[1], 10) : 0;
+
+            return {
+              lineup,
+              tourPrefix,
+              maxYear,
+              displayText: `${tourPrefix}${lineup}`
+            };
+          });
+
+        // Seřazení podle roku sestupně (od nejnovějšího roku po nejstarší)
+        otherItems.sort((a, b) => b.maxYear - a.maxYear || a.displayText.localeCompare(b.displayText));
+
+        otherItems.forEach(item => {
+          const opt = document.createElement('option');
+          opt.value = item.lineup; // Vkládá do formuláře čistý kód sestavy
+          opt.textContent = item.displayText.length > 70 ? item.displayText.substring(0, 67) + '...' : item.displayText;
+          opt.title = item.displayText;
+          groupAll.appendChild(opt);
         });
+
         selectEl.appendChild(groupAll);
       }
     }
