@@ -74,3 +74,47 @@ Před začátkem vytvořte novou větev (branch), např. `feature/refactoring-ar
 | **4. Modularizace UI** | Rozdělit `app.js` | Oddělit vykreslování karet, filtrů a paginationu.
 
  |
+
+***
+
+Nejlepším a nejefektivnějším postupem je **kombinace obou přístupů**, přičemž **Google AI Studio + Repomix** by mělo být tvým hlavním vývojovým prostředím.
+
+Zde je důvod a doporučené rozdělení rolí:
+
+### Proč je AI Studio + Repomix na refaktoring výrazně lepší
+
+1. **Obrovské kontextové okno:**
+Repomix zabalí celý tvůj projekt (HTML, JS, CSS) do jednoho strukturovaného textového souboru. V AI Studiu (např. s modelem Gemini 1.5 Pro) ho pak vložíš najednou. AI tak vidí *všechny soubory současně* v jejich plném rozsahu – zná přesné vazby mezi `app.js`, `index.html`, `edit_ticket_new.html` i `storage-service.js`.
+
+
+2. **Konec "slepých" chyb a přepisování:**
+Při konverzaci v běžném chatu řešíme věci po částech. Když změníme funkci na jednom místě, snadno přehlédneme, že ji volá inline skript v úplně jiném souboru. V AI Studiu s Repomixem má AI kompletní mapu projektu, takže navrhne refaktoring celku bez toho, aby po cestě cokoliv "vypadlo".
+
+
+
+---
+
+### Jak efektivně rozdělit úlohy
+
+* **Sem do chatu (Thought Partner & Architekt):**
+* **Příprava a strategie:** Můžeme si zde nejdříve ujasnit novou strukturu složek (např. `/src/services/`, `/src/ui/`), domluvit se na pravidlech (čistý vanilla JS vs. moduly) a sepsat přesné *Zadání pro refaktoring* (Prompt Spec).
+
+
+* **Do AI Studia s Repomixem (Výkonný vývojář):**
+* **Spuštění Repomixu:** Generování jednoho balíčku celého repozitáře (`repomix`).
+* **Vložení do AI Studia:** Zadání strukturovaného promptu společně s balíčkem kódu.
+* **Generování nových modulů:** AI Studio ti vrátí kompletně přepsané, čisté a modulární soubory bez duplicit, které si jen stáhneš nebo nakopíruješ zpět do projektu.
+
+
+
+Pokud chceš, můžeme hned teď v chatu navrhnout **přesnou strukturu nových modulů** a **připravit prompt pro AI Studio**, který pak jen přihodíš k Repomix souboru.
+
+***
+
+**Výhody Vite + TypeScriptu vs. čistý Vanilla JS**
+
+* **Typescript (Typová kontrola):** Odhalí chyby v názvech proměnných nebo datových typech (např. zda databáze vrací řetězec nebo číslo) přímo v editoru během psaní, ne až po nahrání na web.
+* **Vite (Build & Bundling):** Automaticky spojí kód do malých, bleskově načítaných balíčků, optimalizuje obrázky, spravuje `.env` proměnné pro klíče k API a při vývoji okamžitě promítá změny bez nutnosti obnovovat prohlížeč.
+* **Vanilla JS (Bez sestavování):** Kód funguje ihned po uložení přímo v prohlížeči bez instalace Node.js/Bun nebo spouštění terminálu, což je jednodušší na údržbu, pokud nad projektem pracujete sami.
+
+Přejdeme k sestavení kompletního promptu pro AI Studio a Repomix?
