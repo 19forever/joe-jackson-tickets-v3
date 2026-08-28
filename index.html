@@ -85,9 +85,9 @@
         <a href="edit_ticket_new.html" id="adminEditorLink" class="btn-contribute" style="display: none;" title="Open Ticket Editor">
           ✏️ Editor
         </a>
-        <button type="button" id="adminLoginLink" class="btn-contribute" style="background: transparent; border: 1px solid var(--border-color-light, #333); cursor: pointer; font-family: inherit;" onclick="handleAdminLogin()" title="Admin Login Gate">
-          🔒 Admin
-        </button>
+       <button type="button" id="adminLoginLink" class="btn-contribute" style="background: transparent; border: 1px solid var(--border-color-light, #333); cursor: pointer; font-family: inherit;" onclick="handleAdminLogin()" title="Admin Login Gate">
+  🔒 Admin
+</button>
         <a href="ticket_form.html" class="btn-contribute" title="Share your concert ticket, pass, or poster with us">
           ➕ Contribute your item
         </a>
@@ -213,11 +213,11 @@
       };
 
       function handleAdminLogin() {
-        const editQuery = typeof getEditUrlParams === 'function' ? getEditUrlParams() : '';
-        window.location.href = editQuery ? `edit_ticket_new.html?${editQuery}` : 'edit_ticket_new.html';
-      }
-      window.handleAdminLogin = handleAdminLogin;
-
+  const editQuery = typeof getEditUrlParams === 'function' ? getEditUrlParams() : '';
+  window.location.href = editQuery ? `edit_ticket_new.html?${editQuery}` : 'edit_ticket_new.html';
+}
+window.handleAdminLogin = handleAdminLogin;
+      
       async function lockAdminSession() {
   // 1. Odhlášení ze Supabase Auth
   if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
