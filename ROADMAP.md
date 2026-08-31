@@ -1,8 +1,6 @@
 # 🗺️ Joe Jackson Ticket Museum — Roadmap & Project Plan
 
 ## Corrections 
-- CHECK: log in/out Admin mode is not working properly - test it!
-  - when refactored Admin mode buttons, loading data is longer - check
 - Q: how to handle Contributors/Donors?
   - get rid of completely?
   - if keep - show them or not?
@@ -16,18 +14,20 @@
 - Q: added Support Band field or just text into NOTES
 - Q: get rid of Ticket button with it´s number (all buttons showe up when admin mode)
 - Q: is searching by cities (countries) necessary? what other search shortcuts would be useful?
+- Q: when rafactoring? see ReEFACTOR_PLAN.MD (Vite)
 - NEW FEATURE: check setlist.fm for existing setlist and fill-in URL and songs
+- NEW FEATURE: light mode / dark mode
 - DONE: not working Fetch from Setlist.fm
 - DONE: new ticket-like logo
 - DONE: paging is holding the last page within search scope
 - DONE: focus into search line after reloading - quick quesry writing works
-- Q: when rafactoring? see ReEFACTOR_PLAN.MD (Vite)
+- DONE: Repaire - log in/out Admin mode is not working properly - test it!
+  - when refactored Admin mode buttons, loading data is longer - check
 - LAUNCH: don´t forget to make archive@joejackson.band address alive
 
 ## New Ideas
 - DELETE SCAN: Nástroj v Editoru (Rychlý odkaz na smazání): Přímo do edit_ticket_new.html lze případně přidat malé tlačítko "Otevřít soubor na GitHubu", které vás po kliknutí přesměruje přímo na konkrétní stranu daného obrázku na GitHubu, kde už jen kliknete na ikonu koše a potvrzujete smazání. Nebude potřeba žádný token a ušetříte hledání.
 - MAIN PAGE: small icon with number of images within item
-- MAIN UX: add switch for dark / light modes
 - Consert of the Day:
   - if there are more shows on this date, let it scroll right to left like in TV headlines?
   - get rid of "view anniversary show"?
@@ -48,15 +48,8 @@ An interactive digital museum and archive dedicated to Joe Jackson's live concer
   - Display a subtle link on item detail cards with 0 songs: *"Know this setlist? Add it on Setlist.fm or contribute a program scan."*
 - [ ] **Verification Filter**:
   - Add quick filter checkboxes in Museum View and Admin Editor to easily isolate unverified shows or shows with missing setlist songs.
-
-### 3. Theme Switcher (Light / Dark / Auto Mode)
-- [ ] **Světlý a tmavý režim (`index.html` / `styles.css`)**:
-  - Přidání přepínače motivu vedle přepínače fontů v hlavičce.
-  - Vytvoření světlé varianty CSS proměnných (`:root` / `.theme-light`) pro čtení na přímém slunci.
-  - Detekce systémového nastavení uživatele (`prefers-color-scheme: dark`).
-  - Ukládání preferovaného režimu do `localStorage` (`jj_selected_theme`).
      
- ### 4. Launching schedule
+ ### 3. Launching schedule
 - [ ] **When and what content to publish**:
 - [ ] **joejackson.band connect**:
   - in GitHub settings
