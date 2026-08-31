@@ -12,6 +12,7 @@
   - what about NULL or multiple source
     - because there more images for one show, but just one Donor Line
     - maybe like images - comma separated with the same order like images
+- Q: Reviews as a unique category?
 - Q: added Support Band field or just text into NOTES
 - Q: get rid of Ticket button with it´s number (all buttons showe up when admin mode)
 - Q: is searching by cities (countries) necessary? what other search shortcuts would be useful?
