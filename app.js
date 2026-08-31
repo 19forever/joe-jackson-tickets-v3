@@ -300,8 +300,33 @@ function initFontSwitcher() {
   }
 }
 
+function initTheme() {
+  const themeSwitcher = document.getElementById('themeSwitcher');
+  const savedTheme = safeGetStorage('app-theme') || 'theme-dark';
+
+  document.body.classList.remove('theme-dark', 'theme-light');
+  document.documentElement.classList.remove('theme-dark', 'theme-light');
+  document.body.classList.add(savedTheme);
+  document.documentElement.classList.add(savedTheme);
+
+  if (themeSwitcher) {
+    themeSwitcher.value = savedTheme;
+    themeSwitcher.addEventListener('change', (e) => {
+      const selectedTheme = e.target.value;
+      
+      document.body.classList.remove('theme-dark', 'theme-light');
+      document.documentElement.classList.remove('theme-dark', 'theme-light');
+      document.body.classList.add(selectedTheme);
+      document.documentElement.classList.add(selectedTheme);
+      
+      safeSetStorage('app-theme', selectedTheme);
+    });
+  }
+}
+
 // Initialization - NAČÍTÁNÍ ZE SUPABASE
 window.addEventListener('DOMContentLoaded', () => {
+  initTheme();
   initFontSwitcher();
   setupEventListeners();
 

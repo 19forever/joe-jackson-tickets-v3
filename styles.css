@@ -1,21 +1,44 @@
 :root {
-  --bg-main: #0f0f0f;
-  --bg-panel: #141414;
-  --bg-card: #161616;
-  --bg-hover: #1a1a1a;
-  --text-main: #e0e0e0;
-  --text-muted: #9ca3af;
-  --accent-yellow: #f59e0b;
-  --accent-yellow-bright: #fbbf24;
-  --accent-yellow-glow: rgba(245, 158, 11, 0.15);
-  --accent-blue: #f59e0b;
-  --accent-orange: #f59e0b;
-  --border-color: #2a2a2a;
-  --border-color-light: #333333;
   --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   --font-family: var(--font-primary);
   --font-weight-title: 600;
   --font-weight-heading: 700;
+}
+
+:root, body.theme-dark {
+  --bg-main: #0f0f0f;
+  --bg-panel: #141414;
+  --bg-card: #161616;
+  --bg-hover: #1a1a1a;
+  --bg-input: #0d0d0d;
+  --text-main: #e0e0e0;
+  --text-muted: #9ca3af;
+  --text-heading: #ffffff;
+  --accent-yellow: #f59e0b;
+  --border-color: #2a2a2a;
+  --border-color-light: #333333;
+  --accent-yellow-bright: #fbbf24;
+  --accent-yellow-glow: rgba(245, 158, 11, 0.15);
+  --accent-blue: #f59e0b;
+  --accent-orange: #f59e0b;
+}
+
+body.theme-light {
+  --bg-main: #f4f4f6;
+  --bg-panel: #ffffff;
+  --bg-card: #ffffff;
+  --bg-hover: #f0f0f3;
+  --bg-input: #f9f9fb;
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --text-heading: #111827;
+  --accent-yellow: #d97706;
+  --border-color: #e5e7eb;
+  --border-color-light: #e5e7eb;
+  --accent-yellow-bright: #b45309;
+  --accent-yellow-glow: rgba(217, 119, 6, 0.12);
+  --accent-blue: #d97706;
+  --accent-orange: #d97706;
 }
 
 /* Typography Themes for Live Preview */
@@ -101,7 +124,7 @@ button, input, select, textarea {
 }
 
 .font-switcher-select {
-  background-color: #1a1a1a;
+  background-color: var(--bg-hover);
   border: 1px solid var(--border-color-light);
   color: var(--text-main);
   padding: 6px 10px;
@@ -210,6 +233,7 @@ header {
   align-items: center;
   gap: 10px;
   letter-spacing: -0.01em;
+  color: var(--text-heading);
 }
 
 .year-badge {
@@ -231,7 +255,7 @@ header {
 }
 
 .btn-contribute {
-  background-color: #1a1a1a;
+  background-color: var(--bg-hover);
   border: 1px solid var(--border-color-light);
   color: var(--text-main);
   padding: 8px 16px;
@@ -251,13 +275,13 @@ header {
 .btn-contribute:hover {
   border-color: var(--accent-yellow);
   color: var(--accent-yellow);
-  background-color: #222222;
+  background-color: var(--bg-hover);
   transform: translateY(-1px);
 }
 
 /* On This Day Banner */
 .on-this-day-banner {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(20, 20, 20, 0.95));
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), var(--bg-panel));
   border: 1px solid rgba(245, 158, 11, 0.25);
   border-left: 4px solid var(--accent-yellow);
   border-radius: 8px;
@@ -349,7 +373,7 @@ header {
 
 .tab-btn:hover {
   border-color: rgba(245, 158, 11, 0.4);
-  color: #fff;
+  color: var(--text-heading);
   background-color: var(--bg-hover);
 }
 
@@ -381,7 +405,7 @@ header {
 }
 
 .search-input-wrapper input {
-  background-color: #0d0d0d;
+  background-color: var(--bg-input);
   border: 1px solid var(--border-color-light) !important;
   color: var(--text-main);
   padding: 8px 32px 8px 12px;
@@ -421,7 +445,7 @@ header {
 }
 
 .surprise-btn {
-  background-color: #1a1a1a;
+  background-color: var(--bg-hover);
   border: 1px solid var(--border-color-light);
   color: var(--accent-yellow);
   padding: 8px 12px;
@@ -449,7 +473,7 @@ header {
 }
 
 .controls select {
-  background-color: #0d0d0d;
+  background-color: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-main);
   padding: 0 10px;
@@ -464,7 +488,7 @@ header {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background-color: #0d0d0d;
+  background-color: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-main);
   padding: 0 10px;
@@ -526,7 +550,7 @@ header {
 }
 
 .toggle-btn {
-  background-color: #0d0d0d;
+  background-color: var(--bg-input);
   border: 1px solid var(--border-color);
   color: var(--text-muted);
   width: 36px;
@@ -594,7 +618,7 @@ header {
   position: relative;
   height: 230px;
   width: 100%;
-  background-color: #0d0d0d;
+  background-color: var(--bg-input);
   overflow: hidden;
 }
 
@@ -621,13 +645,13 @@ header {
   font-family: var(--font-primary);
   font-size: 0.88rem;
   font-weight: var(--font-weight-title);
-  color: #ffffff;
+  color: var(--text-heading);
 }
 
 .card-meta-line1 .card-date {
   font-size: 0.88rem;
   font-weight: var(--font-weight-title);
-  color: #ffffff;
+  color: var(--text-heading);
   margin: 0;
   white-space: nowrap;
 }
@@ -711,7 +735,7 @@ header {
 .btn-action-lineup,
 .btn-action-video,
 .btn-action-edit {
-  background: #1a1a1a;
+  background: var(--bg-hover);
   border: 1px solid var(--border-color-light);
   color: var(--text-main);
   border-radius: 4px;
@@ -762,8 +786,8 @@ header {
 .badge-setlist,
 .btn-action-setlist {
   background: rgba(245, 158, 11, 0.25);
-  border: 1px solid #f59e0b;
-  color: #fbbf24 !important;
+  border: 1px solid var(--accent-yellow);
+  color: var(--accent-yellow-bright) !important;
   font-weight: 400 !important;
   min-width: 3.2rem;
   padding: 0 6px;
@@ -772,16 +796,16 @@ header {
 
 .badge-setlist:hover,
 .btn-action-setlist:hover {
-  background: #f59e0b;
-  border-color: #f59e0b;
-  color: #000000;
+  background: var(--accent-yellow);
+  border-color: var(--accent-yellow);
+  color: #000000 !important;
 }
 
 /* Missing Setlist on Setlist.fm Badge */
 .badge-setlist-empty {
   background: rgba(245, 158, 11, 0.1);
-  border: 1px dashed #f59e0b !important;
-  color: #f59e0b !important;
+  border: 1px dashed var(--accent-yellow) !important;
+  color: var(--accent-yellow) !important;
   font-weight: 400 !important;
   min-width: 3.2rem;
   height: 28px;
@@ -791,8 +815,8 @@ header {
 
 .badge-setlist-empty:hover {
   background: rgba(245, 158, 11, 0.25);
-  border-color: #f59e0b !important;
-  color: #fbbf24 !important;
+  border-color: var(--accent-yellow) !important;
+  color: var(--accent-yellow-bright) !important;
 }
 
 /* Unverified Show Badge */
@@ -859,7 +883,7 @@ header {
 .collapsible-content {
   display: none;
   margin-top: 10px;
-  background: #0d0d0d;
+  background: var(--bg-input);
   border: 1px solid var(--border-color);
   padding: 10px;
   border-radius: 6px;
@@ -930,7 +954,7 @@ header {
 }
 
 .page-btn {
-  background-color: #1a1a1a;
+  background-color: var(--bg-hover);
   border: 1px solid var(--border-color-light);
   color: var(--text-main);
   padding: 8px 14px;
@@ -1016,7 +1040,7 @@ header {
 .jj-modal-concert-header h4 {
   font-size: 1.15rem;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-heading);
   margin: 0;
   letter-spacing: 0.3px;
 }
@@ -1095,8 +1119,8 @@ header {
 
 .jj-modal-card {
   position: relative;
-  background-color: var(--bg-panel, #121212);
-  border: 1px solid var(--border-color, #27272a);
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 28px 24px;
   max-width: 440px;
@@ -1127,7 +1151,7 @@ header {
   right: 14px;
   background: none;
   border: none;
-  color: var(--text-muted, #9ca3af);
+  color: var(--text-muted);
   font-size: 1.2rem;
   cursor: pointer;
   line-height: 1;
@@ -1136,7 +1160,7 @@ header {
 }
 
 .jj-modal-close-btn:hover {
-  color: var(--accent-yellow, #f59e0b);
+  color: var(--accent-yellow);
 }
 
 .jj-modal-header {
@@ -1154,20 +1178,20 @@ header {
 .jj-modal-header h3 {
   font-family: var(--font-primary);
   font-size: 1.2rem;
-  font-weight: var(--font-weight-title, 700);
-  color: #ffffff;
+  font-weight: var(--font-weight-title);
+  color: var(--text-heading);
   margin: 0;
 }
 
 .jj-modal-body {
   font-size: 0.88rem;
-  color: var(--text-muted, #9ca3af);
+  color: var(--text-muted);
   line-height: 1.5;
   margin: 0;
 }
 
 .jj-modal-body strong {
-  color: #ffffff;
+  color: var(--text-heading);
 }
 
 .jj-modal-actions {
@@ -1179,9 +1203,9 @@ header {
 
 .jj-modal-actions .btn-secondary {
   flex: 1;
-  background: #1f2937;
-  border: 1px solid var(--border-color-light, #374151);
-  color: var(--text-main, #f3f4f6);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color-light);
+  color: var(--text-main);
   padding: 9px 14px;
   border-radius: 6px;
   font-size: 0.85rem;
@@ -1191,8 +1215,9 @@ header {
 }
 
 .jj-modal-actions .btn-secondary:hover {
-  background: #374151;
-  color: #ffffff;
+  background: var(--bg-hover);
+  color: var(--text-heading);
+  border-color: var(--accent-yellow);
 }
 
 .jj-modal-actions .otd-btn {
@@ -1337,9 +1362,8 @@ header {
   }
 }
 
-/* Mobile Touch & Layout Optimization (iOS / Android Responsive overrides) */
+/* Mobile Touch & Layout Optimization */
 @media (max-width: 640px) {
-  /* 1. Category Tabs Horizontal Scroll */
   .category-tabs {
     display: flex !important;
     flex-wrap: nowrap !important;
@@ -1360,7 +1384,6 @@ header {
     white-space: nowrap !important;
   }
 
-  /* 2. Compact Filter Controls Layout */
   .controls {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
@@ -1369,19 +1392,16 @@ header {
     padding: 8px !important;
   }
 
-  /* Search input spans both columns */
   .search-input-wrapper {
     grid-column: span 2 !important;
     width: 100% !important;
   }
 
-  /* Tour filter spans both columns */
   #tourFilter {
     grid-column: span 2 !important;
     width: 100% !important;
   }
 
-  /* Selects and toggles occupy half columns */
   #cityFilter {
     grid-column: span 1 !important;
     width: 100% !important;
@@ -1409,7 +1429,6 @@ header {
     flex: 1 !important;
   }
 
-  /* Horizontal action toolbar row */
   .action-buttons-group {
     grid-column: span 2 !important;
     display: flex !important;
@@ -1421,7 +1440,6 @@ header {
     flex: 1 !important;
   }
 
-  /* 3. List View Cards (.list-view) adjustments */
   .tickets-container.list-view .ticket-card {
     flex-direction: row !important;
     align-items: flex-start !important;
@@ -1429,14 +1447,12 @@ header {
     gap: 10px !important;
   }
 
-  /* Thumbnail wrapper */
   .tickets-container.list-view .card-img-wrapper {
     width: 44px !important;
     height: 33px !important;
     margin-top: 2px !important;
   }
 
-  /* Card content wrapper */
   .tickets-container.list-view .card-content {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -1445,7 +1461,6 @@ header {
     width: 100% !important;
   }
 
-  /* Metadata row */
   .tickets-container.list-view .card-meta-line1 {
     width: 100% !important;
     height: auto !important;
@@ -1454,7 +1469,6 @@ header {
     margin-bottom: 2px !important;
   }
 
-  /* Venue / location metadata wraps elegantly instead of severe truncation */
   .tickets-container.list-view .card-location-line2 {
     width: 100% !important;
     height: auto !important;
@@ -1467,7 +1481,6 @@ header {
     margin-bottom: 4px !important;
   }
 
-  /* Action buttons align cleanly to the right */
   .tickets-container.list-view .card-actions-grid {
     grid-template-columns: repeat(7, 1fr) !important;
     max-width: 280px !important;
@@ -1481,7 +1494,6 @@ header {
     height: 44px !important;
   }
 
-  /* 4. Touch Targets & min-height of 44px for ergonomics */
   .tab-btn,
   .btn-contribute,
   .font-switcher-select,
@@ -1519,7 +1531,6 @@ header {
   }
 }
 
-/* Reduced padding on control panel / controls under 600px width */
 @media (max-width: 600px) {
   .control-panel,
   .controls {
@@ -1568,9 +1579,9 @@ header {
   width: 100%;
   margin-top: 40px;
   padding: 30px 20px;
-  background: #0d0d0d;
-  border-top: 1px solid var(--border-color, #27272a);
-  color: var(--text-muted, #9ca3af);
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border-color);
+  color: var(--text-muted);
   font-size: 0.8rem;
   line-height: 1.6;
 }
@@ -1587,31 +1598,32 @@ header {
 .jj-museum-footer .disclaimer-title {
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--accent-yellow, #f59e0b);
+  color: var(--accent-yellow);
   margin-bottom: 2px;
 }
 
 .jj-museum-footer .disclaimer-text {
-  color: #9ca3af;
+  color: var(--text-muted);
   margin: 0;
   text-align: center;
 }
 
 .jj-museum-footer .disclaimer-contact {
-  color: #6b7280;
+  color: var(--text-muted);
   font-size: 0.78rem;
   margin: 0;
+  opacity: 0.8;
 }
 
 .jj-museum-footer .disclaimer-contact a {
-  color: var(--accent-blue, #38bdf8);
+  color: var(--accent-yellow);
   text-decoration: underline;
   text-underline-offset: 3px;
   transition: color 0.2s ease;
 }
 
 .jj-museum-footer .disclaimer-contact a:hover {
-  color: var(--accent-yellow, #f59e0b);
+  color: var(--accent-yellow-bright);
 }
 
 /* Status Badges pro zrušené a přeložené akce */
@@ -1664,7 +1676,7 @@ header {
 
 .card-note-line:hover {
   opacity: 1;
-  color: #fbbf24;
+  color: var(--accent-yellow-bright);
   text-decoration: underline;
 }
 
@@ -1706,14 +1718,14 @@ header {
   padding: 6px 12px !important;
   min-height: 44px !important;
   gap: 12px !important;
-  background: var(--bg-card, #161616) !important;
-  border: 1px solid var(--border-color, #2a2a2a) !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
   border-radius: 6px !important;
 }
 
 .tickets-container.list-view .ticket-card:hover {
   border-color: rgba(245, 158, 11, 0.4) !important;
-  background: #181818 !important;
+  background: var(--bg-hover) !important;
   transform: none !important;
 }
 
@@ -1829,9 +1841,9 @@ header {
 .tickets-container.list-view .btn-action-video:hover,
 .tickets-container.list-view .btn-action-lineup:hover,
 .tickets-container.list-view .btn-action-edit:hover {
-  background-color: rgba(255, 255, 255, 0.12) !important;
-  border-color: rgba(245, 158, 11, 0.6) !important;
-  color: #ffffff !important;
+  background-color: var(--bg-hover) !important;
+  border-color: var(--accent-yellow) !important;
+  color: var(--text-heading) !important;
   box-shadow: none !important;
 }
 
@@ -1841,8 +1853,8 @@ header {
   width: 100% !important;
   flex-basis: 100% !important;
   margin-top: 8px !important;
-  background: #0d0d0d !important;
-  border: 1px solid var(--border-color, #2a2a2a) !important;
+  background: var(--bg-input) !important;
+  border: 1px solid var(--border-color) !important;
   border-radius: 6px !important;
   padding: 10px 14px !important;
   box-sizing: border-box !important;
@@ -1851,8 +1863,8 @@ header {
 /* Vlastní tlačítko Back / Close ve Viewer.js */
 .viewer-toolbar > li[data-viewer-action="closeBtn"],
 .viewer-toolbar > li.viewer-closeBtn {
-  background-color: rgba(245, 158, 11, 0.2);
-  border: 1px solid var(--accent-yellow, #f59e0b);
+  background-color: var(--accent-yellow-glow);
+  border: 1px solid var(--accent-yellow);
   border-radius: 4px;
   width: auto !important;
   min-width: 65px;
@@ -1880,7 +1892,7 @@ header {
 
 .viewer-toolbar > li[data-viewer-action="closeBtn"]:hover,
 .viewer-toolbar > li.viewer-closeBtn:hover {
-  background-color: var(--accent-yellow, #f59e0b) !important;
+  background-color: var(--accent-yellow) !important;
   color: #000000 !important;
 }
 

@@ -50,6 +50,8 @@
       try {
         var f = localStorage.getItem('jj_selected_font') || 'font-default';
         if (f) document.documentElement.classList.add(f);
+        var t = localStorage.getItem('app-theme') || 'theme-dark';
+        document.documentElement.classList.add(t);
       } catch(e) {}
     })();
   </script>
@@ -71,6 +73,10 @@
       </div>
 
       <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <select id="themeSwitcher" class="font-switcher-select" title="Switch Theme">
+          <option value="theme-dark">🌙 Dark Mode</option>
+          <option value="theme-light">☀️ Light Mode</option>
+        </select>
         <select id="fontSwitcher" class="font-switcher-select" title="Preview Typography Theme">
           <option value="font-default">🔤 Font: Default (Inter)</option>
           <option value="font-condensed">🔤 Font: Tall &amp; Condensed (Barlow)</option>

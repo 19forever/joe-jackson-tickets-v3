@@ -33,10 +33,6 @@
   <link rel="alternate icon" type="image/x-icon" href="favicon.ico">
   <link rel="apple-touch-icon" href="favicon.svg">
 
-  <!-- Supabase JS Client & Config -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-client.js"></script>
-
   <!-- Chart.js for rendering graphs -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -47,19 +43,17 @@
   <!-- External Global Stylesheet -->
   <link rel="stylesheet" href="styles.css">
 
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('app-theme') || 'theme-dark';
+        document.documentElement.classList.add(t);
+      } catch(e) {}
+    })();
+  </script>
+
   <style>
     :root {
-      --bg-main: #0f0f0f;
-      --bg-panel: #141414;
-      --bg-card: #161616;
-      --text-main: #e0e0e0;
-      --text-muted: #9ca3af;
-      --accent-yellow: #f59e0b;
-      --accent-blue: #f59e0b;
-      --accent-orange: #f59e0b;
-      --accent-green: #10b981;
-      --accent-purple: #8b5cf6;
-      --border-color: #2a2a2a;
       --font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
     }
 
@@ -102,7 +96,7 @@
       letter-spacing: -1px;
     }
 
-    .title-area h1 { font-size: 1.4rem; font-weight: 700; }
+    .title-area h1 { font-size: 1.4rem; font-weight: 700; color: var(--text-heading); }
     .title-area p { color: var(--text-muted); font-size: 0.85rem; margin-top: 4px; }
 
     .btn-back {
@@ -264,7 +258,13 @@
         <p>Distribution of ticketed concerts and memorabilia across venues, cities, countries, and timeline</p>
       </div>
     </div>
-    <a href="index.html" class="btn-back">◄ Back to Museum</a>
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <select id="themeSwitcher" class="font-switcher-select" title="Switch Theme">
+        <option value="theme-dark">🌙 Dark Mode</option>
+        <option value="theme-light">☀️ Light Mode</option>
+      </select>
+      <a href="index.html" class="btn-back">◄ Back to Museum</a>
+    </div>
   </header>
 
   <!-- KPI Key Numbers -->
@@ -275,7 +275,7 @@
     </div>
     <div class="stat-card">
       <span>Concert Tickets</span>
-      <strong id="statTickets" style="color: #fff;">0</strong>
+      <strong id="statTickets" style="color: var(--text-heading);">0</strong>
     </div>
     <div class="stat-card">
       <span>Unique Cities</span>
@@ -416,6 +416,29 @@
     let mapPolyline = null;
 
     window.addEventListener('DOMContentLoaded', async () => {
+      // Initialize theme switcher for stats.html
+      const themeSwitcher = document.getElementById('themeSwitcher');
+      const savedTheme = localStorage.getItem('app-theme') || 'theme-dark';
+      
+      document.body.classList.remove('theme-dark', 'theme-light');
+      document.documentElement.classList.remove('theme-dark', 'theme-light');
+      document.body.classList.add(savedTheme);
+      document.documentElement.classList.add(savedTheme);
+
+      if (themeSwitcher) {
+        themeSwitcher.value = savedTheme;
+        themeSwitcher.addEventListener('change', (e) => {
+          const selectedTheme = e.target.value;
+          
+          document.body.classList.remove('theme-dark', 'theme-light');
+          document.documentElement.classList.remove('theme-dark', 'theme-light');
+          document.body.classList.add(selectedTheme);
+          document.documentElement.classList.add(selectedTheme);
+          
+          localStorage.setItem('app-theme', selectedTheme);
+        });
+      }
+
       await loadDataFromSupabase();
     });
 
@@ -565,16 +588,16 @@
     }
 
     function initMap() {
-  if (leafletMap) return;
-  leafletMap = L.map('worldMap').setView([30.0, 10.0], 2);
+      if (leafletMap) return;
+      leafletMap = L.map('worldMap').setView([30.0, 10.0], 2);
 
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 19
-  }).addTo(leafletMap);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19
+      }).addTo(leafletMap);
 
-  mapMarkersGroup = L.layerGroup().addTo(leafletMap);
-}
+      mapMarkersGroup = L.layerGroup().addTo(leafletMap);
+    }
     
     function updateMapTour() {
       if (!leafletMap) return;
@@ -671,6 +694,13 @@
           }
         }
       });
+    }
+
+    // Helper pro kontrolu aktivního Admin módu
+    function lockAdminSession() {
+      if (typeof lockAdminSession === 'function') {
+        window.lockAdminSession();
+      }
     }
 
     function renderDoughnutChart(canvasId, dataMap) {
