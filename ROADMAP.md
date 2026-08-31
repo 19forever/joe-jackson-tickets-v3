@@ -1,8 +1,6 @@
 # 🗺️ Joe Jackson Ticket Museum — Roadmap & Project Plan
 
 ## Corrections 
-- Error: harmonize legal disclaimer in stats.html with index.html (placing into styles?)
-- Error: stats.html required API key for virtual map but working
 - CHECK: log in/out Admin mode is not working properly - test it!
   - when refactored Admin mode buttons, loading data is longer - check
 - Q: how to handle Contributors/Donors?
@@ -22,7 +20,7 @@
 - DONE: new ticket-like logo
 - DONE: paging is holding the last page within search scope
 - DONE: focus into search line after reloading - quick quesry writing works
-- Q: when rafactoring?
+- Q: when rafactoring? see ReEFACTOR_PLAN.MD (Vite)
 - LAUNCH: don´t forget to make archive@joejackson.band address alive
 
 ## New Ideas
