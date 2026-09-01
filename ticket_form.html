@@ -249,7 +249,7 @@
         <label for="scan_file">Upload Image Scan / Photo <span>*</span></label>
         <input type="file" id="scan_file" accept="image/*" required>
         <small style="display: block; margin-top: 5px; color: var(--text-muted, #94a3b8);">
-          📸 Scans are automatically compressed and stamped with a discrete watermark badge: <strong>"JJ Memorabilia Museum"</strong>.
+          📸 Scans are automatically compressed.
         </small>
         <div id="watermarkPreviewBox" style="display: none; margin-top: 12px; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--accent-yellow, #f59e0b); border-radius: 8px;">
           <div style="font-size: 0.85rem; color: var(--accent-yellow, #f59e0b); font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
@@ -623,7 +623,7 @@
         if (response.ok) {
           statusMsg.className = 'success';
           statusMsg.style.display = 'block';
-          statusMsg.innerHTML = '🎉 <strong>Thank you!</strong> Your memorabilia contribution with "JJ Memorabilia Museum" watermark has been sent successfully. We will review it shortly.';
+          statusMsg.innerHTML = '🎉 <strong>Thank you!</strong> Your memorabilia contribution with "JJ Memorabilia Museum" has been sent successfully. We will review it shortly.';
           form.reset();
           document.getElementById('watermarkPreviewBox').style.display = 'none';
           watermarkedBlob = null;
