@@ -17,9 +17,10 @@
     - maybe like images - comma separated with the same order like images
 - Q: Reviews as a unique category?
 - Q: added Support Band field or just text into NOTES
-- Q: get rid of Ticket button with it´s number (all buttons showe up when admin mode)
+- DONE: get rid of Ticket button with it´s number (all buttons showe up when admin mode)
+  - when Tickets and Passes then it stay like this
 - Q: is searching by cities (countries) necessary? what other search shortcuts would be useful?
-- Q: when rafactoring? see ReEFACTOR_PLAN.MD (Vite)
+- Q: when rafactoring? see REFACTOR_PLAN.MD (Vite)
 - 
 - NEW FEATURE - DONE: check setlist.fm for existing setlist and fill-in URL and songs
 - NEW FEATURE - DONE: light mode / dark mode
