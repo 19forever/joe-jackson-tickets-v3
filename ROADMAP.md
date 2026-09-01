@@ -5,7 +5,7 @@
 - Error: Tour list is not working even for admin
 - Error: Logoff button visible even when I am logged-off
 - Nice to have: better mobile styles.css
-- Change: Tickets and Passes available for public (initial release
+- Change: Tickets and Passes available for public (initial release)
 - Q: how to handle Contributors/Donors?
   - get rid of completely?
   - if keep - show them or not?
@@ -22,6 +22,7 @@
 - Q: when rafactoring? see ReEFACTOR_PLAN.MD (Vite)
 - NEW FEATURE - DONE: check setlist.fm for existing setlist and fill-in URL and songs
 - NEW FEATURE - DONE: light mode / dark mode
+- DONE: Get rid of watermarking if ticket_form.html
 - DONE: Supabase set-up policies = table not-public - set restrictions
 - DONE: not working Fetch from Setlist.fm
 - DONE: new ticket-like logo
