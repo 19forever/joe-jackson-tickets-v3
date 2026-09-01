@@ -1,7 +1,6 @@
 # 🗺️ Joe Jackson Ticket Museum — Roadmap & Project Plan
 
 ## Corrections 
-- Error: Tour list is not working even for admin
 - Error: Logoff button visible even when I am logged-off (only on iOS)
 - Error: Tour search list visible for public (only on iOS)
 - 
@@ -22,9 +21,11 @@
 - Q: is searching by cities (countries) necessary? what other search shortcuts would be useful?
 - Q: when rafactoring? see ReEFACTOR_PLAN.MD (Vite)
 - 
-- DONE: Tickets and Passes available for public (initial release)
 - NEW FEATURE - DONE: check setlist.fm for existing setlist and fill-in URL and songs
 - NEW FEATURE - DONE: light mode / dark mode
+- 
+- DONE: Tour list is not working even for admin
+- DONE: Tickets and Passes available for public (initial release)
 - DONE: Get rid of watermarking if ticket_form.html
 - DONE: Supabase set-up policies = table not-public - set restrictions
 - DONE: not working Fetch from Setlist.fm
