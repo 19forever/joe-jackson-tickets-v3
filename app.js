@@ -401,6 +401,10 @@ function setupEventListeners() {
   (document.getElementById('reshuffleBtn') || document.getElementById('btnReshuffle'))?.addEventListener('click', reshuffleAndRender);
   (document.getElementById('surpriseBtn') || document.getElementById('btnSurprise'))?.addEventListener('click', openSurpriseTicket);
   document.getElementById('cityFilter')?.addEventListener('change', () => filterData(false));
+  document.getElementById('tourFilter')?.addEventListener('change', () => {
+    updateUrlParams();
+    filterData(false);
+    });
   
   const sortSelect = document.getElementById('sortFilter');
   if (sortSelect) {
@@ -1343,6 +1347,7 @@ function filterData(keepSavedPage = false) {
   const rawQuery = document.getElementById('searchInput')?.value || '';
   const query = rawQuery.toLowerCase().trim();
   const selectedCity = document.getElementById('cityFilter')?.value || '';
+  const selectedTour = document.getElementById('tourFilter')?.value || '';
   const sort = document.getElementById('sortFilter')?.value || 'random';
   const isAdminUser = checkIsAdmin();
 
@@ -1386,6 +1391,7 @@ function filterData(keepSavedPage = false) {
 
     const qMatch = !query || dateMatch || textMatch;
     const cMatch = !selectedCity || city === selectedCity.toLowerCase();
+    const tourMatch = !selectedTour || (isValidValue(t.TOUR_NAME) && t.TOUR_NAME.trim().toLowerCase() === selectedTour.trim().toLowerCase());
     return qMatch && cMatch;
   });
 
