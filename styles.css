@@ -1900,3 +1900,34 @@ header {
 .viewer-toolbar > li.viewer-closeBtn:hover::before {
   color: #000000;
 }
+
+/* Badge s počtem skenů v rohu náhledu obrázku */
+.card-img-wrapper {
+  position: relative; /* Zajišťuje správné umístění odznaku */
+}
+
+.scan-count-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(15, 15, 15, 0.82);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: var(--text-main, #e0e0e0);
+  border: 1px solid var(--border-color-light, #333333);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  z-index: 2;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.scan-count-badge .badge-icon {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
