@@ -1392,7 +1392,7 @@ function filterData(keepSavedPage = false) {
     const qMatch = !query || dateMatch || textMatch;
     const cMatch = !selectedCity || city === selectedCity.toLowerCase();
     const tourMatch = !selectedTour || (isValidValue(t.TOUR_NAME) && t.TOUR_NAME.trim().toLowerCase() === selectedTour.trim().toLowerCase());
-    return qMatch && cMatch;
+    return qMatch && cMatch && tourMatch;
   });
 
   renderCategoryTabs(matchesBase);
