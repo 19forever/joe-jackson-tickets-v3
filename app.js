@@ -1287,8 +1287,8 @@ function renderCategoryTabs(matchesBeforeCategoryFilter) {
   });
 
   const categoryOrder = isAdmin 
-    ? ['Tickets', 'Passes', 'Programs', 'Posters', 'T-shirts', 'Tour Items', 'Memorabilia', 'Videos', 'ALL']
-    : ['Tickets'];
+    ? ['Tickets', 'Programs', 'Posters', 'T-shirts', 'Tour Items', 'Memorabilia', 'Videos', 'ALL']
+    : ['Tickets', 'Passes'];
 
   const categoryLabels = { 
     'Tickets': '🎫 Tickets', 'Passes': '🪪 Passes', 'Programs': '📖 Programs', 
