@@ -41,6 +41,14 @@ const MISSING_TICKET_SVG = `data:image/svg+xml;utf8,${encodeURIComponent(`
 </svg>
 `)}`;
 
+// Pomocná funkce pro spočítání reálných skenů
+function getScanCount(scanField) {
+  if (!scanField || typeof scanField !== 'string') return 0;
+  return scanField.split(',')
+    .map(f => f.trim())
+    .filter(f => f.length > 0 && f.toLowerCase() !== 'missing_item.svg').length;
+}
+
 // Safe Storage helpers leveraging StorageService with fallbacks
 function safeGetStorage(key, defaultVal = null) {
   if (typeof StorageService !== 'undefined') {
@@ -1649,8 +1657,15 @@ function renderTickets(tickets) {
         </button>`;
     }
 
+    // Výpočet počtu skenů pro vytvoření odznaku v rohu náhledu
+    const totalScansCount = getScanCount(t.SOUBOR_SKEN);
+    const scanCountBadgeHTML = totalScansCount > 1 
+      ? `<div class="scan-count-badge" title="This record contains ${totalScansCount} scans"><span class="badge-icon">🖼️</span> ${totalScansCount}</div>`
+      : '';
+
     card.innerHTML = `
       <div class="card-img-wrapper" title="${isMissingScan ? 'Missing scan - Click to preview' : 'Click to view scan'}">
+        ${scanCountBadgeHTML}
         <img src="${imgSrc}" loading="lazy" alt="Joe Jackson Concert ${t.DATUM ? formatDisplayDate(t.DATUM) : (t.TOUR_NAME || 'Archive Item')} - ${locationText || 'Live Performance'} (${catName})" onerror="this.onerror=null; this.src='${MISSING_TICKET_SVG}';">
       </div>
       <div class="card-content">
