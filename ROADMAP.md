@@ -1,11 +1,12 @@
 # 🗺️ Joe Jackson Ticket Museum — Roadmap & Project Plan
 
 ## Corrections 
-- Error: Tour search list visible for public
 - Error: Tour list is not working even for admin
-- Error: Logoff button visible even when I am logged-off
+- Error: Logoff button visible even when I am logged-off (only on iOS)
+- Error: Tour search list visible for public (only on iOS)
+- 
 - Nice to have: better mobile styles.css
-- Change: Tickets and Passes available for public (initial release)
+- 
 - Q: how to handle Contributors/Donors?
   - get rid of completely?
   - if keep - show them or not?
@@ -20,6 +21,8 @@
 - Q: get rid of Ticket button with it´s number (all buttons showe up when admin mode)
 - Q: is searching by cities (countries) necessary? what other search shortcuts would be useful?
 - Q: when rafactoring? see ReEFACTOR_PLAN.MD (Vite)
+- 
+- DONE: Tickets and Passes available for public (initial release)
 - NEW FEATURE - DONE: check setlist.fm for existing setlist and fill-in URL and songs
 - NEW FEATURE - DONE: light mode / dark mode
 - DONE: Get rid of watermarking if ticket_form.html
