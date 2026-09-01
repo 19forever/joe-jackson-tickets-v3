@@ -1,6 +1,12 @@
 # 🗺️ Joe Jackson Ticket Museum — Roadmap & Project Plan
 
 ## Corrections 
+- Error: Tour search list visible for public
+- Error: Tour list is not working even for admin
+- Error: Supabase table not-public - set restrictions
+- Error: Logoff button visible even when I am logged-off
+- Nice to have: better mobile styles.css
+- Change: Tickets and Passes available for public (initial release
 - Q: how to handle Contributors/Donors?
   - get rid of completely?
   - if keep - show them or not?
@@ -15,8 +21,8 @@
 - Q: get rid of Ticket button with it´s number (all buttons showe up when admin mode)
 - Q: is searching by cities (countries) necessary? what other search shortcuts would be useful?
 - Q: when rafactoring? see ReEFACTOR_PLAN.MD (Vite)
-- NEW FEATURE: check setlist.fm for existing setlist and fill-in URL and songs
-- NEW FEATURE: light mode / dark mode
+- NEW FEATURE - DONE: check setlist.fm for existing setlist and fill-in URL and songs
+- NEW FEATURE - DONE: light mode / dark mode
 - DONE: not working Fetch from Setlist.fm
 - DONE: new ticket-like logo
 - DONE: paging is holding the last page within search scope
