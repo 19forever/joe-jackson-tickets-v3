@@ -564,39 +564,39 @@
     let watermarkedFileName = 'scan.jpg';
 
     document.getElementById('scan_file').addEventListener('change', async function(e) {
-      const file = e.target.files[0];
-      const previewBox = document.getElementById('watermarkPreviewBox');
-      const previewImg = document.getElementById('watermarkPreviewImg');
-      const dimsEl = document.getElementById('watermarkDimensions');
+  const file = e.target.files[0];
+  const previewBox = document.getElementById('watermarkPreviewBox');
+  const previewImg = document.getElementById('watermarkPreviewImg');
+  const dimsEl = document.getElementById('watermarkDimensions');
 
-      if (!file) {
-        previewBox.style.display = 'none';
-        watermarkedBlob = null;
-        return;
-      }
+  if (!file) {
+    previewBox.style.display = 'none';
+    watermarkedBlob = null;
+    return;
+  }
 
-      try {
-        dimsEl.textContent = '🎨 Applying watermark...';
-        previewBox.style.display = 'block';
+  try {
+    dimsEl.textContent = '🎨 Applying watermark...';
+    previewBox.style.display = 'block';
 
-        const result = await JJWatermark.apply(file, {
-          text: 'JJ Memorabilia Museum',
-          subtext: 'Joe Jackson Archive • joejackson.band',
-          position: 'bottom-right'
-        });
-
-        watermarkedBlob = result.blob;
-        watermarkedFileName = file.name ? file.name.replace(/\.[^/.]+$/, '_watermarked.jpg') : 'watermarked_scan.jpg';
-
-        previewImg.src = result.dataUrl;
-        dimsEl.textContent = `${result.width} × ${result.height} px • Watermarked`;
-      } catch (err) {
-        console.error('Watermark error:', err);
-        previewBox.style.display = 'none';
-        watermarkedBlob = null;
-      }
+    const result = await JJWatermark.apply(file, {
+      text: 'JJ Memorabilia Museum',
+      subtext: 'Joe Jackson Archive • joejackson.band',
+      position: 'bottom-right'
     });
 
+    watermarkedBlob = result.blob;
+    watermarkedFileName = file.name ? file.name.replace(/\.[^/.]+$/, '_watermarked.jpg') : 'watermarked_scan.jpg';
+
+    previewImg.src = result.dataUrl;
+    dimsEl.textContent = `${result.width} × ${result.height} px • Watermarked`;
+  } catch (err) {
+    console.error('Watermark error:', err);
+    previewBox.style.display = 'none';
+    watermarkedBlob = null;
+  }
+});
+    
     document.getElementById('contribForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
