@@ -3,7 +3,6 @@
 ## Corrections 
 - Error: Tour search list visible for public
 - Error: Tour list is not working even for admin
-- Error: Supabase table not-public - set restrictions
 - Error: Logoff button visible even when I am logged-off
 - Nice to have: better mobile styles.css
 - Change: Tickets and Passes available for public (initial release
@@ -23,6 +22,7 @@
 - Q: when rafactoring? see ReEFACTOR_PLAN.MD (Vite)
 - NEW FEATURE - DONE: check setlist.fm for existing setlist and fill-in URL and songs
 - NEW FEATURE - DONE: light mode / dark mode
+- DONE: Supabase set-up policies = table not-public - set restrictions
 - DONE: not working Fetch from Setlist.fm
 - DONE: new ticket-like logo
 - DONE: paging is holding the last page within search scope
