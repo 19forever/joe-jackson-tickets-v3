@@ -1,7 +1,7 @@
 # 🗺️ Joe Jackson Ticket Museum — Roadmap & Project Plan
 
 ## Corrections 
-- 
+- Error/feature: remember sort param when coming back from edit in other categories but Tickets
 - Q: articles
   - new category?
   - different approach
