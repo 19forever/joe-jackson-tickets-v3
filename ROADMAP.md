@@ -4,10 +4,10 @@
 - WHY
   - "Live music is fleeting, but the memories shouldn't be. We are building a permanent digital monument to Joe Jackson's 45+ years on stage — preserved by fans, for fans."
 - HOW
- - "By cross-referencing physical stubs with setlists, bootleg audio, and community contributions, we connect every show from 1978 to today."
- - "Got a stub in a shoe box? Help us map the complete tour history." (Neříkáš „Pošli sken“, ale „Pomoz nám dokončit mapu“).
+  - "By cross-referencing physical stubs with setlists, bootleg audio, and community contributions, we connect every show from 1978 to today."
+  - "Got a stub in a shoe box? Help us map the complete tour history." (Neříkáš „Pošli sken“, ale „Pomoz nám dokončit mapu“).
 - WHAT
- - "No records found for this query. Explore 50+ tours, filter by city, or click 'Help Us Find' to see what's still missing."
+  - "No records found for this query. Explore 50+ tours, filter by city, or click 'Help Us Find' to see what's still missing."
 
 ## Corrections 
 - Error/feature: remember sort param when coming back from edit in other categories but Tickets
