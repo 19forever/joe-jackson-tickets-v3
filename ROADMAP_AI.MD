@@ -84,3 +84,7 @@ An interactive digital museum and historical archive dedicated to Joe Jackson's 
   - Verify graceful image fallback handlers when `SOUBOR_SKEN` file paths fail or return 404.
 - [ ] **Support Email**:
   - Activate and verify `archive@joejackson.band` inbox for contribution handling and DMCA requests.
+- [ ] **Golden Circle Onboarding (Why-How-What Framework)**:
+  - **WHY (Hero Header):** Frame the site around preserving concert memories and live history (*"Preserving 45+ years of live music history..."*).
+  - **HOW (Community Call):** Emphasize crowdsourced archiving and data cross-referencing with setlists/audio.
+  - **WHAT (UI Navigation):** Clear call-to-actions for search, filtering, and the `Help Us Find` missing scans workflow.
