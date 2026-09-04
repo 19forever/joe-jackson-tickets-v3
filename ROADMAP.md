@@ -1,6 +1,17 @@
 # 🗺️ Joe Jackson Ticket Museum — Roadmap & Project Plan
 
 ## Corrections 
+- 
+- Q: articles
+  - new category?
+  - different approach
+- New Feature: edit_ticket_new.html
+  - adding other columns into edit html (donor public y/n, etc.)
+  - get rid of Watermark tool
+  - get rid of Select Scan File for Record
+  - get rid of Missing Scans Check
+  - add control of mandatory fields (only Year actually)
+- Error. Q: Search button searching within Tour names too (confusing?)
 - Error: Logoff button visible even when I am logged-off (only on iOS)
 - Error: Tour search list visible for public (only on iOS)
 - 
