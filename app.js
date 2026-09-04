@@ -1291,7 +1291,7 @@ function renderCategoryTabs(matchesBeforeCategoryFilter) {
   });
 
   const categoryOrder = isAdmin 
-    ? ['Tickets', 'Programs', 'Posters', 'T-shirts', 'Tour Items', 'Memorabilia', 'Videos', 'ALL']
+    ? ['Tickets', 'Passes', 'Programs', 'Posters', 'T-shirts', 'Tour Items', 'Memorabilia', 'Videos', 'ALL']
     : ['Tickets', 'Passes'];
 
   const categoryLabels = { 
