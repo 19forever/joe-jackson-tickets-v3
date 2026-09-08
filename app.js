@@ -1580,7 +1580,6 @@ const donorHTML = isValidValue(donorName)
     const line2HTML = `
       <div class="card-location-line2">${locationText || (isValidValue(t.TOUR_NAME) ? t.TOUR_NAME : '')}</div>
       ${noteHTML}
-      ${donorHTML}
     `;
 
     const relatedItems = getRelatedItems(t);
