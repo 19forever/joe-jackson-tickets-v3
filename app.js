@@ -1092,9 +1092,10 @@ function openDirectImagePreview(startIndex) {
   const container = document.createElement('div');
   container.style.display = 'none';
 
-  const imageTicketMap = [];
+  // Pole pro namapování indexu obrázku na konkrétní záznam z filteredTickets
+  const ticketIndexList = [];
 
-  filteredTickets.forEach((ticket, ticketIndex) => {
+  filteredTickets.forEach((ticket, ticketIdx) => {
     const rawSken = (ticket.SOUBOR_SKEN && isValidValue(ticket.SOUBOR_SKEN)) ? ticket.SOUBOR_SKEN : '';
     const skenFiles = rawSken.split(',').map(s => s.trim()).filter(Boolean);
 
@@ -1103,35 +1104,29 @@ function openDirectImagePreview(startIndex) {
       img.src = MISSING_TICKET_SVG;
       img.alt = `Missing scan for ${formatDisplayDate(ticket.DATUM)}`;
       img.dataset.isMissing = 'true';
-      img.dataset.ticketIndex = ticketIndex; // Uložíme si přesný index záznamu
       container.appendChild(img);
-      imageTicketMap.push(ticket);
+      ticketIndexList.push(ticketIdx);
     } else {
       skenFiles.forEach((file) => {
         const img = document.createElement('img');
         img.src = `./scans/${file}`;
         img.alt = `${formatDisplayDate(ticket.DATUM)} - ${formatLocationText(ticket)}`;
-        img.dataset.ticketIndex = ticketIndex; // Uložíme si přesný index záznamu
         img.onerror = function() {
           this.onerror = null;
           this.src = MISSING_TICKET_SVG;
           this.dataset.isMissing = 'true';
         };
         container.appendChild(img);
-        imageTicketMap.push(ticket);
+        ticketIndexList.push(ticketIdx);
       });
     }
   });
 
   document.body.appendChild(container);
 
-  // Spočítáme startovní index prvního skenu z vybraného lístku
-  let initialImageIndex = 0;
-  if (startIndex > 0 && startIndex < filteredTickets.length) {
-    const targetTicket = filteredTickets[startIndex];
-    initialImageIndex = imageTicketMap.indexOf(targetTicket);
-    if (initialImageIndex === -1) initialImageIndex = 0;
-  }
+  // Určení počátečního indexu obrázku
+  let initialImageIndex = ticketIndexList.indexOf(startIndex);
+  if (initialImageIndex === -1) initialImageIndex = 0;
 
   activeViewerInstance = new Viewer(container, {
     backdrop: true,
@@ -1154,16 +1149,22 @@ function openDirectImagePreview(startIndex) {
       }
       if (container.parentNode) document.body.removeChild(container);
     },
-    title: function(image) {
-      // Správné zjištění indexu aktuálně zobrazeného lístku z datasetu obrázku
-      const ticketIdxAttr = image ? image.getAttribute('data-ticket-index') : null;
-      const ticketIdx = ticketIdxAttr !== null ? parseInt(ticketIdxAttr, 10) : startIndex;
-      const t = filteredTickets[ticketIdx] || filteredTickets[startIndex];
+    title: function() {
+      // Čteme index přímo z paměti Viewer.js
+      const activeImgIndex = (activeViewerInstance && typeof activeViewerInstance.index === 'number') 
+        ? activeViewerInstance.index 
+        : initialImageIndex;
+
+      const ticketIdx = ticketIndexList[activeImgIndex] !== undefined 
+        ? ticketIndexList[activeImgIndex] 
+        : startIndex;
+
+      const t = filteredTickets[ticketIdx];
       if (!t) return '';
 
       const topRow = [];
 
-      // Dynamické číslo snímku/záznamu (např. [1 / 29], [2 / 29] atd.)
+      // Číslo aktuálního záznamu (např. [4 / 29])
       const currentTicketPos = ticketIdx + 1;
       topRow.push(`[${currentTicketPos} / ${filteredTickets.length}]`);
 
@@ -1190,10 +1191,8 @@ function openDirectImagePreview(startIndex) {
       return topRow.join(' | ');
     },
     viewed: function() {
-      // Při posunu načteme aktuální obrázek z kontejneru a získáme jeho přesný ticket
-      const activeImg = container.children[activeViewerInstance.index];
-      const ticketIdxAttr = activeImg ? activeImg.getAttribute('data-ticket-index') : null;
-      const ticketIdx = ticketIdxAttr !== null ? parseInt(ticketIdxAttr, 10) : startIndex;
+      const activeImgIndex = activeViewerInstance ? activeViewerInstance.index : initialImageIndex;
+      const ticketIdx = ticketIndexList[activeImgIndex] !== undefined ? ticketIndexList[activeImgIndex] : startIndex;
       const t = filteredTickets[ticketIdx];
 
       setTimeout(() => {
