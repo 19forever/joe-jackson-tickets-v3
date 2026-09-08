@@ -55,14 +55,6 @@
       accent-color: var(--accent-yellow, #f59e0b);
       cursor: pointer;
     }
-    .form-row-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    @media (max-width: 480px) {
-      .form-row-2 { grid-template-columns: 1fr; }
-    }
   </style>
 </head>
 <body class="theme-dark">
@@ -88,24 +80,28 @@
       Help us preserve Joe Jackson's live concert history. If you have a ticket stub, pass, program or photo, please share it with the archive!
     </p>
 
-    <form id="contributionForm">
+    <!-- Odesílání přes bezplatnou formulářovou službu Formspree -->
+    <form id="contributionForm" action="https://formspree.io/f/xknpzgqb" method="POST" enctype="multipart/form-data">
       
-      <!-- 1. Concert Date (Required) -->
+      <!-- Skryté pole s informací, co se má uložit do databáze jako CONTRIBUTOR -->
+      <input type="hidden" id="finalContributor" name="Donor_Name_For_Museum" value="">
+
+      <!-- 1. Concert Date -->
       <div class="form-group">
         <label for="concertDate">Concert Date <span class="required-asterisk">*</span></label>
-        <input type="date" id="concertDate" name="concertDate" class="form-control" required>
+        <input type="date" id="concertDate" name="Concert_Date" class="form-control" required>
       </div>
 
-      <!-- 2. City, Country (Required) -->
+      <!-- 2. City, Country -->
       <div class="form-group">
         <label for="cityCountry">City, Country <span class="required-asterisk">*</span></label>
-        <input type="text" id="cityCountry" name="cityCountry" class="form-control" placeholder="e.g. London, UK or Prague, Czech Republic" required>
+        <input type="text" id="cityCountry" name="City_Country" class="form-control" placeholder="e.g. London, UK or Prague, Czech Republic" required>
       </div>
 
-      <!-- 3. Venue (Optional) -->
+      <!-- 3. Venue -->
       <div class="form-group">
         <label for="venue">Venue</label>
-        <input type="text" id="venue" name="venue" class="form-control" placeholder="e.g. Royal Albert Hall or Lucerna Music Bar">
+        <input type="text" id="venue" name="Venue" class="form-control" placeholder="e.g. Royal Albert Hall or Lucerna Music Bar">
       </div>
 
       <hr style="border: 0; border-top: 1px solid var(--border-color, #2a364f); margin: 20px 0;">
@@ -113,22 +109,22 @@
       <!-- 4. Name / Nick & Consent Checkbox -->
       <div class="form-group">
         <label for="contributorName">Your Name / Nick <span class="required-asterisk">*</span></label>
-        <input type="text" id="contributorName" name="contributorName" class="form-control" placeholder="e.g. John Doe or JJ_Fan_99" required>
+        <input type="text" id="contributorName" name="Contributor_Name" class="form-control" placeholder="e.g. John Doe or JJ_Fan_99" required>
       </div>
 
       <div class="form-group">
         <label class="form-checkbox-group">
-          <input type="checkbox" id="publishConsent" name="publishConsent" checked>
+          <input type="checkbox" id="publishConsent" name="Consent_To_Publish_Name" value="YES" checked>
           <span style="font-size: 0.88rem; color: var(--text-main, #e2e8f0); font-weight: normal;">
             My name / nick can be published as a donor on the museum card
           </span>
         </label>
       </div>
 
-      <!-- 5. Email (Required for follow-up) -->
+      <!-- 5. Email -->
       <div class="form-group">
         <label for="contributorEmail">Your Email <span class="required-asterisk">*</span></label>
-        <input type="email" id="contributorEmail" name="contributorEmail" class="form-control" placeholder="your.email@example.com" required>
+        <input type="email" id="contributorEmail" name="_replyto" class="form-control" placeholder="your.email@example.com" required>
         <span style="font-size: 0.75rem; color: var(--text-muted, #9ca3af);">Used strictly for clarifying questions if necessary. Will never be published.</span>
       </div>
 
@@ -137,26 +133,24 @@
       <!-- 6. Additional Notes / Trivia -->
       <div class="form-group">
         <label for="notes">Additional Notes / Trivia</label>
-        <textarea id="notes" name="notes" rows="3" class="form-control" placeholder="Concert memories, supporting act details, tour anecdotes..."></textarea>
+        <textarea id="notes" name="Notes_Trivia" rows="3" class="form-control" placeholder="Concert memories, supporting act details, tour anecdotes..."></textarea>
       </div>
 
-      <!-- 7. Image Upload (Required) -->
+      <!-- 7. Image Upload -->
       <div class="form-group">
         <label for="imageFile">Image / Scan File <span class="required-asterisk">*</span></label>
-        <input type="file" id="imageFile" name="imageFile" accept="image/*" class="form-control" required>
+        <input type="file" id="imageFile" name="attachment" accept="image/*" class="form-control" required>
       </div>
 
-      <button type="submit" class="btn-contribute" style="width: 100%; margin-top: 15px; padding: 12px; font-size: 1rem; cursor: pointer;">
+      <button type="submit" id="submitBtn" class="btn-contribute" style="width: 100%; margin-top: 15px; padding: 12px; font-size: 1rem; cursor: pointer;">
         📤 Submit Contribution
       </button>
 
     </form>
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-client.js"></script>
   <script>
-    // Předvyplnění z URL parametrů (pokud uživatel kliknul z karty lístku)
+    // 1. Předvyplnění formuláře z URL parametrů (při prokliku z karty muzea)
     window.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
       
@@ -179,29 +173,13 @@
       }
     });
 
-    // Logika zpracování a odoslaní formuláře
-    document.getElementById('contributionForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const consentChecked = document.getElementById('publishConsent').checked;
+    // 2. Před odosláním formuláře zkontrolujeme souhlas
+    document.getElementById('contributionForm').addEventListener('submit', function() {
+      const consent = document.getElementById('publishConsent').checked;
       const rawName = document.getElementById('contributorName').value.trim();
       
-      // Pokud byl udělán souhlas, uplatní se jméno, jinak anonymní '?'
-      const finalDonorName = consentChecked ? rawName : '?';
-
-      const formData = {
-        date: document.getElementById('concertDate').value,
-        location: document.getElementById('cityCountry').value,
-        venue: document.getElementById('venue').value,
-        contributor: finalDonorName,
-        email: document.getElementById('contributorEmail').value,
-        notes: document.getElementById('notes').value,
-        consent: consentChecked
-      };
-
-      console.log('Sending submission:', formData);
-      alert('Thank you! Your contribution has been submitted for review.');
-      window.location.href = 'index.html';
+      // Pokud souhlas udělil, pošleme jeho jméno, jinak '?'
+      document.getElementById('finalContributor').value = consent ? rawName : '?';
     });
   </script>
 </body>
