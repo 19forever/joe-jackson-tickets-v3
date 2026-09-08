@@ -1966,3 +1966,13 @@ header {
   padding: 1px 4px;
   border-radius: 4px;
 }
+
+/* Úprava popisku ve Viewer.js pro čitelnost Notes */
+.viewer-title {
+  white-space: pre-wrap !important;
+  line-height: 1.5 !important;
+  max-width: 80% !important;
+  margin: 0 auto !important;
+  font-size: 0.92rem !important;
+  color: var(--text-heading, #ffffff) !important;
+}
