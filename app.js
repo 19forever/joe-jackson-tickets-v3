@@ -1557,9 +1557,11 @@ function renderTickets(tickets) {
       statusBadgeHTML = ` <span class="badge-status-rescheduled" title="Rescheduled show${origText}">🔄 Rescheduled</span>`;
     }
 
-    // Zobrazení Jména Donora / Přispěvatele
-    const donorName = t.PRISPEVATEL || t.CONTRIBUTOR;
-    const donorHTML = isValidValue(donorName) ? `<div class="card-donor" title="Donor / Contributor"><i>Donor👤${donorName}</i></div>` : '';
+    // 1. Zobrazení Jména Donora / Přispěvatele
+const donorName = t.PRISPEVATEL || t.CONTRIBUTOR;
+const donorHTML = isValidValue(donorName) 
+  ? `<div class="card-donor" style="margin-bottom: 6px;" title="Donor / Contributor"><i>Donor👤${donorName}</i></div>` 
+  : '';
 
     const line1HTML = `
      <div class="card-meta-line1">
