@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings & Preferences — Joe Jackson's Ticket Museum</title>
+  
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate icon" type="image/x-icon" href="favicon.ico">
+
+  <!-- Google Fonts pro náhled typografie -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+
+  <script src="storage-service.js"></script>
+
+  <script>
+    (function() {
+      try {
+        var f = localStorage.getItem('jj_selected_font') || 'font-default';
+        if (f) document.documentElement.classList.add(f);
+        var t = localStorage.getItem('app-theme') || 'theme-dark';
+        document.documentElement.classList.add(t);
+      } catch(e) {}
+    })();
+  </script>
+
+  <style>
+    .settings-container {
+      max-width: 650px;
+      margin: 40px auto;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .settings-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 20px;
+      margin-bottom: 25px;
+    }
+
+    .settings-header h2 {
+      font-size: 1.4rem;
+      color: var(--text-heading);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .settings-group {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .settings-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .settings-row label {
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: var(--text-heading);
+    }
+
+    .settings-row p.desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .settings-row select {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color-light);
+      color: var(--text-main);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      outline: none;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .settings-row select:focus {
+      border-color: var(--accent-yellow);
+    }
+
+    .settings-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .status-msg {
+      font-size: 0.85rem;
+      color: var(--accent-yellow);
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="settings-container">
+    <div class="settings-header">
+      <h2>⚙️ Settings & Preferences</h2>
+      <a href="index.html" class="btn-contribute">← Back to Museum</a>
+    </div>
+
+    <div class="settings-group">
+      <!-- Theme Setting -->
+      <div class="settings-row">
+        <label for="settingsTheme">Color Theme</label>
+        <p class="desc">Choose your preferred visual appearance mode.</p>
+        <select id="settingsTheme">
+          <option value="theme-dark">🌙 Dark Mode (Default)</option>
+          <option value="theme-light">☀️ Light Mode</option>
+        </select>
+      </div>
+
+      <!-- Typography Setting -->
+      <div class="settings-row">
+        <label for="settingsFont">Typography & Font Family</label>
+        <p class="desc">Select font styling for headers, titles, and concert cards.</p>
+        <select id="settingsFont">
+          <option value="font-default">🔤 Default (Inter)</option>
+          <option value="font-condensed">🔤 Tall & Condensed (Barlow)</option>
+          <option value="font-light">🔤 Light & Elegant (Slim)</option>
+        </select>
+      </div>
+
+      <!-- Default Sorting Setting -->
+      <div class="settings-row">
+        <label for="settingsSort">Default Concert Sorting</label>
+        <p class="desc">Choose how items are initially ordered when opening the archive.</p>
+        <select id="settingsSort">
+          <option value="random">🎲 Random / Shuffled (Default)</option>
+          <option value="oldest">Date (Oldest First)</option>
+          <option value="newest">Date (Newest First)</option>
+          <option value="missing_setlists_only">📝 Missing Setlists Only</option>
+        </select>
+      </div>
+
+      <!-- Default Page Size Setting -->
+      <div class="settings-row">
+        <label for="settingsPageSize">Default Items Per Page</label>
+        <p class="desc">Number of items displayed before pagination.</p>
+        <select id="settingsPageSize">
+          <option value="25">25 items</option>
+          <option value="50">50 items (Default)</option>
+          <option value="100">100 items</option>
+          <option value="ALL">Show ALL items</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="settings-actions">
+      <span class="status-msg" id="statusMsg">✓ Preferences saved!</span>
+      <button class="btn-contribute" id="saveBtn" style="background: var(--accent-yellow); color: #000; font-weight: 700; border: none; cursor: pointer;">
+        Save Preferences
+      </button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const themeSelect = document.getElementById('settingsTheme');
+      const fontSelect = document.getElementById('settingsFont');
+      const sortSelect = document.getElementById('settingsSort');
+      const pageSizeSelect = document.getElementById('settingsPageSize');
+      const saveBtn = document.getElementById('saveBtn');
+      const statusMsg = document.getElementById('statusMsg');
+
+      // Helper pro čtení z StorageService / localStorage
+      function getStored(key, fallback) {
+        if (typeof StorageService !== 'undefined') {
+          return StorageService.get(key, fallback);
+        }
+        try {
+          return localStorage.getItem(key) || fallback;
+        } catch(e) {
+          return fallback;
+        }
+      }
+
+      function setStored(key, val) {
+        if (typeof StorageService !== 'undefined') {
+          StorageService.set(key, val);
+        } else {
+          try {
+            localStorage.setItem(key, val);
+          } catch(e) {}
+        }
+      }
+
+      // Načtení uložených hodnot
+      const currentTheme = getStored('app-theme', 'theme-dark');
+      const currentFont = getStored('jj_selected_font', 'font-default');
+      const currentSort = getStored('jj_museum_sort', 'random');
+      const currentPageSize = getStored('jj_museum_pagesize', '50');
+
+      themeSelect.value = currentTheme;
+      fontSelect.value = currentFont;
+      sortSelect.value = currentSort;
+      pageSizeSelect.value = currentPageSize;
+
+      // Živý náhled motivu a písma při změně
+      themeSelect.addEventListener('change', (e) => {
+        const val = e.target.value;
+        document.body.classList.remove('theme-dark', 'theme-light');
+        document.documentElement.classList.remove('theme-dark', 'theme-light');
+        document.body.classList.add(val);
+        document.documentElement.classList.add(val);
+      });
+
+      fontSelect.addEventListener('change', (e) => {
+        const val = e.target.value;
+        document.body.classList.remove('font-default', 'font-condensed', 'font-light');
+        document.documentElement.classList.remove('font-default', 'font-condensed', 'font-light');
+        document.body.classList.add(val);
+        document.documentElement.classList.add(val);
+      });
+
+      // Uložení nastavení
+      saveBtn.addEventListener('click', () => {
+        setStored('app-theme', themeSelect.value);
+        setStored('jj_selected_font', fontSelect.value);
+        setStored('jj_museum_sort', sortSelect.value);
+        setStored('jj_museum_pagesize', pageSizeSelect.value);
+
+        statusMsg.style.display = 'inline';
+        setTimeout(() => {
+          statusMsg.style.display = 'none';
+        }, 2500);
+      });
+    });
+  </script>
+</body>
+</html>
