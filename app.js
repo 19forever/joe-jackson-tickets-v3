@@ -1371,7 +1371,7 @@ function filterData(keepSavedPage = false) {
     const formattedDate = formatDisplayDate(t.DATUM).toLowerCase();
     const venue = (t.VENUE || t.MISTO_KONANI || '').toLowerCase();
     const city = (t.MESTO || '').toLowerCase();
-    const country = (t.STAT || '').toLowerCase();
+    const country = (t.STAT || '').toLowerCase(); // Nacita pole STAT
     const contributor = (t.PRISPEVATEL || t.CONTRIBUTOR || '').toLowerCase();
     const category = (t.KATEGORIE || '').toLowerCase();
     const supportingAct = (t.SUPPORTING_ACT || '').toLowerCase();
@@ -1386,7 +1386,7 @@ function filterData(keepSavedPage = false) {
       locationText.includes(query) ||
       venue.includes(query) ||
       city.includes(query) ||
-      country.includes(query) ||
+      country.includes(query) || // FIX: Doplněno hledání podle země!
       contributor.includes(query) ||
       category.includes(query) ||
       rawDate.includes(query) ||
