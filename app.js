@@ -1092,22 +1092,23 @@ function openDirectImagePreview(startIndex) {
   const container = document.createElement('div');
   container.style.display = 'none';
 
-  // Pole pro namapování indexu obrázku na konkrétní záznam z filteredTickets
-  const ticketIndexList = [];
+  // Struktura uchovávající index lístku i pod-index skenu (a, b, c...)
+  const imageTicketMap = [];
 
   filteredTickets.forEach((ticket, ticketIdx) => {
     const rawSken = (ticket.SOUBOR_SKEN && isValidValue(ticket.SOUBOR_SKEN)) ? ticket.SOUBOR_SKEN : '';
     const skenFiles = rawSken.split(',').map(s => s.trim()).filter(Boolean);
+    const totalScans = skenFiles.length;
 
-    if (skenFiles.length === 0) {
+    if (totalScans === 0) {
       const img = document.createElement('img');
       img.src = MISSING_TICKET_SVG;
       img.alt = `Missing scan for ${formatDisplayDate(ticket.DATUM)}`;
       img.dataset.isMissing = 'true';
       container.appendChild(img);
-      ticketIndexList.push(ticketIdx);
+      imageTicketMap.push({ ticketIdx, scanIdx: 0, totalScans: 0 });
     } else {
-      skenFiles.forEach((file) => {
+      skenFiles.forEach((file, scanIdx) => {
         const img = document.createElement('img');
         img.src = `./scans/${file}`;
         img.alt = `${formatDisplayDate(ticket.DATUM)} - ${formatLocationText(ticket)}`;
@@ -1117,15 +1118,15 @@ function openDirectImagePreview(startIndex) {
           this.dataset.isMissing = 'true';
         };
         container.appendChild(img);
-        ticketIndexList.push(ticketIdx);
+        imageTicketMap.push({ ticketIdx, scanIdx, totalScans });
       });
     }
   });
 
   document.body.appendChild(container);
 
-  // Určení počátečního indexu obrázku
-  let initialImageIndex = ticketIndexList.indexOf(startIndex);
+  // Spočítáme startovní index prvního skenu z vybraného lístku
+  let initialImageIndex = imageTicketMap.findIndex(item => item.ticketIdx === startIndex);
   if (initialImageIndex === -1) initialImageIndex = 0;
 
   activeViewerInstance = new Viewer(container, {
@@ -1150,23 +1151,27 @@ function openDirectImagePreview(startIndex) {
       if (container.parentNode) document.body.removeChild(container);
     },
     title: function() {
-      // Čteme index přímo z paměti Viewer.js
       const activeImgIndex = (activeViewerInstance && typeof activeViewerInstance.index === 'number') 
         ? activeViewerInstance.index 
         : initialImageIndex;
 
-      const ticketIdx = ticketIndexList[activeImgIndex] !== undefined 
-        ? ticketIndexList[activeImgIndex] 
-        : startIndex;
-
-      const t = filteredTickets[ticketIdx];
+      const mapItem = imageTicketMap[activeImgIndex] || { ticketIdx: startIndex, scanIdx: 0, totalScans: 1 };
+      const t = filteredTickets[mapItem.ticketIdx];
       if (!t) return '';
 
       const topRow = [];
 
-      // Číslo aktuálního záznamu (např. [4 / 29])
-      const currentTicketPos = ticketIdx + 1;
-      topRow.push(`[${currentTicketPos} / ${filteredTickets.length}]`);
+      // Vytvoření přípony a, b, c... v případě více skenů pro jeden koncert
+      const currentTicketPos = mapItem.ticketIdx + 1;
+      let posString = `${currentTicketPos}`;
+
+      if (mapItem.totalScans > 1) {
+        // Převod pod-indexu (0, 1, 2...) na písmeno ('a', 'b', 'c'...)
+        const letter = String.fromCharCode(97 + mapItem.scanIdx); 
+        posString += letter;
+      }
+
+      topRow.push(`[${posString} / ${filteredTickets.length}]`);
 
       if (t.DATUM && isValidValue(t.DATUM)) {
         topRow.push(`📅 ${formatDisplayDate(t.DATUM)}`);
@@ -1192,7 +1197,8 @@ function openDirectImagePreview(startIndex) {
     },
     viewed: function() {
       const activeImgIndex = activeViewerInstance ? activeViewerInstance.index : initialImageIndex;
-      const ticketIdx = ticketIndexList[activeImgIndex] !== undefined ? ticketIndexList[activeImgIndex] : startIndex;
+      const mapItem = imageTicketMap[activeImgIndex] || { ticketIdx: startIndex };
+      const ticketIdx = mapItem.ticketIdx;
       const t = filteredTickets[ticketIdx];
 
       setTimeout(() => {
@@ -1219,7 +1225,6 @@ function openDirectImagePreview(startIndex) {
 
             noteBlock.innerHTML = `💡 Note: ${cleanNote} `;
 
-            // Tlačítko zobrazujeme POUZE v případě, že byl text zkrácen
             if (isTruncated) {
               const btn = document.createElement('button');
               btn.className = 'viewer-note-btn';
