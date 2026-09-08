@@ -1967,36 +1967,28 @@ header {
   border-radius: 4px;
 }
 
-/* Oprava spodního panelu Viewer.js pro dlouhé texty */
+/* Povolení víceřádkového textu v titulku Viewer.js */
 .viewer-title {
   white-space: normal !important;
-  line-height: 1.4 !important;
-  max-width: 85% !important;
+  line-height: 1.5 !important;
+  max-width: 90% !important;
   margin: 0 auto !important;
-  font-size: 0.85rem !important;
+  font-size: 0.88rem !important;
   color: #e0e0e0 !important;
   text-align: center !important;
-  padding-bottom: 5px !important;
 }
 
-/* Tlačítko "Read Full Note / Review" v liště prohlížeče */
+/* Tlačítko na druhém řádku vedle Note */
 .viewer-note-btn {
   display: inline-block !important;
-  margin-left: 10px !important;
-  margin-top: 4px !important;
+  margin-left: 8px !important;
   background: var(--accent-yellow, #f59e0b) !important;
   color: #000000 !important;
   border: none !important;
-  padding: 3px 10px !important;
+  padding: 2px 8px !important;
   border-radius: 4px !important;
-  font-size: 0.78rem !important;
+  font-size: 0.75rem !important;
   font-weight: 700 !important;
   cursor: pointer !important;
-  transition: transform 0.15s ease, background-color 0.15s ease !important;
   vertical-align: middle !important;
-}
-
-.viewer-note-btn:hover {
-  background: var(--accent-yellow-bright, #fbbf24) !important;
-  transform: scale(1.04) !important;
 }
