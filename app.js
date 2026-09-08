@@ -1219,15 +1219,18 @@ function openDirectImagePreview(startIndex) {
 
             noteBlock.innerHTML = `💡 Note: ${cleanNote} `;
 
-            const btn = document.createElement('button');
-            btn.className = 'viewer-note-btn';
-            btn.innerHTML = '💡 Read Full Note / Review';
-            btn.onclick = (e) => {
-              e.stopPropagation();
-              openNoteModal(ticketIdx);
-            };
+            // Tlačítko zobrazíme POUZE v případě, že byl text zkrácen
+            if (isTruncated) {
+              const btn = document.createElement('button');
+              btn.className = 'viewer-note-btn';
+              btn.innerHTML = '💡 Read Full Note / Review';
+              btn.onclick = (e) => {
+                e.stopPropagation();
+                openNoteModal(ticketIdx);
+              };
+              noteBlock.appendChild(btn);
+            }
 
-            noteBlock.appendChild(btn);
             titleEl.appendChild(noteBlock);
           }
         }
