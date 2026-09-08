@@ -236,20 +236,20 @@ function initializeStateFromUrlAndStorage() {
   const urlSort = urlParams.get('sort');
   const urlView = urlParams.get('view') || urlParams.get('layout');
 
-  // Category
+  // 1. Category
   const resolvedCategory = resolveCategoryFromUrl(urlCategory);
   if (resolvedCategory) {
     currentCategory = resolvedCategory;
   }
 
-  // View layout preference (fallback to StorageService)
+  // 2. View layout preference (fallback to StorageService)
   const savedView = safeGetStorage('jj_museum_view');
   const resolvedView = (urlView === 'list' || urlView === 'grid') 
     ? urlView 
     : (savedView === 'list' || savedView === 'grid' ? savedView : 'grid');
   setLayout(resolvedView, false);
 
-  // Sort order preference (fallback to StorageService)
+  // 3. Sort order preference (fallback to StorageService)
   const sortSelect = document.getElementById('sortFilter');
   const savedSort = safeGetStorage('jj_museum_sort');
   const resolvedSort = normalizeSortParam(urlSort) || normalizeSortParam(savedSort) || 'random';
@@ -258,7 +258,15 @@ function initializeStateFromUrlAndStorage() {
     safeSetStorage('jj_museum_sort', resolvedSort);
   }
 
-  // Search
+  // 4. Page Size preference (fallback to StorageService z settings.html)
+  const pageSizeSelect = document.getElementById('pageSizeFilter');
+  const savedPageSize = safeGetStorage('jj_museum_pagesize', '50');
+  pageSize = savedPageSize === 'ALL' ? 'ALL' : parseInt(savedPageSize, 10);
+  if (pageSizeSelect) {
+    pageSizeSelect.value = savedPageSize;
+  }
+
+  // 5. Search
   const searchInput = document.getElementById('searchInput');
   if (urlSearch && searchInput) {
     searchInput.value = urlSearch;
