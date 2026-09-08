@@ -1371,8 +1371,7 @@ function filterData(keepSavedPage = false) {
     const formattedDate = formatDisplayDate(t.DATUM).toLowerCase();
     const venue = (t.VENUE || t.MISTO_KONANI || '').toLowerCase();
     const city = (t.MESTO || '').toLowerCase();
-    const country = (t.STAT || '').toLowerCase(); // Nacita pole STAT
-    const contributor = (t.PRISPEVATEL || t.CONTRIBUTOR || '').toLowerCase();
+    const country = (t.STAT || '').toLowerCase();
     const category = (t.KATEGORIE || '').toLowerCase();
     const supportingAct = (t.SUPPORTING_ACT || '').toLowerCase();
     const lineup = (t.LINEUP || '').toLowerCase();
@@ -1571,9 +1570,15 @@ function renderTickets(tickets) {
     let rawCardNote = isValidValue(t.NOTE) ? String(t.NOTE).replace(/&lt;/g, '<').replace(/&gt;/g, '>') : '';
     const formattedNote = rawCardNote.replace(/\\n/g, '<br>').replace(/\r?\n/g, '<br>');
     const noteHTML = formattedNote ? `<div class="card-note-line" onclick="event.stopPropagation(); openNoteModal(${globalIndex});">💡 ${formattedNote}</div>` : '';
+    
+    // Zobrazení Jména Donora / Přispěvatele
+    const donorName = t.PRISPEVATEL || t.CONTRIBUTOR;
+    const donorHTML = isValidValue(donorName) ? `<div class="card-donor" title="Donor / Contributor">👤 ${donorName}</div>` : '';
+
     const line2HTML = `
       <div class="card-location-line2">${locationText || (isValidValue(t.TOUR_NAME) ? t.TOUR_NAME : '')}</div>
       ${noteHTML}
+      ${donorHTML}
     `;
 
     const relatedItems = getRelatedItems(t);
@@ -1617,19 +1622,26 @@ function renderTickets(tickets) {
         </button>`;
     };
 
-    const posterItems = relatedItems.filter(r => getTicketCategory(r) === 'Posters');
-    const slot3HTML = buildRelatedSlotBadge(posterItems, '🖼️', 'Related Posters');
+    // Odkazové ikony pro související předměty (Postery, Pasy, Merch) se generují pouze v ADMIN režimu
+    let slot3HTML = '<div class="grid-slot-empty"></div>';
+    let slot4HTML = '<div class="grid-slot-empty"></div>';
+    let slot5HTML = '<div class="grid-slot-empty"></div>';
 
-    const passItems = relatedItems.filter(r => getTicketCategory(r) === 'Passes');
-    const slot4HTML = buildRelatedSlotBadge(passItems, '🪪', 'Related Passes');
+    if (isAdmin) {
+      const posterItems = relatedItems.filter(r => getTicketCategory(r) === 'Posters');
+      slot3HTML = buildRelatedSlotBadge(posterItems, '🖼️', 'Related Posters');
 
-    const merchItems = relatedItems.filter(r => {
-      const c = getTicketCategory(r);
-      return c !== 'Posters' && c !== 'Passes' && c !== 'Tickets';
-    });
-    const merchCat = merchItems.length > 0 ? getTicketCategory(merchItems[0]) : '';
-    const merchIcon = merchCat === 'T-shirts' ? '👕' : (merchCat === 'Programs' ? '📖' : (merchCat === 'Tour Items' ? '🎸' : '⭐'));
-    const slot5HTML = buildRelatedSlotBadge(merchItems, merchIcon, 'Related Memorabilia');
+      const passItems = relatedItems.filter(r => getTicketCategory(r) === 'Passes');
+      slot4HTML = buildRelatedSlotBadge(passItems, '🪪', 'Related Passes');
+
+      const merchItems = relatedItems.filter(r => {
+        const c = getTicketCategory(r);
+        return c !== 'Posters' && c !== 'Passes' && c !== 'Tickets';
+      });
+      const merchCat = merchItems.length > 0 ? getTicketCategory(merchItems[0]) : '';
+      const merchIcon = merchCat === 'T-shirts' ? '👕' : (merchCat === 'Programs' ? '📖' : (merchCat === 'Tour Items' ? '🎸' : '⭐'));
+      slot5HTML = buildRelatedSlotBadge(merchItems, merchIcon, 'Related Memorabilia');
+    }
 
     let slot6HTML = '<div class="grid-slot-empty"></div>';
     if (hasLineup) {
