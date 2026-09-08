@@ -1300,7 +1300,7 @@ function renderCategoryTabs(matchesBeforeCategoryFilter) {
 
   const categoryOrder = isAdmin 
     ? ['Tickets', 'Passes', 'Programs', 'Posters', 'T-shirts', 'Tour Items', 'Memorabilia', 'Videos', 'ALL']
-    : ['Tickets', 'Passes'];
+    : ['Tickets', 'Passes', 'ALL'];
 
   const categoryLabels = { 
     'Tickets': '🎫 Tickets', 'Passes': '🪪 Passes', 'Programs': '📖 Programs', 
