@@ -1094,7 +1094,7 @@ function openDirectImagePreview(startIndex) {
 
   const imageTicketMap = [];
 
-  filteredTickets.forEach((ticket) => {
+  filteredTickets.forEach((ticket, ticketIndex) => {
     const rawSken = (ticket.SOUBOR_SKEN && isValidValue(ticket.SOUBOR_SKEN)) ? ticket.SOUBOR_SKEN : '';
     const skenFiles = rawSken.split(',').map(s => s.trim()).filter(Boolean);
 
@@ -1103,6 +1103,7 @@ function openDirectImagePreview(startIndex) {
       img.src = MISSING_TICKET_SVG;
       img.alt = `Missing scan for ${formatDisplayDate(ticket.DATUM)}`;
       img.dataset.isMissing = 'true';
+      img.dataset.ticketIndex = ticketIndex; // Uložíme si přesný index záznamu
       container.appendChild(img);
       imageTicketMap.push(ticket);
     } else {
@@ -1110,6 +1111,7 @@ function openDirectImagePreview(startIndex) {
         const img = document.createElement('img');
         img.src = `./scans/${file}`;
         img.alt = `${formatDisplayDate(ticket.DATUM)} - ${formatLocationText(ticket)}`;
+        img.dataset.ticketIndex = ticketIndex; // Uložíme si přesný index záznamu
         img.onerror = function() {
           this.onerror = null;
           this.src = MISSING_TICKET_SVG;
@@ -1123,6 +1125,7 @@ function openDirectImagePreview(startIndex) {
 
   document.body.appendChild(container);
 
+  // Spočítáme startovní index prvního skenu z vybraného lístku
   let initialImageIndex = 0;
   if (startIndex > 0 && startIndex < filteredTickets.length) {
     const targetTicket = filteredTickets[startIndex];
@@ -1151,15 +1154,17 @@ function openDirectImagePreview(startIndex) {
       }
       if (container.parentNode) document.body.removeChild(container);
     },
-    // Vracíme pouze čistý text bez HTML značek (aby se v liště neobjevovaly kódové fragmenty)
     title: function(image) {
-      const index = Array.from(container.children).indexOf(image);
-      const t = imageTicketMap[index] || filteredTickets[startIndex];
+      // Správné zjištění indexu aktuálně zobrazeného lístku z datasetu obrázku
+      const ticketIdxAttr = image ? image.getAttribute('data-ticket-index') : null;
+      const ticketIdx = ticketIdxAttr !== null ? parseInt(ticketIdxAttr, 10) : startIndex;
+      const t = filteredTickets[ticketIdx] || filteredTickets[startIndex];
       if (!t) return '';
 
       const topRow = [];
 
-      const currentTicketPos = filteredTickets.indexOf(t) + 1;
+      // Dynamické číslo snímku/záznamu (např. [1 / 29], [2 / 29] atd.)
+      const currentTicketPos = ticketIdx + 1;
       topRow.push(`[${currentTicketPos} / ${filteredTickets.length}]`);
 
       if (t.DATUM && isValidValue(t.DATUM)) {
@@ -1185,21 +1190,21 @@ function openDirectImagePreview(startIndex) {
       return topRow.join(' | ');
     },
     viewed: function() {
-      const currentImg = container.children[activeViewerInstance.index];
-      const index = Array.from(container.children).indexOf(currentImg);
-      const t = imageTicketMap[index];
+      // Při posunu načteme aktuální obrázek z kontejneru a získáme jeho přesný ticket
+      const activeImg = container.children[activeViewerInstance.index];
+      const ticketIdxAttr = activeImg ? activeImg.getAttribute('data-ticket-index') : null;
+      const ticketIdx = ticketIdxAttr !== null ? parseInt(ticketIdxAttr, 10) : startIndex;
+      const t = filteredTickets[ticketIdx];
 
-      // Bezpečné vytvoření 2. řádku pro Note přímo do DOMu pomocí HTML
       setTimeout(() => {
         const titleEl = document.querySelector('.viewer-title');
         if (titleEl && t) {
-          // Odstraníme starý note-block, pokud existoval z předchozího lístku
           const oldNoteBlock = titleEl.querySelector('.viewer-note-block');
           if (oldNoteBlock) oldNoteBlock.remove();
 
           if (isValidValue(t.NOTE)) {
             let cleanNote = String(t.NOTE)
-              .replace(/<[^>]*>/g, '') // Odstraní HTML tagy z databáze
+              .replace(/<[^>]*>/g, '')
               .replace(/\\n/g, ' ')
               .replace(/\r?\n/g, ' ')
               .trim();
@@ -1220,10 +1225,7 @@ function openDirectImagePreview(startIndex) {
             btn.innerHTML = '💡 Read Full Note / Review';
             btn.onclick = (e) => {
               e.stopPropagation();
-              const ticketIdx = filteredTickets.indexOf(t);
-              if (ticketIdx !== -1) {
-                openNoteModal(ticketIdx);
-              }
+              openNoteModal(ticketIdx);
             };
 
             noteBlock.appendChild(btn);
