@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About & Legacy — Joe Jackson Memorabilia Museum</title>
+  
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="alternate icon" type="image/x-icon" href="favicon.ico">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Supabase & Storage Service -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script src="storage-service.js"></script>
+
+  <!-- Markdown Parser (marked.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <link rel="stylesheet" href="styles.css">
+
+  <script>
+    (function() {
+      try {
+        var f = localStorage.getItem('jj_selected_font') || 'font-default';
+        if (f) document.documentElement.classList.add(f);
+        var t = localStorage.getItem('app-theme') || 'theme-dark';
+        document.documentElement.classList.add(t);
+      } catch(e) {}
+    })();
+  </script>
+
+  <style>
+    .about-container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .about-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+
+    .about-header h2 {
+      font-size: 1.6rem;
+      color: var(--text-heading);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Styling pro vykreslený Markdown */
+    .markdown-body {
+      color: var(--text-main);
+      line-height: 1.7;
+      font-size: 0.95rem;
+    }
+
+    .markdown-body h1, 
+    .markdown-body h2, 
+    .markdown-body h3 {
+      color: var(--text-heading);
+      margin-top: 1.8em;
+      margin-bottom: 0.6em;
+      border-bottom: 1px solid var(--border-color-light);
+      padding-bottom: 6px;
+    }
+
+    .markdown-body h1 { font-size: 1.5rem; }
+    .markdown-body h2 { font-size: 1.25rem; color: var(--accent-yellow); }
+    .markdown-body h3 { font-size: 1.1rem; }
+
+    .markdown-body p {
+      margin-bottom: 1.2em;
+    }
+
+    .markdown-body ul, .markdown-body ol {
+      padding-left: 24px;
+      margin-bottom: 1.2em;
+    }
+
+    .markdown-body li {
+      margin-bottom: 6px;
+    }
+
+    .markdown-body a {
+      color: var(--accent-yellow);
+      text-decoration: underline;
+    }
+
+    .markdown-body blockquote {
+      border-left: 4px solid var(--accent-yellow);
+      padding-left: 16px;
+      margin: 20px 0;
+      color: var(--text-muted);
+      font-style: italic;
+      background: var(--bg-hover);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+    }
+
+    /* Editor v režimu Administrace */
+    .admin-editor-area {
+      display: none;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .admin-editor-area textarea {
+      width: 100%;
+      height: 400px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color-light);
+      color: var(--text-main);
+      font-family: monospace;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      outline: none;
+      resize: vertical;
+    }
+
+    .admin-editor-area textarea:focus {
+      border-color: var(--accent-yellow);
+    }
+
+    .editor-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="about-container">
+    <div class="about-header">
+      <h2>🏛️ About & Legacy</h2>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button id="editToggleBtn" class="btn-contribute" style="display: none; background: var(--bg-hover); color: var(--accent-yellow); border-color: var(--accent-yellow); cursor: pointer;">
+          ✏️ Edit Content
+        </button>
+        <a href="index.html" class="btn-contribute">← Back to Museum</a>
+      </div>
+    </div>
+
+    <!-- Vykreslený veřejný obsah -->
+    <div id="aboutView" class="markdown-body">
+      <p style="color: var(--text-muted);">Loading content...</p>
+    </div>
+
+    <!-- Admin Editor -->
+    <div id="aboutEditor" class="admin-editor-area">
+      <label style="font-weight: 600; color: var(--text-heading);">Edit Content (Markdown Format):</label>
+      <textarea id="markdownInput"></textarea>
+      <div class="editor-actions">
+        <button id="cancelEditBtn" class="btn-contribute" style="cursor: pointer;">Cancel</button>
+        <button id="saveEditBtn" class="btn-contribute" style="background: var(--accent-yellow); color: #000; font-weight: 700; border: none; cursor: pointer;">
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Výchozí text (fallback), pokud ještě v databázi nic není uloženého
+    const DEFAULT_ABOUT_MD = `# Preserving Joe Jackson's Stage History
+
+Live music is fleeting, but the memories shouldn't be. The **Joe Jackson Memorabilia Museum** is a non-commercial, community-driven digital monument dedicated to preserving over 45 years of concert history, ticket stubs, venue metadata, setlists, and rare memorabilia from 1978 to present.
+
+> "Preserving four decades of live music history — preserved by fans, for fans."
+
+---
+
+## 💛 Acknowledgments & Donors
+
+This archive would not be possible without the generous contributions of fans, collectors, and concertgoers around the world who scanned and donated their personal physical stubs:
+
+- **Rolf's Vault Collection** (Historic 1979–1986 ticket stubs & passes)
+- **Community Contributions** (Individual concertgoers sharing their personal stubs)
+- **Internet Archives & Collectors**
+
+---
+
+## 🎖️ Museum Supporters & Patrons
+
+A special thanks to our patrons on Patreon who help directly cover web hosting, domain renewal (\`joejackson.band\`), and database infrastructure costs:
+
+* *Your Name / Nickname could be here — [Support us on Patreon](#)*
+`;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const aboutView = document.getElementById('aboutView');
+      const aboutEditor = document.getElementById('aboutEditor');
+      const markdownInput = document.getElementById('markdownInput');
+      const editToggleBtn = document.getElementById('editToggleBtn');
+      const cancelEditBtn = document.getElementById('cancelEditBtn');
+      const saveEditBtn = document.getElementById('saveEditBtn');
+
+      // Kontrola Admin módu
+      function isAdmin() {
+        let adminFlag = false;
+        if (typeof StorageService !== 'undefined') {
+          adminFlag = StorageService.get('jj_admin_mode') === 'true';
+        } else {
+          try {
+            adminFlag = localStorage.getItem('jj_admin_mode') === 'true' || sessionStorage.getItem('jj_admin_mode') === 'true';
+          } catch(e) {}
+        }
+        const urlParams = new URLSearchParams(window.location.search);
+        return adminFlag || urlParams.get('admin') === '1';
+      }
+
+      if (isAdmin()) {
+        editToggleBtn.style.display = 'inline-flex';
+      }
+
+      // Načtení obsahu ze Supabase (nebo z LocalStorage/Fallbacku)
+      let currentMarkdown = DEFAULT_ABOUT_MD;
+
+      async function loadContent() {
+        try {
+          if (typeof supabaseClient !== 'undefined') {
+            const { data, error } = await supabaseClient
+              .from('site_settings')
+              .select('value')
+              .eq('key', 'about_content_md')
+              .single();
+
+            if (data && data.value) {
+              currentMarkdown = data.value;
+            }
+          }
+        } catch (err) {
+          // Fallback na localStorage pokud Supabase tabulka ještě neexistuje
+          const localSaved = localStorage.getItem('jj_about_md');
+          if (localSaved) currentMarkdown = localSaved;
+        }
+
+        renderMarkdown(currentMarkdown);
+      }
+
+      function renderMarkdown(mdText) {
+        if (typeof marked !== 'undefined') {
+          aboutView.innerHTML = marked.parse(mdText);
+        } else {
+          aboutView.textContent = mdText;
+        }
+      }
+
+      await loadContent();
+
+      // Přepínání do editoru
+      editToggleBtn.addEventListener('click', () => {
+        markdownInput.value = currentMarkdown;
+        aboutView.style.display = 'none';
+        aboutEditor.style.display = 'flex';
+        editToggleBtn.style.display = 'none';
+      });
+
+      cancelEditBtn.addEventListener('click', () => {
+        aboutEditor.style.display = 'none';
+        aboutView.style.display = 'block';
+        if (isAdmin()) editToggleBtn.style.display = 'inline-flex';
+      });
+
+      // Uložení
+      saveEditBtn.addEventListener('click', async () => {
+        const newMd = markdownInput.value;
+        saveEditBtn.textContent = 'Saving...';
+
+        try {
+          if (typeof supabaseClient !== 'undefined') {
+            const { error } = await supabaseClient
+              .from('site_settings')
+              .upsert({ key: 'about_content_md', value: newMd }, { onConflict: 'key' });
+
+            if (error) throw error;
+          }
+          localStorage.setItem('jj_about_md', newMd);
+          currentMarkdown = newMd;
+          renderMarkdown(currentMarkdown);
+
+          aboutEditor.style.display = 'none';
+          aboutView.style.display = 'block';
+          if (isAdmin()) editToggleBtn.style.display = 'inline-flex';
+        } catch (err) {
+          alert('Error saving content: ' + err.message);
+        } finally {
+          saveEditBtn.textContent = 'Save Changes';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
