@@ -1691,25 +1691,26 @@ const donorHTML = isValidValue(donorName)
       : '';
 
     card.innerHTML = `
-      <div class="card-img-wrapper" title="${isMissingScan ? 'Missing scan - Click to preview' : 'Click to view scan'}">
-        ${scanCountBadgeHTML}
-        <img src="${imgSrc}" loading="lazy" alt="Joe Jackson Concert ${t.DATUM ? formatDisplayDate(t.DATUM) : (t.TOUR_NAME || 'Archive Item')} - ${locationText || 'Live Performance'} (${catName})" onerror="this.onerror=null; this.src='${MISSING_TICKET_SVG}';">
-      </div>
-      <div class="card-content">
-        ${line1HTML}
-        ${line2HTML}
-        <div class="card-actions-grid card-actions">
-          ${slot1HTML}
-          ${slot2HTML}
-          ${slot3HTML}
-          ${slot4HTML}
-          ${slot5HTML}
-          ${slot6HTML}
-          ${slot7HTML}
-        </div>
-        ${collapsibleHTML}
-      </div>
-    `;
+  <div class="card-img-wrapper" title="${isMissingScan ? 'Missing scan - Click to preview' : 'Click to view scan'}">
+    ${scanCountBadgeHTML}
+    <img src="${imgSrc}" loading="lazy" alt="Joe Jackson Concert ${t.DATUM ? formatDisplayDate(t.DATUM) : (t.TOUR_NAME || 'Archive Item')} - ${locationText || 'Live Performance'} (${catName})" onerror="this.onerror=null; this.src='${MISSING_TICKET_SVG}';">
+  </div>
+  <div class="card-content">
+    ${donorHTML}  <!-- ZDE: Donor je na samostatném prvním řádku pod obrázkem -->
+    ${line1HTML}
+    ${line2HTML}
+    <div class="card-actions-grid card-actions">
+      ${slot1HTML}
+      ${slot2HTML}
+      ${slot3HTML}
+      ${slot4HTML}
+      ${slot5HTML}
+      ${slot6HTML}
+      ${slot7HTML}
+    </div>
+    ${collapsibleHTML}
+  </div>
+`;
     
     container.appendChild(card);
   });
