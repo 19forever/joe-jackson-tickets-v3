@@ -1202,15 +1202,15 @@ function openDirectImagePreview(startIndex) {
           if (oldNoteBlock) oldNoteBlock.remove();
 
           if (isValidValue(t.NOTE)) {
-            let cleanNote = String(t.NOTE)
+            const rawNote = String(t.NOTE)
               .replace(/<[^>]*>/g, '')
               .replace(/\\n/g, ' ')
               .replace(/\r?\n/g, ' ')
               .trim();
 
-            if (cleanNote.length > 80) {
-              cleanNote = cleanNote.substring(0, 80) + '...';
-            }
+            const LIMIT = 80;
+            const isTruncated = rawNote.length > LIMIT;
+            const cleanNote = isTruncated ? rawNote.substring(0, LIMIT) + '...' : rawNote;
 
             const noteBlock = document.createElement('div');
             noteBlock.className = 'viewer-note-block';
@@ -1219,7 +1219,7 @@ function openDirectImagePreview(startIndex) {
 
             noteBlock.innerHTML = `💡 Note: ${cleanNote} `;
 
-            // Tlačítko zobrazíme POUZE v případě, že byl text zkrácen
+            // Tlačítko zobrazujeme POUZE v případě, že byl text zkrácen
             if (isTruncated) {
               const btn = document.createElement('button');
               btn.className = 'viewer-note-btn';
