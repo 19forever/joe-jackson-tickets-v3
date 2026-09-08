@@ -10,22 +10,17 @@
   <meta name="author" content="Joe Jackson Memorabilia Museum">
   <meta name="theme-color" content="#f59e0b">
 
-  <!-- Canonical URL -->
   <link rel="canonical" href="https://joejackson.band/edit_ticket_new.html">
 
-  <!-- Favicon (JJ Icon) -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="alternate icon" type="image/x-icon" href="favicon.ico">
   <link rel="apple-touch-icon" href="favicon.svg">
 
-  <!-- Supabase JS Client & App Supabase Config -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-client.js"></script>
 
-  <!-- Viewer.js (Image Inspection & Zoom) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
-  <script src="watermark.js"></script>
   <script src="storage-service.js"></script>
 
   <style>
@@ -206,7 +201,6 @@
       font-size: 0.85rem;
       color: var(--accent-yellow);
       font-weight: 700;
-      font-mono: true;
     }
 
     .select-jump {
@@ -407,10 +401,9 @@
 
     .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 
     @media (max-width: 768px) {
-      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
     }
 
     .form-group {
@@ -538,51 +531,10 @@
 
     .yt-preview { margin-top: 4px; font-size: 0.8rem; }
     .yt-preview a { color: var(--accent-yellow); text-decoration: none; font-weight: 600; }
-
-    /* Missing Scans Modal Styling */
-    .missing-modal-card {
-      background: #141414;
-      border: 1px solid #2a2a2a;
-      border-radius: 12px;
-      width: 95%;
-      max-width: 850px;
-      max-height: 85vh;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-      overflow: hidden;
-    }
-    .missing-modal-header {
-      padding: 16px 20px;
-      border-bottom: 1px solid #2a2a2a;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .missing-modal-body {
-      padding: 16px 20px;
-      overflow-y: auto;
-      flex-grow: 1;
-    }
-    .missing-item-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #0d0d0d;
-      border: 1px solid #222;
-      border-radius: 8px;
-      padding: 10px 14px;
-      margin-bottom: 10px;
-      gap: 12px;
-    }
-    .missing-item-row:hover {
-      border-color: #333;
-    }
   </style>
 </head>
 <body>
 
-  <!-- ADMIN LOGIN GATE MODAL -->
   <div id="gateModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 9999;">
     <div style="background: #141414; border: 1px solid #2a2a2a; border-radius: 12px; padding: 30px; width: 100%; max-width: 380px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);">
       <div style="text-align: center; font-size: 2rem; margin-bottom: 10px;">🔒</div>
@@ -613,21 +565,6 @@
     </div>
   </div>
 
-  <!-- MISSING SCANS MODAL -->
-  <div id="missingScansModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); align-items: center; justify-content: center; z-index: 9998;">
-    <div class="missing-modal-card">
-      <div class="missing-modal-header">
-        <h3 style="color: var(--accent-yellow); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
-          📂 Records Without Scans (<span id="missingScansModalCount">0</span>)
-        </h3>
-        <button type="button" onclick="closeMissingScansModal()" style="background: none; border: none; color: #9ca3af; font-size: 1.4rem; cursor: pointer; line-height: 1;">✖</button>
-      </div>
-      <div class="missing-modal-body" id="missingScansModalList">
-        <!-- Dynamic content filled by JS -->
-      </div>
-    </div>
-  </div>
-
   <header>
     <div class="header-left">
       <div class="logo">JJ</div>
@@ -639,7 +576,6 @@
     </div>
   </header>
 
-  <!-- Navigation & Action Bar -->
   <div class="record-nav-bar">
     <div style="display: flex; align-items: center;">
       <button class="nav-btn" id="prevBtn" onclick="navigateRecord(-1)" title="Previous Record">◄</button>
@@ -663,7 +599,6 @@
 
   <div class="main-editor-layout">
     
-    <!-- Left Sticky Column: Image Inspection -->
     <div class="scan-preview-sticky">
       <h3>🔍 Scan Inspection (Click to Zoom)</h3>
       <div class="img-box">
@@ -671,34 +606,6 @@
       </div>
       <div class="thumb-list" id="thumbList"></div>
 
-      <!-- SELECT IMAGE FOR SOUBOR_SKEN -->
-      <div style="margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px;">
-        <h4 style="margin: 0 0 6px 0; font-size: 0.85rem; color: var(--accent-yellow);">
-          📷 Select Scan File for Record
-        </h4>
-        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; line-height: 1.3;">
-          Choose an image file matching your local <code>/scans/</code> folder. The filename will be assigned automatically.
-        </p>
-        <input type="file" id="scanFileInput" accept="image/*" style="font-size: 0.8rem; width: 100%;">
-      </div>
-
-      <!-- Admin Watermark Tool -->
-      <div style="margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px;">
-        <h4 style="margin: 0 0 8px 0; font-size: 0.85rem; color: var(--accent-yellow); display: flex; align-items: center; gap: 6px;">
-          <span>🏷️ Watermark Tool</span>
-        </h4>
-        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
-          Upload a raw scan photo to apply the official <strong>"JJ Memorabilia Museum"</strong> watermark badge.
-        </p>
-        <input type="file" id="adminWatermarkInput" accept="image/*" style="font-size: 0.8rem; width: 100%; margin-bottom: 8px;">
-        <div id="adminWatermarkBox" style="display: none; text-align: center; margin-top: 8px;">
-          <a id="adminWatermarkDownload" class="nav-btn" style="display: inline-block; background: var(--accent-yellow); color: #000; text-decoration: none; font-weight: 700; font-size: 0.8rem; padding: 6px 12px; border-radius: 4px;" download>
-            💾 Download Watermarked Image
-          </a>
-        </div>
-      </div>
-
-      <!-- Unassigned Scans Inbox (Scans Folder Check via GitHub API) -->
       <div style="margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px;">
         <h4 style="margin: 0 0 8px 0; font-size: 0.85rem; color: var(--accent-yellow); display: flex; align-items: center; justify-content: space-between;">
           <span>📂 Unassigned Scans Inbox</span>
@@ -710,24 +617,10 @@
         <button type="button" class="btn-token" id="btnScanFolder" onclick="scanUnassignedImages()" style="width: 100%; margin-top: 6px;">🔍 Scan /scans/ Folder</button>
         <div id="unassignedScansList" style="margin-top: 10px; max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
       </div>
-
-      <!-- CHECK UNASSIGNED SCANS IN DATABASE -->
-      <div style="margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px;">
-        <h4 style="margin: 0 0 8px 0; font-size: 0.85rem; color: var(--accent-yellow); display: flex; align-items: center; justify-content: space-between;">
-          <span>📂 Missing Scans Check</span>
-        </h4>
-        <button type="button" class="btn-token" id="btnCheckMissing" onclick="checkMissingScansInDatabase()" style="width: 100%; margin-top: 4px;">
-          🔍 Check Records Without Scans
-        </button>
-        <div id="missingScansResult" style="margin-top: 8px; font-size: 0.75rem; color: var(--text-muted);"></div>
-      </div>
-
     </div>
 
-    <!-- Right Column: Form Panels -->
     <form id="editForm" onsubmit="event.preventDefault();">
       
-      <!-- Primary Classification -->
       <div class="form-panel">
         <h3>Primary Metadata</h3>
         <div class="grid-3">
@@ -823,7 +716,6 @@
         </div>
       </div>
 
-      <!-- Scans & Contributor -->
       <div class="form-panel">
         <h3>Files & Contributor</h3>
         <div class="grid-2">
@@ -838,7 +730,6 @@
         </div>
       </div>
 
-      <!-- Links & Setlist API -->
       <div class="form-panel">
         <h3>Links & Setlist Integration</h3>
         <div class="grid-2">
@@ -989,52 +880,6 @@
       }
 
       const isAuthenticated = await checkAuthSession();
-
-      const scanInput = document.getElementById('scanFileInput');
-      if (scanInput) {
-        scanInput.addEventListener('change', function(e) {
-          const file = e.target.files[0];
-          if (file) {
-            const skenField = getField('SOUBOR_SKEN');
-            if (skenField) {
-              const currentVal = skenField.value.trim();
-              if (currentVal) {
-                if (!currentVal.includes(file.name)) {
-                  skenField.value = currentVal + ', ' + file.name;
-                }
-              } else {
-                skenField.value = file.name;
-              }
-              updateImageFromInput();
-              showStatus(`📷 Filename "${file.name}" assigned to SOUBOR_SKEN field. Remember to upload the file to /scans/ on your server.`, 'green');
-            }
-          }
-        });
-      }
-
-      const wmInputEl = document.getElementById('adminWatermarkInput');
-      if (wmInputEl) {
-        wmInputEl.addEventListener('change', async function(e) {
-          const file = e.target.files[0];
-          const box = document.getElementById('adminWatermarkBox');
-          const dlBtn = document.getElementById('adminWatermarkDownload');
-          if (!file) { box.style.display = 'none'; return; }
-          try {
-            showStatus('🎨 Applying watermark...', 'yellow');
-            const result = await JJWatermark.apply(file, {
-              text: 'JJ Memorabilia Museum',
-              subtext: 'Joe Jackson Archive • joejackson.band',
-              position: 'bottom-right'
-            });
-            dlBtn.href = result.url;
-            dlBtn.download = `watermarked_${file.name}`;
-            box.style.display = 'block';
-            showStatus('✅ Watermark applied! Download the file and upload it to /scans/', 'green');
-          } catch (err) {
-            showStatus('❌ Watermark processing error: ' + err.message, 'red');
-          }
-        });
-      }
 
       if (isAuthenticated) {
         await loadDataFromSupabase();
@@ -1600,7 +1445,6 @@
           return;
         }
 
-        // Porovnání dat s našimi poli v databázi
         const matchCity = localCity.toLowerCase() === (data.cityName || '').toLowerCase();
         const matchCountry = localCountry.toLowerCase() === (data.countryName || '').toLowerCase();
         const matchVenue = localVenue.toLowerCase() === (data.venueName || '').toLowerCase();
@@ -1851,109 +1695,6 @@
         loadRecordByIndex(fullDbData.length - 1);
         scanUnassignedImages();
         showStatus(`✅ Created new Supabase record ${newId} for scan ${filename}`, 'green');
-      } catch (err) {
-        showStatus('❌ Error creating record: ' + err.message, 'red');
-      }
-    }
-
-    // CHECK RECORDS WITHOUT SCANS IN DATABASE - WITH POP-UP MODAL
-    function checkMissingScansInDatabase() {
-      const missingScans = fullDbData.filter(r => !r.SOUBOR_SKEN || !r.SOUBOR_SKEN.trim());
-      const modal = document.getElementById('missingScansModal');
-      const listEl = document.getElementById('missingScansModalList');
-      const countEl = document.getElementById('missingScansModalCount');
-
-      if (!modal || !listEl) return;
-
-      countEl.textContent = missingScans.length;
-      listEl.innerHTML = '';
-
-      if (missingScans.length === 0) {
-        listEl.innerHTML = '<p style="text-align: center; color: #4ade80; padding: 20px;">🎉 All records in the database have assigned scans!</p>';
-      } else {
-        missingScans.forEach(row => {
-          const globalIdx = fullDbData.indexOf(row);
-          const div = document.createElement('div');
-          div.className = 'missing-item-row';
-          
-          const dateStr = row.DATUM || 'YYYY-MM-DD';
-          const cityStr = row.MESTO || row.STAT || 'Unknown City';
-          const venueStr = row.VENUE ? ` (${row.VENUE})` : '';
-          const catStr = row.KATEGORIE || 'Tickets';
-          const recId = row.ID_MEMORABILIA || row.ID_LISTKU || 'No ID';
-
-          div.innerHTML = `
-            <div>
-              <div style="font-weight: 700; color: #fff; font-size: 0.85rem;">
-                [${dateStr}] ${cityStr}${venueStr}
-              </div>
-              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
-                ID: <span style="color: var(--accent-yellow);">${recId}</span> | Category: ${catStr}
-              </div>
-            </div>
-            <div style="display: flex; gap: 6px;">
-              <button type="button" class="btn-token" onclick="jumpToMissingRecord(${globalIdx})" title="Edit this record">
-                ✏️ Edit
-              </button>
-              <button type="button" class="btn-add-new" onclick="createAdditionalRecordForShow(${globalIdx})" title="Add another category/item for this concert date">
-                ➕ New Record for Show
-              </button>
-            </div>
-          `;
-          listEl.appendChild(div);
-        });
-      }
-
-      modal.style.display = 'flex';
-    }
-
-    function closeMissingScansModal() {
-      const modal = document.getElementById('missingScansModal');
-      if (modal) modal.style.display = 'none';
-    }
-
-    function jumpToMissingRecord(idx) {
-      closeMissingScansModal();
-      loadRecordByIndex(idx);
-    }
-
-    // ADD NEW RECORD FOR AN EXISTING SHOW/DATE
-    async function createAdditionalRecordForShow(idx) {
-      closeMissingScansModal();
-      saveCurrentFormToMemory();
-
-      const sourceRecord = fullDbData[idx] || {};
-      const newId = `TICKET_${String(Date.now()).slice(-6)}`;
-      
-      const newRecord = {
-        ID_MEMORABILIA: newId,
-        SHOW_ID: sourceRecord.SHOW_ID || '',
-        TOUR_ID: sourceRecord.TOUR_ID || '',
-        TOUR_NAME: sourceRecord.TOUR_NAME || '',
-        DATUM: sourceRecord.DATUM || '',
-        MESTO: sourceRecord.MESTO || '',
-        STAT: sourceRecord.STAT || '',
-        VENUE: sourceRecord.VENUE || '',
-        LINEUP: sourceRecord.LINEUP || '',
-        KATEGORIE: 'Tickets'
-      };
-
-      showStatus(`➕ Creating additional record for show ${sourceRecord.DATUM || ''}...`, 'yellow');
-
-      try {
-        const { data, error } = await supabaseClient
-          .from('tickets')
-          .insert([newRecord])
-          .select();
-
-        if (error) throw error;
-
-        fullDbData.push(newRecord);
-        populateTourDropdown();
-        populateLocationDropdowns();
-        applyFilters();
-        loadRecordByIndex(fullDbData.length - 1);
-        showStatus(`✅ Created new record ID: ${newId} for show on ${sourceRecord.DATUM || 'N/A'}`, 'green');
       } catch (err) {
         showStatus('❌ Error creating record: ' + err.message, 'red');
       }
