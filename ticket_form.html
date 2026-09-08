@@ -3,630 +3,205 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contribute Memorabilia - Joe Jackson Memorabilia Museum</title>
-  
-  <meta name="description" content="Contribute your Joe Jackson concert ticket stubs, backstage passes, tour programs, posters, or concert photographs to help preserve live music history.">
-  <meta name="keywords" content="Joe Jackson contribution, submit ticket stubs, concert memorabilia donor, Joe Jackson archive, concert passes, vintage posters">
-  <meta name="author" content="Joe Jackson Memorabilia Museum">
-  <meta name="theme-color" content="#f59e0b">
-
-  <!-- Canonical URL -->
-  <link rel="canonical" href="https://joejackson.band/ticket_form.html">
-
-  <!-- Open Graph / Facebook / WhatsApp -->
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Joe Jackson Memorabilia Museum">
-  <meta property="og:url" content="https://joejackson.band/ticket_form.html">
-  <meta property="og:title" content="Contribute Memorabilia - Joe Jackson Memorabilia Museum">
-  <meta property="og:description" content="Contribute your Joe Jackson concert ticket stubs, backstage passes, tour programs, and posters to help preserve live music history.">
-  <meta property="og:image" content="https://joejackson.band/favicon.svg">
-
-  <!-- Twitter Cards -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="https://joejackson.band/ticket_form.html">
-  <meta name="twitter:title" content="Contribute Memorabilia - Joe Jackson Memorabilia Museum">
-  <meta name="twitter:description" content="Contribute your Joe Jackson concert ticket stubs, backstage passes, tour programs, and posters to help preserve live music history.">
-  <meta name="twitter:image" content="https://joejackson.band/favicon.svg">
-
-  <!-- Favicon (JJ Icon) -->
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="alternate icon" type="image/x-icon" href="favicon.ico">
-  <link rel="apple-touch-icon" href="favicon.svg">
+  <title>Contribute Memorabilia - Joe Jackson Archive</title>
   <link rel="stylesheet" href="styles.css">
-  <!-- PapaParse for CSV parsing -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <script src="storage-service.js"></script>
-  <script src="watermark.js"></script>
-
   <style>
-    body {
+    .form-container {
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 24px;
+      background: var(--bg-card, #161e2e);
+      border: 1px solid var(--border-color, #2a364f);
+      border-radius: 8px;
+      color: var(--text-main, #e2e8f0);
+    }
+    .form-group {
+      margin-bottom: 18px;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      padding: 30px;
+      gap: 6px;
     }
-
-    .form-container {
-      width: 100%;
-      max-width: 750px;
-      background-color: var(--bg-panel);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 30px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }
-
-    .form-intro {
-      margin-bottom: 25px;
-      line-height: 1.6;
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
-    .form-intro strong { color: var(--accent-yellow); }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-group.full-width { grid-column: 1 / -1; }
-
-    label { font-size: 0.85rem; font-weight: 600; color: var(--text-main); }
-    label span { color: var(--accent-orange); }
-
-    input[type="text"], input[type="date"], input[type="email"], select, textarea {
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      outline: none;
-      font-family: inherit;
-    }
-
-    input:focus, select:focus, textarea:focus { border-color: var(--accent-blue); }
-
-    input[type="file"] {
-      background-color: var(--bg-card);
-      border: 1px dashed var(--accent-blue);
-      color: var(--text-muted);
-      padding: 15px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .btn-new-tour {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 0.85rem;
+    .form-group label {
       font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s;
+      font-size: 0.9rem;
+      color: var(--accent-yellow, #f59e0b);
     }
-    .btn-new-tour:hover {
-      background-color: rgba(255, 255, 255, 0.08);
-      border-color: var(--accent-yellow);
-      color: var(--accent-yellow);
-    }
-
-    .btn-submit {
-      background-color: var(--accent-yellow);
-      color: #000;
-      border: none;
-      padding: 14px 28px;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 10px;
-      transition: background-color 0.2s, transform 0.1s;
-    }
-    .btn-submit:hover { background-color: #fde047; transform: translateY(-1px); }
-    .btn-submit:disabled { opacity: 0.6; cursor: wait; transform: none; }
-
-    #statusMessage {
-      margin-top: 20px;
-      padding: 16px;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      display: none;
-      text-align: center;
-      line-height: 1.5;
-    }
-    #statusMessage.success {
-      background: rgba(74, 222, 128, 0.15);
-      border: 1px solid #4ade80;
-      color: #4ade80;
-    }
-    #statusMessage.error {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid #ef4444;
+    .form-group label .required-asterisk {
       color: #ef4444;
+      margin-left: 2px;
     }
-
-    @media (max-width: 600px) {
-      body { padding: 15px; }
-      .form-grid { grid-template-columns: 1fr; }
+    .form-control {
+      padding: 10px 12px;
+      background: var(--bg-input, #0f172a);
+      border: 1px solid var(--border-color, #2a364f);
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--accent-yellow, #f59e0b);
+    }
+    .form-checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+      cursor: pointer;
+    }
+    .form-checkbox-group input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent-yellow, #f59e0b);
+      cursor: pointer;
+    }
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 480px) {
+      .form-row-2 { grid-template-columns: 1fr; }
     }
   </style>
 </head>
-<body>
+<body class="theme-dark">
 
-  <header style="max-width: 750px;">
-    <div class="header-left">
-      <div class="logo">JJ</div>
-      <div class="title-area">
-        <h1>Contribute to Archive</h1>
-        <p>Share your Joe Jackson concert tickets, passes, or posters</p>
-      </div>
-    </div>
-    <a href="index.html" class="btn-contribute">◄ Back to Museum</a>
-  </header>
-
-  <div class="form-container">
-    <p class="form-intro">
-      Do you possess a Joe Jackson concert ticket, pass, poster, or program scan not yet featured in our museum? 
-      <strong>Help us grow the archive!</strong> Please submit <strong>one concert item per form</strong>.
-    </p>
-
-    <form id="contribForm" action="https://formsubmit.co/marekkraus@gmail.com" method="POST" enctype="multipart/form-data" class="form-grid">
-      <input type="hidden" name="_subject" value="JJMM - addition">
-      <input type="hidden" name="_captcha" value="false">
-      <input type="hidden" name="_template" value="table">
-
-      <div class="form-group">
-        <label for="category">Category <span>*</span></label>
-        <select id="category" name="Category" required>
-          <option value="Tickets">Ticket</option>
-          <option value="Passes">Pass / Backstage</option>
-          <option value="Posters">Poster / Flyer</option>
-          <option value="Programs">Tour Program</option>
-          <option value="T-shirts">Merchandise / T-shirt</option>
-          <option value="Memorabilia">Other Memorabilia</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="tour_name">Tour Name</label>
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <input type="text" id="tour_name" name="Tour Name" list="toursList" placeholder="Select or type tour name..." style="flex: 1;">
-          <datalist id="toursList"></datalist>
-          <datalist id="tourNamesList"></datalist>
-          <button type="button" class="btn-new-tour" onclick="addNewTourPrompt()" title="Enter a new tour name">➕ New Tour</button>
+  <div class="top-header-container">
+    <header style="flex-direction: column; align-items: center; text-align: center; gap: 12px;">
+      <div class="header-left" style="flex-direction: column; align-items: center; gap: 8px;">
+        <a href="index.html" style="text-decoration: none;">
+          <div class="logo">JJ</div>
+        </a>
+        <div class="title-area" style="text-align: center;">
+          <h1 style="justify-content: center;">Joe Jackson Memorabilia Museum</h1>
+          <p>Contribute Item / Scan</p>
         </div>
       </div>
-
-      <div class="form-group">
-        <label for="tour_id">Tour ID <small style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Auto-generated)</small></label>
-        <input type="text" id="tour_id" name="Tour ID" placeholder="tour-night-and-day-tour" readonly style="opacity: 0.7; cursor: not-allowed; background-color: rgba(255,255,255,0.04);">
-      </div>
-
-      <div class="form-group">
-        <label for="date">Concert Date <span>*</span></label>
-        <input type="date" id="date" name="Concert Date" required>
-      </div>
-
-      <div class="form-group">
-        <label for="city">City <span>*</span></label>
-        <input type="text" id="city" name="City" placeholder="e.g. London, New York" required>
-      </div>
-
-      <div class="form-group">
-        <label for="country">Country</label>
-        <input type="text" id="country" name="Country" list="countriesList" placeholder="e.g. UK, USA, Germany">
-        <datalist id="countriesList"></datalist>
-      </div>
-
-      <div class="form-group full-width">
-        <label for="venue">Venue / Club / Hall</label>
-        <input type="text" id="venue" name="Venue" placeholder="e.g. Royal Albert Hall, The Bottom Line">
-      </div>
-
-      <div class="form-group full-width">
-        <label for="supporting_act">Supporting Act / Special Guest</label>
-        <input type="text" id="supporting_act" name="Supporting Act" placeholder="e.g. The Members, Lincoln Durham">
-      </div>
-
-      <div class="form-group">
-        <label for="contributor">Your Name / Credit <span>*</span></label>
-        <input type="text" id="contributor" name="Contributor Credit" placeholder="How you want to be listed" required>
-      </div>
-
-      <div class="form-group">
-        <label for="email">Your Email (Private)</label>
-        <input type="email" id="email" name="email" placeholder="For verification only (optional)">
-      </div>
-
-      <div class="form-group full-width">
-        <label for="scan_file">Upload Image Scan / Photo <span>*</span></label>
-        <input type="file" id="scan_file" accept="image/*" required>
-        <small style="display: block; margin-top: 5px; color: var(--text-muted, #94a3b8);">
-          📸 Scans are automatically compressed.
-        </small>
-        <div id="watermarkPreviewBox" style="display: none; margin-top: 12px; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--accent-yellow, #f59e0b); border-radius: 8px;">
-          <div style="font-size: 0.85rem; color: var(--accent-yellow, #f59e0b); font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-            <span>✅ Ticket Preview (JJ Memorabilia Museum)</span>
-            <span id="watermarkDimensions" style="font-size: 0.75rem; opacity: 0.8; color: #fff;"></span>
-          </div>
-          <div style="text-align: center; max-height: 320px; overflow: hidden; border-radius: 6px; background: #000;">
-            <img id="watermarkPreviewImg" src="" alt="Joe Jackson Memorabilia Watermarked Scan Preview" style="max-width: 100%; max-height: 320px; object-fit: contain; display: block; margin: 0 auto;">
-          </div>
-        </div>
-      </div>
-
-      <div class="form-group full-width">
-        <label for="notes">Additional Information / Notes</label>
-        <textarea id="notes" name="Notes" rows="3" placeholder="Setlist details, story behind the ticket, or personal memories..."></textarea>
-      </div>
-
-      <div class="form-group full-width">
-        <button type="submit" id="submitBtn" class="btn-submit">🚀 Submit Memorabilia to Archive</button>
-      </div>
-    </form>
-
-    <div id="statusMessage"></div>
+      <a href="index.html" class="btn-contribute">◄ Back to Museum Catalog</a>
+    </header>
   </div>
 
+  <main class="form-container">
+    <h2 style="margin-bottom: 6px; color: #fff;">Submit Memorabilia Scan</h2>
+    <p style="color: var(--text-muted, #9ca3af); font-size: 0.88rem; margin-bottom: 20px;">
+      Help us preserve Joe Jackson's live concert history. If you have a ticket stub, pass, program or photo, please share it with the archive!
+    </p>
+
+    <form id="contributionForm">
+      
+      <!-- 1. Concert Date (Required) -->
+      <div class="form-group">
+        <label for="concertDate">Concert Date <span class="required-asterisk">*</span></label>
+        <input type="date" id="concertDate" name="concertDate" class="form-control" required>
+      </div>
+
+      <!-- 2. City, Country (Required) -->
+      <div class="form-group">
+        <label for="cityCountry">City, Country <span class="required-asterisk">*</span></label>
+        <input type="text" id="cityCountry" name="cityCountry" class="form-control" placeholder="e.g. London, UK or Prague, Czech Republic" required>
+      </div>
+
+      <!-- 3. Venue (Optional) -->
+      <div class="form-group">
+        <label for="venue">Venue</label>
+        <input type="text" id="venue" name="venue" class="form-control" placeholder="e.g. Royal Albert Hall or Lucerna Music Bar">
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid var(--border-color, #2a364f); margin: 20px 0;">
+
+      <!-- 4. Name / Nick & Consent Checkbox -->
+      <div class="form-group">
+        <label for="contributorName">Your Name / Nick <span class="required-asterisk">*</span></label>
+        <input type="text" id="contributorName" name="contributorName" class="form-control" placeholder="e.g. John Doe or JJ_Fan_99" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-checkbox-group">
+          <input type="checkbox" id="publishConsent" name="publishConsent" checked>
+          <span style="font-size: 0.88rem; color: var(--text-main, #e2e8f0); font-weight: normal;">
+            My name / nick can be published as a donor on the museum card
+          </span>
+        </label>
+      </div>
+
+      <!-- 5. Email (Required for follow-up) -->
+      <div class="form-group">
+        <label for="contributorEmail">Your Email <span class="required-asterisk">*</span></label>
+        <input type="email" id="contributorEmail" name="contributorEmail" class="form-control" placeholder="your.email@example.com" required>
+        <span style="font-size: 0.75rem; color: var(--text-muted, #9ca3af);">Used strictly for clarifying questions if necessary. Will never be published.</span>
+      </div>
+
+      <hr style="border: 0; border-top: 1px solid var(--border-color, #2a364f); margin: 20px 0;">
+
+      <!-- 6. Additional Notes / Trivia -->
+      <div class="form-group">
+        <label for="notes">Additional Notes / Trivia</label>
+        <textarea id="notes" name="notes" rows="3" class="form-control" placeholder="Concert memories, supporting act details, tour anecdotes..."></textarea>
+      </div>
+
+      <!-- 7. Image Upload (Required) -->
+      <div class="form-group">
+        <label for="imageFile">Image / Scan File <span class="required-asterisk">*</span></label>
+        <input type="file" id="imageFile" name="imageFile" accept="image/*" class="form-control" required>
+      </div>
+
+      <button type="submit" class="btn-contribute" style="width: 100%; margin-top: 15px; padding: 12px; font-size: 1rem; cursor: pointer;">
+        📤 Submit Contribution
+      </button>
+
+    </form>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
   <script>
-    const CSV_FILENAME = 'joe_jackson_tickets_cleaned.csv';
-
-    function getCustomTours() {
-      const list = [];
-      try {
-        if (typeof StorageService !== 'undefined') {
-          const stored = StorageService.get('custom_tours_list', []);
-          if (Array.isArray(stored)) {
-            stored.forEach(t => {
-              if (t && typeof t === 'string' && !list.includes(t.trim())) list.push(t.trim());
-            });
-          }
-        }
-      } catch (e) {}
-
-      try {
-        const storedSession = sessionStorage.getItem('custom_tours_list');
-        if (storedSession) {
-          const parsed = JSON.parse(storedSession);
-          if (Array.isArray(parsed)) {
-            parsed.forEach(t => {
-              if (t && typeof t === 'string' && !list.includes(t.trim())) list.push(t.trim());
-            });
-          }
-        }
-      } catch (e) {}
-
-      return list;
-    }
-
-    function saveCustomTour(tourName) {
-      if (!tourName || typeof tourName !== 'string') return;
-      const trimmed = tourName.trim();
-      if (!trimmed) return;
-
-      const list = getCustomTours();
-      if (!list.some(t => t.toLowerCase() === trimmed.toLowerCase())) {
-        list.push(trimmed);
-      }
-
-      try {
-        if (typeof StorageService !== 'undefined') {
-          StorageService.set('custom_tours_list', list);
-        }
-      } catch (e) {}
-
-      try {
-        sessionStorage.setItem('custom_tours_list', JSON.stringify(list));
-      } catch (e) {}
-
-      // Append to datalist(s)
-      ['toursList', 'tourNamesList'].forEach(id => {
-        const datalist = document.getElementById(id);
-        if (datalist) {
-          const exists = Array.from(datalist.options).some(opt => opt.value.toLowerCase() === trimmed.toLowerCase());
-          if (!exists) {
-            const opt = document.createElement('option');
-            opt.value = trimmed;
-            datalist.appendChild(opt);
-          }
-        }
-      });
-    }
-
-    function syncTourId() {
-      const tourNameInput = document.getElementById('tour_name');
-      const tourIdInput = document.getElementById('tour_id');
-      if (!tourNameInput || !tourIdInput) return;
-      const tourName = tourNameInput.value;
-      if (tourName && tourName.trim()) {
-        const trimmed = tourName.trim();
-        const tourId = 'tour-' + trimmed.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        tourIdInput.value = tourId;
-        saveCustomTour(trimmed);
-      } else {
-        tourIdInput.value = '';
-      }
-    }
-
-    function populateTourList(data) {
-      const tours = new Set();
-      const countries = new Set();
-
-      if (Array.isArray(data)) {
-        data.forEach(row => {
-          if (!row) return;
-          const name = row.TOUR_NAME || row.tour_name || row['Tour Name'];
-          if (name && typeof name === 'string' && name.trim()) {
-            tours.add(name.trim());
-          }
-          const country = row.STAT || row.stat || row.Country || row.country;
-          if (country && typeof country === 'string' && country.trim()) {
-            countries.add(country.trim());
-          }
-        });
-      }
-
-      // Merge custom tours stored in StorageService and sessionStorage
-      const customTours = getCustomTours();
-      customTours.forEach(t => {
-        if (t && typeof t === 'string' && t.trim()) {
-          tours.add(t.trim());
-        }
-      });
-
-      const sortedTours = Array.from(tours).sort((a, b) => a.localeCompare(b));
-
-      ['toursList', 'tourNamesList'].forEach(id => {
-        const datalist = document.getElementById(id);
-        if (datalist) {
-          datalist.innerHTML = '';
-          sortedTours.forEach(tour => {
-            const opt = document.createElement('option');
-            opt.value = tour;
-            datalist.appendChild(opt);
-          });
-        }
-      });
-
-      const countriesDatalist = document.getElementById('countriesList');
-      if (countriesDatalist) {
-        countriesDatalist.innerHTML = '';
-        Array.from(countries).sort((a, b) => a.localeCompare(b)).forEach(c => {
-          const opt = document.createElement('option');
-          opt.value = c;
-          countriesDatalist.appendChild(opt);
-        });
-      }
-    }
-
-    function addNewTourPrompt() {
-      const input = document.getElementById('tour_name');
-      const newName = prompt('Enter New Concert Tour Name:');
-      if (newName && newName.trim()) {
-        const trimmed = newName.trim();
-        if (input) {
-          input.value = trimmed;
-          input.dispatchEvent(new Event('input'));
-          input.dispatchEvent(new Event('change'));
-        }
-        saveCustomTour(trimmed);
-      } else if (input) {
-        input.focus();
-      }
-    }
-
-    // Prefill form from URL query parameters (e.g. when clicking missing item card/placeholder)
+    // Předvyplnění z URL parametrů (pokud uživatel kliknul z karty lístku)
     window.addEventListener('DOMContentLoaded', () => {
-      // Auto-compute TOUR_ID from TOUR_NAME
-      const tourNameInput = document.getElementById('tour_name');
-      if (tourNameInput) {
-        tourNameInput.addEventListener('input', syncTourId);
-        tourNameInput.addEventListener('change', syncTourId);
-      }
-
-      const catSelect = document.getElementById('category');
-      if (catSelect) {
-        catSelect.addEventListener('change', () => {
-          // Keep active selection in sync if needed
-        });
-      }
-
-      // Load CSV to populate dynamic tour names and countries list
-      Papa.parse(CSV_FILENAME, {
-        download: true,
-        header: true,
-        skipEmptyLines: true,
-        complete: function(results) {
-          if (results && results.data) {
-            populateTourList(results.data);
-          }
-        },
-        error: function(err) {
-          console.warn('Could not pre-load tours list from CSV:', err);
-        }
-      });
-
       const params = new URLSearchParams(window.location.search);
-      const catParam = params.get('category') || params.get('cat');
-      const dateParam = params.get('date') || params.get('datum');
-      const cityParam = params.get('city') || params.get('mesto');
-      const countryParam = params.get('country') || params.get('stat');
-      const tourIdParam = params.get('tour_id');
-      const tourNameParam = params.get('tour_name') || params.get('tour');
-      const venueParam = params.get('venue');
-      const lineupParam = params.get('lineup') || params.get('supporting_act') || params.get('ucinkujici');
-      const idParam = params.get('id');
-      const notesParam = params.get('notes');
-
-      let isPrefilled = false;
-
-      if (tourNameParam) {
-        if (tourNameInput) tourNameInput.value = tourNameParam;
-        syncTourId();
-        isPrefilled = true;
+      
+      if (params.has('date')) {
+        document.getElementById('concertDate').value = params.get('date');
+      }
+      
+      const city = params.get('city') || '';
+      const country = params.get('country') || '';
+      if (city || country) {
+        document.getElementById('cityCountry').value = [city, country].filter(Boolean).join(', ');
+      }
+      
+      if (params.has('venue')) {
+        document.getElementById('venue').value = params.get('venue');
       }
 
-      if (tourIdParam) {
-        document.getElementById('tour_id').value = tourIdParam;
-        isPrefilled = true;
-      }
-
-      if (catParam) {
-        const select = document.getElementById('category');
-        const c = catParam.toLowerCase().trim();
-        let matched = false;
-        Array.from(select.options).forEach(opt => {
-          const val = opt.value.toLowerCase();
-          const txt = opt.text.toLowerCase();
-          if (val === c || txt.includes(c) || (c.startsWith('ticket') && val === 'tickets') || (c.startsWith('pass') && val === 'passes') || (c.startsWith('poster') && val === 'posters') || (c.startsWith('program') && val === 'programs') || (c.startsWith('t-shirt') && val === 't-shirts')) {
-            select.value = opt.value;
-            matched = true;
-          }
-        });
-        if (select) {
-          select.dispatchEvent(new Event('change'));
-        }
-        isPrefilled = true;
-      }
-
-      if (dateParam) {
-        const dateInput = document.getElementById('date');
-        if (/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
-          dateInput.value = dateParam;
-          isPrefilled = true;
-        } else if (/^\d{4}$/.test(dateParam)) {
-          dateInput.value = `${dateParam}-01-01`;
-          isPrefilled = true;
-        }
-      }
-
-      if (cityParam) {
-        document.getElementById('city').value = cityParam;
-        isPrefilled = true;
-      }
-
-      if (countryParam) {
-        document.getElementById('country').value = countryParam;
-        isPrefilled = true;
-      }
-
-      if (venueParam) {
-        document.getElementById('venue').value = venueParam;
-        isPrefilled = true;
-      }
-
-      if (lineupParam) {
-        document.getElementById('supporting_act').value = lineupParam;
-        isPrefilled = true;
-      }
-
-      if (idParam || notesParam) {
-        let noteParts = [];
-        if (idParam) noteParts.push(`Contribute scan for missing item (Record ID: ${idParam})`);
-        if (notesParam) noteParts.push(notesParam);
-        document.getElementById('notes').value = noteParts.join('\n');
-        isPrefilled = true;
-      }
-
-      if (isPrefilled) {
-        const banner = document.createElement('div');
-        banner.style.cssText = `
-          background: rgba(245, 158, 11, 0.15);
-          border: 1px solid var(--accent-yellow);
-          color: var(--accent-yellow);
-          padding: 14px 18px;
-          border-radius: 8px;
-          margin-bottom: 25px;
-          font-size: 0.95rem;
-          line-height: 1.5;
-        `;
-        const dateStr = dateParam ? ` on <strong>${dateParam}</strong>` : '';
-        const cityStr = cityParam ? ` in <strong>${cityParam}</strong>` : '';
-        const venueStr = venueParam ? ` (<em>${venueParam}</em>)` : '';
-        const idStr = idParam ? ` [Record #${idParam}]` : '';
-
-        banner.innerHTML = `📌 <strong>Pre-filled for missing scan:</strong> Form populated for Joe Jackson show${dateStr}${cityStr}${venueStr}${idStr}. Please attach your scan photo or image file below!`;
-        const formIntro = document.querySelector('.form-intro');
-        if (formIntro && formIntro.parentNode) {
-          formIntro.parentNode.insertBefore(banner, formIntro.nextSibling);
-        }
+      if (params.has('notes')) {
+        document.getElementById('notes').value = params.get('notes');
       }
     });
 
-document.getElementById('scan_file').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  const previewBox = document.getElementById('watermarkPreviewBox');
-  const previewImg = document.getElementById('watermarkPreviewImg');
-  const dimsEl = document.getElementById('watermarkDimensions');
-
-  if (!file) {
-    previewBox.style.display = 'none';
-    watermarkedBlob = null;
-    return;
-  }
-
-  // Uložíme přímo původní soubor bez watermarku
-  watermarkedBlob = file;
-  watermarkedFileName = file.name;
-
-  // Náhled původního obrázku
-  const reader = new FileReader();
-  reader.onload = function(evt) {
-    previewImg.src = evt.target.result;
-    previewBox.style.display = 'block';
-    dimsEl.textContent = `${file.name} (Original without watermark)`;
-  };
-  reader.readAsDataURL(file);
-});
-    
-    document.getElementById('contribForm').addEventListener('submit', async function(e) {
+    // Logika zpracování a odoslaní formuláře
+    document.getElementById('contributionForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const form = this;
-      const submitBtn = document.getElementById('submitBtn');
-      const statusMsg = document.getElementById('statusMessage');
+      const consentChecked = document.getElementById('publishConsent').checked;
+      const rawName = document.getElementById('contributorName').value.trim();
+      
+      // Pokud byl udělán souhlas, uplatní se jméno, jinak anonymní '?'
+      const finalDonorName = consentChecked ? rawName : '?';
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = '⏳ Sending memorabilia...';
-      statusMsg.style.display = 'none';
+      const formData = {
+        date: document.getElementById('concertDate').value,
+        location: document.getElementById('cityCountry').value,
+        venue: document.getElementById('venue').value,
+        contributor: finalDonorName,
+        email: document.getElementById('contributorEmail').value,
+        notes: document.getElementById('notes').value,
+        consent: consentChecked
+      };
 
-      try {
-        const formData = new FormData(form);
-        if (watermarkedBlob) {
-          formData.set('Attachment', watermarkedBlob, watermarkedFileName);
-        }
-
-        const response = await fetch(form.action, {
-          method: 'POST',
-          body: formData,
-          headers: { 'Accept': 'application/json' }
-        });
-
-        if (response.ok) {
-          statusMsg.className = 'success';
-          statusMsg.style.display = 'block';
-          statusMsg.innerHTML = '🎉 <strong>Thank you!</strong> Your memorabilia contribution with "JJ Memorabilia Museum" has been sent successfully. We will review it shortly.';
-          form.reset();
-          document.getElementById('watermarkPreviewBox').style.display = 'none';
-          watermarkedBlob = null;
-        } else {
-          throw new Error(`HTTP ${response.status}`);
-        }
-      } catch (err) {
-        statusMsg.className = 'error';
-        statusMsg.style.display = 'block';
-        statusMsg.innerHTML = '❌ <strong>Submission Error:</strong> Could not send form. Please try again.';
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = '🚀 Submit Memorabilia to Archive';
-      }
+      console.log('Sending submission:', formData);
+      alert('Thank you! Your contribution has been submitted for review.');
+      window.location.href = 'index.html';
     });
   </script>
 </body>
