@@ -1557,6 +1557,10 @@ function renderTickets(tickets) {
       statusBadgeHTML = ` <span class="badge-status-rescheduled" title="Rescheduled show${origText}">🔄 Rescheduled</span>`;
     }
 
+    // Zobrazení Jména Donora / Přispěvatele
+    const donorName = t.PRISPEVATEL || t.CONTRIBUTOR;
+    const donorHTML = isValidValue(donorName) ? `<div class="card-donor" title="Donor / Contributor"><i>Donor👤${donorName}</i></div>` : '';
+
     const line1HTML = `
      <div class="card-meta-line1">
        <span class="card-date">${displayDate}</span>
@@ -1571,10 +1575,6 @@ function renderTickets(tickets) {
     const formattedNote = rawCardNote.replace(/\\n/g, '<br>').replace(/\r?\n/g, '<br>');
     const noteHTML = formattedNote ? `<div class="card-note-line" onclick="event.stopPropagation(); openNoteModal(${globalIndex});">💡 ${formattedNote}</div>` : '';
     
-    // Zobrazení Jména Donora / Přispěvatele
-    const donorName = t.PRISPEVATEL || t.CONTRIBUTOR;
-    const donorHTML = isValidValue(donorName) ? `<div class="card-donor" title="Donor / Contributor"><i>Donor 👤 ${donorName}</i></div>` : '';
-
     const line2HTML = `
       <div class="card-location-line2">${locationText || (isValidValue(t.TOUR_NAME) ? t.TOUR_NAME : '')}</div>
       ${noteHTML}
