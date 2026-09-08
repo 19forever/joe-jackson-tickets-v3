@@ -1081,13 +1081,8 @@ function getContributeUrlForTicket(t) {
   return `ticket_form.html?${params.toString()}`;
 }
 
-function openDirectImagePreview(ticketIndex) {
-  const t = filteredTickets[ticketIndex];
-  if (!t) return;
-
-  const rawSken = (t.SOUBOR_SKEN && isValidValue(t.SOUBOR_SKEN)) ? t.SOUBOR_SKEN : '';
-  const skenFiles = rawSken.split(',').map(s => s.trim()).filter(Boolean);
-  const contributeUrl = getContributeUrlForTicket(t);
+function openDirectImagePreview(startIndex) {
+  if (!filteredTickets || filteredTickets.length === 0) return;
 
   if (activeViewerInstance) {
     activeViewerInstance.destroy();
@@ -1097,31 +1092,46 @@ function openDirectImagePreview(ticketIndex) {
   const container = document.createElement('div');
   container.style.display = 'none';
 
-  if (skenFiles.length === 0) {
-    const img = document.createElement('img');
-    img.src = MISSING_TICKET_SVG;
-    img.alt = `Missing scan for ${formatDisplayDate(t.DATUM)}`;
-    img.dataset.isMissing = 'true';
-    container.appendChild(img);
-  } else {
-    skenFiles.forEach((file) => {
+  const imageTicketMap = [];
+
+  filteredTickets.forEach((ticket) => {
+    const rawSken = (ticket.SOUBOR_SKEN && isValidValue(ticket.SOUBOR_SKEN)) ? ticket.SOUBOR_SKEN : '';
+    const skenFiles = rawSken.split(',').map(s => s.trim()).filter(Boolean);
+
+    if (skenFiles.length === 0) {
       const img = document.createElement('img');
-      img.src = `./scans/${file}`;
-      img.alt = `${formatDisplayDate(t.DATUM)} - ${formatLocationText(t)}`;
-      img.onerror = function() {
-        this.onerror = null;
-        this.src = MISSING_TICKET_SVG;
-        this.dataset.isMissing = 'true';
-      };
+      img.src = MISSING_TICKET_SVG;
+      img.alt = `Missing scan for ${formatDisplayDate(ticket.DATUM)}`;
+      img.dataset.isMissing = 'true';
       container.appendChild(img);
-    });
-  }
+      imageTicketMap.push(ticket);
+    } else {
+      skenFiles.forEach((file) => {
+        const img = document.createElement('img');
+        img.src = `./scans/${file}`;
+        img.alt = `${formatDisplayDate(ticket.DATUM)} - ${formatLocationText(ticket)}`;
+        img.onerror = function() {
+          this.onerror = null;
+          this.src = MISSING_TICKET_SVG;
+          this.dataset.isMissing = 'true';
+        };
+        container.appendChild(img);
+        imageTicketMap.push(ticket);
+      });
+    }
+  });
 
   document.body.appendChild(container);
 
+  let initialImageIndex = 0;
+  if (startIndex > 0 && startIndex < filteredTickets.length) {
+    const targetTicket = filteredTickets[startIndex];
+    initialImageIndex = imageTicketMap.indexOf(targetTicket);
+    if (initialImageIndex === -1) initialImageIndex = 0;
+  }
+
   activeViewerInstance = new Viewer(container, {
     backdrop: true,
-    // Vypnutí nepodstatných tlačítek, zachování posunu předchozí/další
     toolbar: {
       zoomIn: 0,
       zoomOut: 0,
@@ -1141,8 +1151,11 @@ function openDirectImagePreview(ticketIndex) {
       }
       if (container.parentNode) document.body.removeChild(container);
     },
-    // Vlastní formátování popisku (bez kategorie, s Notes, Date, City, Country, Venue, Contributor)
-    title: function() {
+    title: function(image) {
+      const index = Array.from(container.children).indexOf(image);
+      const t = imageTicketMap[index] || filteredTickets[startIndex];
+      if (!t) return '';
+
       const parts = [];
 
       // Date
@@ -1169,30 +1182,65 @@ function openDirectImagePreview(ticketIndex) {
         parts.push(`👤 Donor: ${donor}`);
       }
 
-      // Notes (zvýrazněné na novém řádku, aby se dobře četly)
+      // Zkrácený náhled Note (čistý text bez HTML značek, max. 90 znaků)
       if (isValidValue(t.NOTE)) {
-        const cleanNote = String(t.NOTE).replace(/\\n/g, ' ').replace(/\r?\n/g, ' ');
-        parts.push(`\n💡 Note: ${cleanNote}`);
+        let cleanNote = String(t.NOTE)
+          .replace(/<[^>]*>/g, '') // Odstraní HTML tagy
+          .replace(/\\n/g, ' ')
+          .replace(/\r?\n/g, ' ')
+          .trim();
+        
+        if (cleanNote.length > 90) {
+          cleanNote = cleanNote.substring(0, 90) + '...';
+        }
+        parts.push(`💡 Note: ${cleanNote}`);
       }
 
-      return parts.join(' | ');
+      const currentTicketPos = filteredTickets.indexOf(t) + 1;
+      const posInfo = `[${currentTicketPos} / ${filteredTickets.length}]`;
+
+      return `${posInfo} ${parts.join(' | ')}`;
     },
     viewed: function() {
+      const currentImg = container.children[activeViewerInstance.index];
+      const index = Array.from(container.children).indexOf(currentImg);
+      const t = imageTicketMap[index];
+
+      // Dynamické přidání/aktualizace tlačítka "💡 Read Full Note" přímo do Viewer titulku
       setTimeout(() => {
+        const titleEl = document.querySelector('.viewer-title');
+        if (titleEl && t && isValidValue(t.NOTE)) {
+          let btn = titleEl.querySelector('.viewer-note-btn');
+          if (!btn) {
+            btn = document.createElement('button');
+            btn.className = 'viewer-note-btn';
+            titleEl.appendChild(btn);
+          }
+          btn.innerHTML = '💡 Read Full Note / Review';
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const ticketIdx = filteredTickets.indexOf(t);
+            if (ticketIdx !== -1) {
+              openNoteModal(ticketIdx);
+            }
+          };
+        }
+
+        // Podpora kliknutí na chybějící lístek
         const canvasImg = document.querySelector('.viewer-canvas img');
         if (canvasImg && (canvasImg.src.includes('data:image/svg+xml') || canvasImg.dataset.isMissing === 'true')) {
           canvasImg.style.cursor = 'pointer';
           canvasImg.title = 'Click to contribute item/photo for this show';
           canvasImg.onclick = (e) => {
             e.stopPropagation();
-            window.location.href = contributeUrl;
+            window.location.href = getContributeUrlForTicket(t);
           };
         }
       }, 50);
     }
   });
 
-  activeViewerInstance.show();
+  activeViewerInstance.view(initialImageIndex);
 }
 
 function openQuickImageModal(scanFileName, ticketObj) {
