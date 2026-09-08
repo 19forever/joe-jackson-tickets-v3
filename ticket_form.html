@@ -140,22 +140,25 @@
       Help us preserve Joe Jackson's live concert history! Please submit your scan or photo below.
     </p>
 
-    <!-- TVŮJ FORMSPREE ENDPOINT -->
-    <form id="contribForm" action="https://formspree.io/f/xqpzbzpa" method="POST" enctype="multipart/form-data">
+    <!-- Odesílání přes Formsubmit.co -->
+    <form id="contribForm" action="https://formsubmit.co/marekkraus@gmail.com" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="_subject" value="JJMM - Memorabilia Addition">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="_template" value="table">
       
-      <!-- Skryté pole pro Formspree, které předá finální název dárce (jméno nebo '?') -->
-      <input type="hidden" id="finalContributor" name="Donor_Name_For_Museum" value="">
+      <!-- Skryté pole, které předá finální jméno dárce (Jméno nebo '?') -->
+      <input type="hidden" id="finalContributor" name="Donor Credit (For Museum Card)" value="">
 
       <!-- 1. Concert Date -->
       <div class="form-group">
         <label for="date">Concert Date <span>*</span></label>
-        <input type="date" id="date" name="Concert_Date" required>
+        <input type="date" id="date" name="Concert Date" required>
       </div>
 
       <!-- 2. City, Country -->
       <div class="form-group">
         <label for="city_country">City, Country <span>*</span></label>
-        <input type="text" id="city_country" name="City_and_Country" placeholder="e.g. London, UK or Prague, Czech Republic" required>
+        <input type="text" id="city_country" name="City and Country" placeholder="e.g. London, UK or Prague, Czech Republic" required>
       </div>
 
       <!-- 3. Venue -->
@@ -169,7 +172,7 @@
       <!-- 4. Contributor Name & Checkbox -->
       <div class="form-group">
         <label for="contributor">Your Name / Credit <span>*</span></label>
-        <input type="text" id="contributor" name="Contributor_Real_Name" placeholder="e.g. John Doe or JJ_Fan_99" required>
+        <input type="text" id="contributor" name="Contributor Real Name" placeholder="e.g. John Doe or JJ_Fan_99" required>
       </div>
 
       <div class="form-group">
@@ -181,10 +184,10 @@
         </label>
       </div>
 
-      <!-- 5. Email (_replyto umožní přímo odpovídat dárci z e-mailu) -->
+      <!-- 5. Email -->
       <div class="form-group">
         <label for="email">Your Email <span>*</span></label>
-        <input type="email" id="email" name="_replyto" placeholder="your.email@example.com (private, for questions only)" required>
+        <input type="email" id="email" name="email" placeholder="your.email@example.com (private, for questions only)" required>
       </div>
 
       <hr style="border: 0; border-top: 1px solid var(--border-color, #2a364f); margin: 20px 0;">
@@ -192,7 +195,7 @@
       <!-- 6. Image Upload -->
       <div class="form-group">
         <label for="scan_file">Upload Image Scan / Photo <span>*</span></label>
-        <input type="file" id="scan_file" name="attachment" accept="image/*" required>
+        <input type="file" id="scan_file" name="Attachment" accept="image/*" required>
       </div>
 
       <!-- 7. Notes -->
@@ -241,7 +244,7 @@
       }
     });
 
-    // Odeslání přes Formspree
+    // Odeslání přes Formsubmit.co
     document.getElementById('contribForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -262,7 +265,7 @@
         const formData = new FormData(form);
 
         if (selectedFileBlob) {
-          formData.set('attachment', selectedFileBlob, selectedFileBlob.name);
+          formData.set('Attachment', selectedFileBlob, selectedFileBlob.name);
         }
 
         const response = await fetch(form.action, {
