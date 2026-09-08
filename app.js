@@ -1151,6 +1151,7 @@ function openDirectImagePreview(startIndex) {
       }
       if (container.parentNode) document.body.removeChild(container);
     },
+    // Vracíme pouze čistý text bez HTML značek (aby se v liště neobjevovaly kódové fragmenty)
     title: function(image) {
       const index = Array.from(container.children).indexOf(image);
       const t = imageTicketMap[index] || filteredTickets[startIndex];
@@ -1158,16 +1159,13 @@ function openDirectImagePreview(startIndex) {
 
       const topRow = [];
 
-      // Pořadí ve výběru
       const currentTicketPos = filteredTickets.indexOf(t) + 1;
       topRow.push(`[${currentTicketPos} / ${filteredTickets.length}]`);
 
-      // Date
       if (t.DATUM && isValidValue(t.DATUM)) {
         topRow.push(`📅 ${formatDisplayDate(t.DATUM)}`);
       }
 
-      // City & Country
       const locParts = [];
       if (isValidValue(t.MESTO)) locParts.push(t.MESTO);
       if (isValidValue(t.STAT)) locParts.push(t.STAT);
@@ -1175,61 +1173,64 @@ function openDirectImagePreview(startIndex) {
         topRow.push(`📍 ${locParts.join(', ')}`);
       }
 
-      // Venue
       if (isValidValue(t.VENUE)) {
         topRow.push(`🏛️ ${t.VENUE}`);
       }
 
-      // Contributor / Donor
       const donor = t.PRISPEVATEL || t.CONTRIBUTOR;
       if (isValidValue(donor)) {
         topRow.push(`👤 Donor: ${donor}`);
       }
 
-      let resultHTML = topRow.join(' | ');
-
-      // Poznámka na samostatném novém řádku (<br>)
-      if (isValidValue(t.NOTE)) {
-        let cleanNote = String(t.NOTE)
-          .replace(/<[^>]*>/g, '') // Odstraní HTML značky
-          .replace(/\\n/g, ' ')
-          .replace(/\r?\n/g, ' ')
-          .trim();
-        
-        if (cleanNote.length > 80) {
-          cleanNote = cleanNote.substring(0, 80) + '...';
-        }
-        resultHTML += `<br><span style="opacity: 0.9;">💡 Note: ${cleanNote}</span>`;
-      }
-
-      return resultHTML;
+      return topRow.join(' | ');
     },
     viewed: function() {
       const currentImg = container.children[activeViewerInstance.index];
       const index = Array.from(container.children).indexOf(currentImg);
       const t = imageTicketMap[index];
 
-      // Dynamické přidání/aktualizace tlačítka "💡 Read Full Note" přímo do Viewer titulku
+      // Bezpečné vytvoření 2. řádku pro Note přímo do DOMu pomocí HTML
       setTimeout(() => {
         const titleEl = document.querySelector('.viewer-title');
-        if (titleEl && t && isValidValue(t.NOTE)) {
-          let btn = titleEl.querySelector('.viewer-note-btn');
-          if (!btn) {
-            btn = document.createElement('button');
-            btn.className = 'viewer-note-btn';
-            titleEl.appendChild(btn);
-          }
-          btn.innerHTML = '💡 Read Full Note / Review';
-          btn.onclick = (e) => {
-            e.stopPropagation();
-            const ticketIdx = filteredTickets.indexOf(t);
-            if (ticketIdx !== -1) {
-              openNoteModal(ticketIdx);
+        if (titleEl && t) {
+          // Odstraníme starý note-block, pokud existoval z předchozího lístku
+          const oldNoteBlock = titleEl.querySelector('.viewer-note-block');
+          if (oldNoteBlock) oldNoteBlock.remove();
+
+          if (isValidValue(t.NOTE)) {
+            let cleanNote = String(t.NOTE)
+              .replace(/<[^>]*>/g, '') // Odstraní HTML tagy z databáze
+              .replace(/\\n/g, ' ')
+              .replace(/\r?\n/g, ' ')
+              .trim();
+
+            if (cleanNote.length > 80) {
+              cleanNote = cleanNote.substring(0, 80) + '...';
             }
-          };
+
+            const noteBlock = document.createElement('div');
+            noteBlock.className = 'viewer-note-block';
+            noteBlock.style.marginTop = '4px';
+            noteBlock.style.opacity = '0.9';
+
+            noteBlock.innerHTML = `💡 Note: ${cleanNote} `;
+
+            const btn = document.createElement('button');
+            btn.className = 'viewer-note-btn';
+            btn.innerHTML = '💡 Read Full Note / Review';
+            btn.onclick = (e) => {
+              e.stopPropagation();
+              const ticketIdx = filteredTickets.indexOf(t);
+              if (ticketIdx !== -1) {
+                openNoteModal(ticketIdx);
+              }
+            };
+
+            noteBlock.appendChild(btn);
+            titleEl.appendChild(noteBlock);
+          }
         }
 
-        // Podpora kliknutí na chybějící lístek
         const canvasImg = document.querySelector('.viewer-canvas img');
         if (canvasImg && (canvasImg.src.includes('data:image/svg+xml') || canvasImg.dataset.isMissing === 'true')) {
           canvasImg.style.cursor = 'pointer';
@@ -1329,15 +1330,47 @@ function openQuickImageModal(scanFileName, ticketObj) {
         parts.push(`👤 Donor: ${donor}`);
       }
 
-      if (isValidValue(ticketObj.NOTE)) {
-        const cleanNote = String(ticketObj.NOTE).replace(/\\n/g, ' ').replace(/\r?\n/g, ' ');
-        parts.push(`\n💡 Note: ${cleanNote}`);
-      }
-
       return parts.join(' | ');
     },
     viewed: function() {
       setTimeout(() => {
+        const titleEl = document.querySelector('.viewer-title');
+        if (titleEl && ticketObj && isValidValue(ticketObj.NOTE)) {
+          const oldNoteBlock = titleEl.querySelector('.viewer-note-block');
+          if (oldNoteBlock) oldNoteBlock.remove();
+
+          let cleanNote = String(ticketObj.NOTE)
+            .replace(/<[^>]*>/g, '')
+            .replace(/\\n/g, ' ')
+            .replace(/\r?\n/g, ' ')
+            .trim();
+
+          if (cleanNote.length > 80) {
+            cleanNote = cleanNote.substring(0, 80) + '...';
+          }
+
+          const noteBlock = document.createElement('div');
+          noteBlock.className = 'viewer-note-block';
+          noteBlock.style.marginTop = '4px';
+          noteBlock.style.opacity = '0.9';
+
+          noteBlock.innerHTML = `💡 Note: ${cleanNote} `;
+
+          const btn = document.createElement('button');
+          btn.className = 'viewer-note-btn';
+          btn.innerHTML = '💡 Read Full Note / Review';
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const ticketIdx = filteredTickets.indexOf(ticketObj);
+            if (ticketIdx !== -1) {
+              openNoteModal(ticketIdx);
+            }
+          };
+
+          noteBlock.appendChild(btn);
+          titleEl.appendChild(noteBlock);
+        }
+
         const canvasImg = document.querySelector('.viewer-canvas img');
         if (canvasImg && (canvasImg.src.includes('data:image/svg+xml') || canvasImg.dataset.isMissing === 'true')) {
           canvasImg.style.cursor = 'pointer';
