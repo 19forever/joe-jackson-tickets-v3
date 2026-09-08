@@ -6,48 +6,73 @@
   <title>Contribute Memorabilia - Joe Jackson Archive</title>
   <link rel="stylesheet" href="styles.css">
   <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+    }
+
     .form-container {
+      width: 100%;
       max-width: 600px;
-      margin: 30px auto;
-      padding: 24px;
-      background: var(--bg-card, #161e2e);
+      background-color: var(--bg-panel, #161e2e);
       border: 1px solid var(--border-color, #2a364f);
-      border-radius: 8px;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
       color: var(--text-main, #e2e8f0);
     }
+
+    .form-intro {
+      margin-bottom: 20px;
+      line-height: 1.6;
+      color: var(--text-muted, #9ca3af);
+      font-size: 0.92rem;
+    }
+
     .form-group {
       margin-bottom: 18px;
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
-    .form-group label {
+
+    label {
+      font-size: 0.88rem;
       font-weight: 600;
-      font-size: 0.9rem;
-      color: var(--accent-yellow, #f59e0b);
+      color: var(--text-main, #e2e8f0);
     }
-    .form-group label .required-asterisk {
-      color: #ef4444;
-      margin-left: 2px;
-    }
-    .form-control {
-      padding: 10px 12px;
-      background: var(--bg-input, #0f172a);
+    label span { color: var(--accent-orange, #ef4444); }
+
+    input[type="text"], input[type="date"], input[type="email"], textarea {
+      background-color: var(--bg-card, #0f172a);
       border: 1px solid var(--border-color, #2a364f);
-      border-radius: 6px;
-      color: #fff;
-      font-size: 0.95rem;
-    }
-    .form-control:focus {
+      color: var(--text-main, #fff);
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
       outline: none;
-      border-color: var(--accent-yellow, #f59e0b);
+      font-family: inherit;
     }
+
+    input:focus, textarea:focus { border-color: var(--accent-blue, #3b82f6); }
+
+    input[type="file"] {
+      background-color: var(--bg-card, #0f172a);
+      border: 1px dashed var(--accent-blue, #3b82f6);
+      color: var(--text-muted, #9ca3af);
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
     .form-checkbox-group {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-top: 4px;
       cursor: pointer;
+      margin-top: 4px;
     }
     .form-checkbox-group input[type="checkbox"] {
       width: 18px;
@@ -55,115 +80,150 @@
       accent-color: var(--accent-yellow, #f59e0b);
       cursor: pointer;
     }
+
+    .btn-submit {
+      background-color: var(--accent-yellow, #f59e0b);
+      color: #000;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    .btn-submit:hover { background-color: #fde047; transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: 0.6; cursor: wait; transform: none; }
+
+    #statusMessage {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      display: none;
+      text-align: center;
+      line-height: 1.5;
+    }
+    #statusMessage.success {
+      background: rgba(74, 222, 128, 0.15);
+      border: 1px solid #4ade80;
+      color: #4ade80;
+    }
+    #statusMessage.error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid #ef4444;
+      color: #ef4444;
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 15px; }
+    }
   </style>
 </head>
-<body class="theme-dark">
+<body>
 
-  <div class="top-header-container">
-    <header style="flex-direction: column; align-items: center; text-align: center; gap: 12px;">
-      <div class="header-left" style="flex-direction: column; align-items: center; gap: 8px;">
-        <a href="index.html" style="text-decoration: none;">
-          <div class="logo">JJ</div>
-        </a>
-        <div class="title-area" style="text-align: center;">
-          <h1 style="justify-content: center;">Joe Jackson Memorabilia Museum</h1>
-          <p>Contribute Item / Scan</p>
-        </div>
+  <header style="max-width: 600px; width: 100%; margin-bottom: 20px;">
+    <div class="header-left">
+      <a href="index.html" style="text-decoration: none;"><div class="logo">JJ</div></a>
+      <div class="title-area">
+        <h1>Contribute Memorabilia</h1>
+        <p>Share your Joe Jackson concert ticket, pass or poster</p>
       </div>
-      <a href="index.html" class="btn-contribute">◄ Back to Museum Catalog</a>
-    </header>
-  </div>
+    </div>
+    <a href="index.html" class="btn-contribute">◄ Back to Museum</a>
+  </header>
 
-  <main class="form-container">
-    <h2 style="margin-bottom: 6px; color: #fff;">Submit Memorabilia Scan</h2>
-    <p style="color: var(--text-muted, #9ca3af); font-size: 0.88rem; margin-bottom: 20px;">
-      Help us preserve Joe Jackson's live concert history. If you have a ticket stub, pass, program or photo, please share it with the archive!
+  <div class="form-container">
+    <p class="form-intro">
+      Help us preserve Joe Jackson's live concert history! Please submit your scan or photo below.
     </p>
 
-    <!-- Odesílání přes bezplatnou formulářovou službu Formspree -->
-    <form id="contributionForm" action="https://formspree.io/f/xknpzgqb" method="POST" enctype="multipart/form-data">
+    <!-- TVŮJ FORMSPREE ENDPOINT -->
+    <form id="contribForm" action="https://formspree.io/f/xqpzbzpa" method="POST" enctype="multipart/form-data">
       
-      <!-- Skryté pole s informací, co se má uložit do databáze jako CONTRIBUTOR -->
+      <!-- Skryté pole pro Formspree, které předá finální název dárce (jméno nebo '?') -->
       <input type="hidden" id="finalContributor" name="Donor_Name_For_Museum" value="">
 
       <!-- 1. Concert Date -->
       <div class="form-group">
-        <label for="concertDate">Concert Date <span class="required-asterisk">*</span></label>
-        <input type="date" id="concertDate" name="Concert_Date" class="form-control" required>
+        <label for="date">Concert Date <span>*</span></label>
+        <input type="date" id="date" name="Concert_Date" required>
       </div>
 
       <!-- 2. City, Country -->
       <div class="form-group">
-        <label for="cityCountry">City, Country <span class="required-asterisk">*</span></label>
-        <input type="text" id="cityCountry" name="City_Country" class="form-control" placeholder="e.g. London, UK or Prague, Czech Republic" required>
+        <label for="city_country">City, Country <span>*</span></label>
+        <input type="text" id="city_country" name="City_and_Country" placeholder="e.g. London, UK or Prague, Czech Republic" required>
       </div>
 
       <!-- 3. Venue -->
       <div class="form-group">
         <label for="venue">Venue</label>
-        <input type="text" id="venue" name="Venue" class="form-control" placeholder="e.g. Royal Albert Hall or Lucerna Music Bar">
+        <input type="text" id="venue" name="Venue" placeholder="e.g. Royal Albert Hall, Lucerna Music Bar">
       </div>
 
       <hr style="border: 0; border-top: 1px solid var(--border-color, #2a364f); margin: 20px 0;">
 
-      <!-- 4. Name / Nick & Consent Checkbox -->
+      <!-- 4. Contributor Name & Checkbox -->
       <div class="form-group">
-        <label for="contributorName">Your Name / Nick <span class="required-asterisk">*</span></label>
-        <input type="text" id="contributorName" name="Contributor_Name" class="form-control" placeholder="e.g. John Doe or JJ_Fan_99" required>
+        <label for="contributor">Your Name / Credit <span>*</span></label>
+        <input type="text" id="contributor" name="Contributor_Real_Name" placeholder="e.g. John Doe or JJ_Fan_99" required>
       </div>
 
       <div class="form-group">
         <label class="form-checkbox-group">
-          <input type="checkbox" id="publishConsent" name="Consent_To_Publish_Name" value="YES" checked>
-          <span style="font-size: 0.88rem; color: var(--text-main, #e2e8f0); font-weight: normal;">
+          <input type="checkbox" id="publishConsent" checked>
+          <span style="font-size: 0.88rem; font-weight: normal; color: var(--text-main, #e2e8f0);">
             My name / nick can be published as a donor on the museum card
           </span>
         </label>
       </div>
 
-      <!-- 5. Email -->
+      <!-- 5. Email (_replyto umožní přímo odpovídat dárci z e-mailu) -->
       <div class="form-group">
-        <label for="contributorEmail">Your Email <span class="required-asterisk">*</span></label>
-        <input type="email" id="contributorEmail" name="_replyto" class="form-control" placeholder="your.email@example.com" required>
-        <span style="font-size: 0.75rem; color: var(--text-muted, #9ca3af);">Used strictly for clarifying questions if necessary. Will never be published.</span>
+        <label for="email">Your Email <span>*</span></label>
+        <input type="email" id="email" name="_replyto" placeholder="your.email@example.com (private, for questions only)" required>
       </div>
 
       <hr style="border: 0; border-top: 1px solid var(--border-color, #2a364f); margin: 20px 0;">
 
-      <!-- 6. Additional Notes / Trivia -->
+      <!-- 6. Image Upload -->
       <div class="form-group">
-        <label for="notes">Additional Notes / Trivia</label>
-        <textarea id="notes" name="Notes_Trivia" rows="3" class="form-control" placeholder="Concert memories, supporting act details, tour anecdotes..."></textarea>
+        <label for="scan_file">Upload Image Scan / Photo <span>*</span></label>
+        <input type="file" id="scan_file" name="attachment" accept="image/*" required>
       </div>
 
-      <!-- 7. Image Upload -->
+      <!-- 7. Notes -->
       <div class="form-group">
-        <label for="imageFile">Image / Scan File <span class="required-asterisk">*</span></label>
-        <input type="file" id="imageFile" name="attachment" accept="image/*" class="form-control" required>
+        <label for="notes">Additional Information / Notes</label>
+        <textarea id="notes" name="Notes" rows="3" placeholder="Concert memories, supporting act details, tour anecdotes..."></textarea>
       </div>
 
-      <button type="submit" id="submitBtn" class="btn-contribute" style="width: 100%; margin-top: 15px; padding: 12px; font-size: 1rem; cursor: pointer;">
-        📤 Submit Contribution
-      </button>
-
+      <button type="submit" id="submitBtn" class="btn-submit">🚀 Submit Memorabilia to Archive</button>
     </form>
-  </main>
+
+    <div id="statusMessage"></div>
+  </div>
 
   <script>
-    // 1. Předvyplnění formuláře z URL parametrů (při prokliku z karty muzea)
+    let selectedFileBlob = null;
+
+    // Předvyplnění z URL parametrů
     window.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
       
       if (params.has('date')) {
-        document.getElementById('concertDate').value = params.get('date');
+        document.getElementById('date').value = params.get('date');
       }
-      
+
       const city = params.get('city') || '';
       const country = params.get('country') || '';
       if (city || country) {
-        document.getElementById('cityCountry').value = [city, country].filter(Boolean).join(', ');
+        document.getElementById('city_country').value = [city, country].filter(Boolean).join(', ');
       }
-      
+
       if (params.has('venue')) {
         document.getElementById('venue').value = params.get('venue');
       }
@@ -173,13 +233,61 @@
       }
     });
 
-    // 2. Před odosláním formuláře zkontrolujeme souhlas
-    document.getElementById('contributionForm').addEventListener('submit', function() {
+    // Uložení vybraného souboru
+    document.getElementById('scan_file').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        selectedFileBlob = file;
+      }
+    });
+
+    // Odeslání přes Formspree
+    document.getElementById('contribForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const form = this;
+      const submitBtn = document.getElementById('submitBtn');
+      const statusMsg = document.getElementById('statusMessage');
+
+      // Vyřešení souhlasu pro jméno dárce
       const consent = document.getElementById('publishConsent').checked;
-      const rawName = document.getElementById('contributorName').value.trim();
-      
-      // Pokud souhlas udělil, pošleme jeho jméno, jinak '?'
+      const rawName = document.getElementById('contributor').value.trim();
       document.getElementById('finalContributor').value = consent ? rawName : '?';
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⏳ Sending memorabilia...';
+      statusMsg.style.display = 'none';
+
+      try {
+        const formData = new FormData(form);
+
+        if (selectedFileBlob) {
+          formData.set('attachment', selectedFileBlob, selectedFileBlob.name);
+        }
+
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: formData,
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (response.ok) {
+          statusMsg.className = 'success';
+          statusMsg.style.display = 'block';
+          statusMsg.innerHTML = '🎉 <strong>Thank you!</strong> Your memorabilia contribution has been sent successfully. We will review it shortly.';
+          form.reset();
+          selectedFileBlob = null;
+        } else {
+          throw new Error(`HTTP ${response.status}`);
+        }
+      } catch (err) {
+        statusMsg.className = 'error';
+        statusMsg.style.display = 'block';
+        statusMsg.innerHTML = '❌ <strong>Submission Error:</strong> Could not send form. Please try again.';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🚀 Submit Memorabilia to Archive';
+      }
     });
   </script>
 </body>
