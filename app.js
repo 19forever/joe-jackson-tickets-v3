@@ -49,6 +49,15 @@ function getScanCount(scanField) {
     .filter(f => f.length > 0 && f.toLowerCase() !== 'missing_item.svg').length;
 }
 
+// Pomocná funkce pro spočítání reálných skladeb (ignoruje jakékoliv sekce/poznámky v [...])
+function getSetlistSongCount(setlistStr) {
+  if (!isValidValue(setlistStr)) return 0;
+  return setlistStr
+    .split(',')
+    .map(s => s.trim())
+    .filter(s => s.length > 0 && !(s.startsWith('[') && s.endsWith(']'))).length;
+}
+
 // Safe Storage helpers leveraging StorageService with fallbacks
 function safeGetStorage(key, defaultVal = null) {
   if (typeof StorageService !== 'undefined') {
@@ -1406,7 +1415,7 @@ function filterData(keepSavedPage = false) {
   filteredTickets = matchesBase.filter(t => {
     const unverifiedOnly = document.getElementById('unverifiedFilter')?.checked || false;
     if (unverifiedOnly) {
-      const songCount = parseInt(t.POCET_SKLADEB, 10) || 0;
+      const songCount = getSetlistSongCount(t.SETLIST);
       const hasFullSetlist = isValidValue(t.SETLIST) && songCount > 0;
       if (hasFullSetlist) return false;
     }
@@ -1430,7 +1439,7 @@ function filterData(keepSavedPage = false) {
   } else if (sort === 'missing_setlists_only' || sort === 'missing_setlists') {
     filteredTickets = filteredTickets.filter(t => {
       const setlistUrl = isValidValue(t.SETLIST_URL) ? t.SETLIST_URL.trim() : (isValidValue(t.SETLIST_FM_URL) ? t.SETLIST_FM_URL.trim() : '');
-      const songCount = parseInt(t.POCET_SKLADEB, 10) || 0;
+      const songCount = getSetlistSongCount(t.SETLIST);
       const hasSongs = isValidValue(t.SETLIST) && songCount > 0;
       return !hasSongs || !setlistUrl;
     });
@@ -1481,7 +1490,7 @@ function renderTickets(tickets) {
     card.className = `ticket-card${cardStatusClass}`;
 
     const itemId = t.ID_MEMORABILIA || t.ID_LISTKU;
-    const songCount = parseInt(t.POCET_SKLADEB, 10) || 0;
+    const songCount = getSetlistSongCount(t.SETLIST);
     const hasSetlist = isValidValue(t.SETLIST) && songCount > 0;
     const setlistUrl = isValidValue(t.SETLIST_URL) ? t.SETLIST_URL.trim() : (isValidValue(t.SETLIST_FM_URL) ? t.SETLIST_FM_URL.trim() : '');
     const hasLineup = isValidValue(t.LINEUP);
@@ -1557,11 +1566,11 @@ function renderTickets(tickets) {
       statusBadgeHTML = ` <span class="badge-status-rescheduled" title="Rescheduled show${origText}">🔄 Rescheduled</span>`;
     }
 
-    // 1. Zobrazení Jména Donora / Přispěvatele
-const donorName = t.PRISPEVATEL || t.CONTRIBUTOR;
-const donorHTML = isValidValue(donorName) 
-  ? `<div class="card-donor" style="margin-bottom: 6px;" title="Donor / Contributor"><i>donor👤${donorName}</i></div>` 
-  : '';
+    // Zobrazení Jména Donora / Přispěvatele se srozumitelným štítkem a kurzívou
+    const donorName = t.PRISPEVATEL || t.CONTRIBUTOR;
+    const donorHTML = isValidValue(donorName) 
+      ? `<div class="card-donor" style="margin-bottom: 6px;" title="Donor / Contributor"><i>Donor: 👤 ${donorName}</i></div>` 
+      : '';
 
     const line1HTML = `
      <div class="card-meta-line1">
@@ -1690,26 +1699,26 @@ const donorHTML = isValidValue(donorName)
       : '';
 
     card.innerHTML = `
-  <div class="card-img-wrapper" title="${isMissingScan ? 'Missing scan - Click to preview' : 'Click to view scan'}">
-    ${scanCountBadgeHTML}
-    <img src="${imgSrc}" loading="lazy" alt="Joe Jackson Concert ${t.DATUM ? formatDisplayDate(t.DATUM) : (t.TOUR_NAME || 'Archive Item')} - ${locationText || 'Live Performance'} (${catName})" onerror="this.onerror=null; this.src='${MISSING_TICKET_SVG}';">
-  </div>
-  <div class="card-content">
-    ${donorHTML}  <!-- ZDE: Donor je na samostatném prvním řádku pod obrázkem -->
-    ${line1HTML}
-    ${line2HTML}
-    <div class="card-actions-grid card-actions">
-      ${slot1HTML}
-      ${slot2HTML}
-      ${slot3HTML}
-      ${slot4HTML}
-      ${slot5HTML}
-      ${slot6HTML}
-      ${slot7HTML}
-    </div>
-    ${collapsibleHTML}
-  </div>
-`;
+      <div class="card-img-wrapper" title="${isMissingScan ? 'Missing scan - Click to preview' : 'Click to view scan'}">
+        ${scanCountBadgeHTML}
+        <img src="${imgSrc}" loading="lazy" alt="Joe Jackson Concert ${t.DATUM ? formatDisplayDate(t.DATUM) : (t.TOUR_NAME || 'Archive Item')} - ${locationText || 'Live Performance'} (${catName})" onerror="this.onerror=null; this.src='${MISSING_TICKET_SVG}';">
+      </div>
+      <div class="card-content">
+        ${donorHTML}
+        ${line1HTML}
+        ${line2HTML}
+        <div class="card-actions-grid card-actions">
+          ${slot1HTML}
+          ${slot2HTML}
+          ${slot3HTML}
+          ${slot4HTML}
+          ${slot5HTML}
+          ${slot6HTML}
+          ${slot7HTML}
+        </div>
+        ${collapsibleHTML}
+      </div>
+    `;
     
     container.appendChild(card);
   });
