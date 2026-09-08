@@ -1573,7 +1573,7 @@ function renderTickets(tickets) {
     
     // Zobrazení Jména Donora / Přispěvatele
     const donorName = t.PRISPEVATEL || t.CONTRIBUTOR;
-    const donorHTML = isValidValue(donorName) ? `<div class="card-donor" title="Donor / Contributor">Donor 👤 ${donorName}</div>` : '';
+    const donorHTML = isValidValue(donorName) ? `<div class="card-donor" title="Donor / Contributor"><i>Donor 👤 ${donorName}</i></div>` : '';
 
     const line2HTML = `
       <div class="card-location-line2">${locationText || (isValidValue(t.TOUR_NAME) ? t.TOUR_NAME : '')}</div>
