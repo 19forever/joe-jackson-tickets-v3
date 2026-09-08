@@ -189,40 +189,40 @@ header {
   gap: 15px;
 }
 
-/* Koncertní lístek - Logo */
+/* Koncertní lístek - Logo (Prodloužený formát) */
 .logo {
   background-color: var(--accent-yellow);
   color: #000;
-  width: 44px;
-  height: 40px;
-  border-radius: 5px;
+  width: 64px; /* Prodloužená šířka pro klasický poměr stran lístku */
+  height: 38px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 900;
-  font-size: 1.25rem;
-  letter-spacing: -1px;
+  font-size: 1.2rem;
+  letter-spacing: -0.5px;
   flex-shrink: 0;
   position: relative;
-  padding-right: 4px;
+  padding-right: 12px; /* Prostor pro oddělený útržek vpravo */
   
   /* Půlkruhové výřezy (notches) po stranách lístku */
-  mask: radial-gradient(circle at 0 50%, #0000 5px, #000 6px) 0 0 / 100% 100%,
-        radial-gradient(circle at 100% 50%, #0000 5px, #000 6px) 0 0 / 100% 100%;
+  mask: radial-gradient(circle at 0 50%, #0000 4px, #000 5px) 0 0 / 100% 100%,
+        radial-gradient(circle at 100% 50%, #0000 4px, #000 5px) 0 0 / 100% 100%;
   mask-composite: intersect;
-  -webkit-mask: radial-gradient(circle at 0 50%, #0000 5px, #000 6px),
-                radial-gradient(circle at 100% 50%, #0000 5px, #000 6px);
+  -webkit-mask: radial-gradient(circle at 0 50%, #0000 4px, #000 5px),
+                radial-gradient(circle at 100% 50%, #0000 4px, #000 5px);
   -webkit-mask-composite: destination-in;
 }
 
-/* Vertikální perforační čára na lístku */
+/* Vertikální perforační čára na lístku (odstřižitelný útržek) */
 .logo::after {
   content: "";
   position: absolute;
-  right: 7px;
-  top: 4px;
-  bottom: 4px;
-  border-right: 1.5px dashed rgba(0, 0, 0, 0.35);
+  right: 12px;
+  top: 3px;
+  bottom: 3px;
+  border-right: 1.5px dashed rgba(0, 0, 0, 0.4);
 }
 
 .title-area h1 {
