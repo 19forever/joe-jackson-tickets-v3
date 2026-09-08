@@ -1156,11 +1156,15 @@ function openDirectImagePreview(startIndex) {
       const t = imageTicketMap[index] || filteredTickets[startIndex];
       if (!t) return '';
 
-      const parts = [];
+      const topRow = [];
+
+      // Pořadí ve výběru
+      const currentTicketPos = filteredTickets.indexOf(t) + 1;
+      topRow.push(`[${currentTicketPos} / ${filteredTickets.length}]`);
 
       // Date
       if (t.DATUM && isValidValue(t.DATUM)) {
-        parts.push(`📅 ${formatDisplayDate(t.DATUM)}`);
+        topRow.push(`📅 ${formatDisplayDate(t.DATUM)}`);
       }
 
       // City & Country
@@ -1168,38 +1172,37 @@ function openDirectImagePreview(startIndex) {
       if (isValidValue(t.MESTO)) locParts.push(t.MESTO);
       if (isValidValue(t.STAT)) locParts.push(t.STAT);
       if (locParts.length > 0) {
-        parts.push(`📍 ${locParts.join(', ')}`);
+        topRow.push(`📍 ${locParts.join(', ')}`);
       }
 
       // Venue
       if (isValidValue(t.VENUE)) {
-        parts.push(`🏛️ ${t.VENUE}`);
+        topRow.push(`🏛️ ${t.VENUE}`);
       }
 
       // Contributor / Donor
       const donor = t.PRISPEVATEL || t.CONTRIBUTOR;
       if (isValidValue(donor)) {
-        parts.push(`👤 Donor: ${donor}`);
+        topRow.push(`👤 Donor: ${donor}`);
       }
 
-      // Zkrácený náhled Note (čistý text bez HTML značek, max. 90 znaků)
+      let resultHTML = topRow.join(' | ');
+
+      // Poznámka na samostatném novém řádku (<br>)
       if (isValidValue(t.NOTE)) {
         let cleanNote = String(t.NOTE)
-          .replace(/<[^>]*>/g, '') // Odstraní HTML tagy
+          .replace(/<[^>]*>/g, '') // Odstraní HTML značky
           .replace(/\\n/g, ' ')
           .replace(/\r?\n/g, ' ')
           .trim();
         
-        if (cleanNote.length > 90) {
-          cleanNote = cleanNote.substring(0, 90) + '...';
+        if (cleanNote.length > 80) {
+          cleanNote = cleanNote.substring(0, 80) + '...';
         }
-        parts.push(`💡 Note: ${cleanNote}`);
+        resultHTML += `<br><span style="opacity: 0.9;">💡 Note: ${cleanNote}</span>`;
       }
 
-      const currentTicketPos = filteredTickets.indexOf(t) + 1;
-      const posInfo = `[${currentTicketPos} / ${filteredTickets.length}]`;
-
-      return `${posInfo} ${parts.join(' | ')}`;
+      return resultHTML;
     },
     viewed: function() {
       const currentImg = container.children[activeViewerInstance.index];
