@@ -255,10 +255,12 @@
         const isAdmin = isAdminModeActive();
 
         const adminEditorLink = document.getElementById('adminEditorLink');
+        const adminStatsLink = document.getElementById('adminStatsLink');
         const adminLoginLink = document.getElementById('adminLoginLink');
         const adminLockBtn = document.getElementById('adminLockBtn');
 
         if (adminLockBtn) adminLockBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+        if (adminStatsLink) adminStatsLink.style.display = isAdmin ? 'inline-flex' : 'none';
         if (adminEditorLink) {
           adminEditorLink.style.display = isAdmin ? 'inline-flex' : 'none';
           if (typeof getEditUrlParams === 'function') {
