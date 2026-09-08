@@ -1121,6 +1121,19 @@ function openDirectImagePreview(ticketIndex) {
 
   activeViewerInstance = new Viewer(container, {
     backdrop: true,
+    // Vypnutí nepodstatných tlačítek, zachování posunu předchozí/další
+    toolbar: {
+      zoomIn: 0,
+      zoomOut: 0,
+      oneToOne: 0,
+      reset: 0,
+      prev: 1,
+      next: 1,
+      rotateLeft: 0,
+      rotateRight: 0,
+      flipHorizontal: 0,
+      flipVertical: 0
+    },
     hidden: function() {
       if (activeViewerInstance) {
         activeViewerInstance.destroy();
@@ -1128,10 +1141,41 @@ function openDirectImagePreview(ticketIndex) {
       }
       if (container.parentNode) document.body.removeChild(container);
     },
+    // Vlastní formátování popisku (bez kategorie, s Notes, Date, City, Country, Venue, Contributor)
     title: function() {
-      const headerStr = t.DATUM ? formatDisplayDate(t.DATUM) : (t.TOUR_NAME || 'Archive Item');
-      const locStr = formatLocationText(t);
-      return `${headerStr}${locStr ? ` | ${locStr}` : ''} (${getTicketCategory(t)})`;
+      const parts = [];
+
+      // Date
+      if (t.DATUM && isValidValue(t.DATUM)) {
+        parts.push(`📅 ${formatDisplayDate(t.DATUM)}`);
+      }
+
+      // City & Country
+      const locParts = [];
+      if (isValidValue(t.MESTO)) locParts.push(t.MESTO);
+      if (isValidValue(t.STAT)) locParts.push(t.STAT);
+      if (locParts.length > 0) {
+        parts.push(`📍 ${locParts.join(', ')}`);
+      }
+
+      // Venue
+      if (isValidValue(t.VENUE)) {
+        parts.push(`🏛️ ${t.VENUE}`);
+      }
+
+      // Contributor / Donor
+      const donor = t.PRISPEVATEL || t.CONTRIBUTOR;
+      if (isValidValue(donor)) {
+        parts.push(`👤 Donor: ${donor}`);
+      }
+
+      // Notes (zvýrazněné na novém řádku, aby se dobře četly)
+      if (isValidValue(t.NOTE)) {
+        const cleanNote = String(t.NOTE).replace(/\\n/g, ' ').replace(/\r?\n/g, ' ');
+        parts.push(`\n💡 Note: ${cleanNote}`);
+      }
+
+      return parts.join(' | ');
     },
     viewed: function() {
       setTimeout(() => {
@@ -1145,16 +1189,6 @@ function openDirectImagePreview(ticketIndex) {
           };
         }
       }, 50);
-    },
-    toolbar: {
-      zoomIn: 1,
-      zoomOut: 1,
-      oneToOne: 1,
-      reset: 1,
-      prev: skenFiles.length > 1 ? 1 : 0,
-      next: skenFiles.length > 1 ? 1 : 0,
-      rotateLeft: 1,
-      rotateRight: 1
     }
   });
 
@@ -1179,14 +1213,14 @@ function openQuickImageModal(scanFileName, ticketObj) {
   if (skenFiles.length === 0) {
     const quickImg = document.createElement('img');
     quickImg.src = MISSING_TICKET_SVG;
-    quickImg.alt = ticketObj ? `Joe Jackson Concert ${formatDisplayDate(ticketObj.DATUM)} - ${formatLocationText(ticketObj)} (${ticketObj.KATEGORIE || 'Memorabilia'})` : 'Joe Jackson concert memorabilia scan preview';
+    quickImg.alt = ticketObj ? `Joe Jackson Concert ${formatDisplayDate(ticketObj.DATUM)}` : 'Scan Preview';
     quickImg.dataset.isMissing = 'true';
     container.appendChild(quickImg);
   } else {
     skenFiles.forEach((file) => {
       const img = document.createElement('img');
       img.src = `./scans/${file}`;
-      img.alt = ticketObj ? `${formatDisplayDate(ticketObj.DATUM)} | ${formatLocationText(ticketObj)} (${ticketObj.KATEGORIE || 'Memorabilia'})` : file;
+      img.alt = file;
       img.onerror = function() {
         this.onerror = null;
         this.src = MISSING_TICKET_SVG;
@@ -1200,6 +1234,18 @@ function openQuickImageModal(scanFileName, ticketObj) {
 
   quickViewerInstance = new Viewer(container, {
     backdrop: true,
+    toolbar: {
+      zoomIn: 0,
+      zoomOut: 0,
+      oneToOne: 0,
+      reset: 0,
+      prev: 1,
+      next: 1,
+      rotateLeft: 0,
+      rotateRight: 0,
+      flipHorizontal: 0,
+      flipVertical: 0
+    },
     hidden: function() {
       if (quickViewerInstance) {
         quickViewerInstance.destroy();
@@ -1209,9 +1255,35 @@ function openQuickImageModal(scanFileName, ticketObj) {
     },
     title: function() {
       if (!ticketObj) return 'Scan Preview';
-      const headerStr = ticketObj.DATUM ? formatDisplayDate(ticketObj.DATUM) : (ticketObj.TOUR_NAME || 'Archive Item');
-      const locStr = formatLocationText(ticketObj);
-      return `${headerStr}${locStr ? ` | ${locStr}` : ''} (${getTicketCategory(ticketObj)})`;
+      
+      const parts = [];
+
+      if (ticketObj.DATUM && isValidValue(ticketObj.DATUM)) {
+        parts.push(`📅 ${formatDisplayDate(ticketObj.DATUM)}`);
+      }
+
+      const locParts = [];
+      if (isValidValue(ticketObj.MESTO)) locParts.push(ticketObj.MESTO);
+      if (isValidValue(ticketObj.STAT)) locParts.push(ticketObj.STAT);
+      if (locParts.length > 0) {
+        parts.push(`📍 ${locParts.join(', ')}`);
+      }
+
+      if (isValidValue(ticketObj.VENUE)) {
+        parts.push(`🏛️ ${ticketObj.VENUE}`);
+      }
+
+      const donor = ticketObj.PRISPEVATEL || ticketObj.CONTRIBUTOR;
+      if (isValidValue(donor)) {
+        parts.push(`👤 Donor: ${donor}`);
+      }
+
+      if (isValidValue(ticketObj.NOTE)) {
+        const cleanNote = String(ticketObj.NOTE).replace(/\\n/g, ' ').replace(/\r?\n/g, ' ');
+        parts.push(`\n💡 Note: ${cleanNote}`);
+      }
+
+      return parts.join(' | ');
     },
     viewed: function() {
       setTimeout(() => {
@@ -1225,16 +1297,6 @@ function openQuickImageModal(scanFileName, ticketObj) {
           };
         }
       }, 50);
-    },
-    toolbar: {
-      zoomIn: 1,
-      zoomOut: 1,
-      oneToOne: 1,
-      reset: 1,
-      prev: skenFiles.length > 1 ? 1 : 0,
-      next: skenFiles.length > 1 ? 1 : 0,
-      rotateLeft: 1,
-      rotateRight: 1
     }
   });
 
