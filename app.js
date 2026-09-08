@@ -1386,8 +1386,7 @@ function filterData(keepSavedPage = false) {
       locationText.includes(query) ||
       venue.includes(query) ||
       city.includes(query) ||
-      country.includes(query) || // FIX: Doplněno hledání podle země!
-      contributor.includes(query) ||
+      country.includes(query) ||
       category.includes(query) ||
       rawDate.includes(query) ||
       formattedDate.includes(query) ||
