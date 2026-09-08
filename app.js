@@ -784,8 +784,8 @@ function openVideoModal(ticketIndex) {
     let listItemsHTML = '';
     
     rawItems.forEach(item => {
-      if (item.startsWith('[Encore') || item.startsWith('[Set')) {
-        const title = item.replace(/^\[|\]$/g, '');
+      if (item.startsWith('[') && item.endsWith(']')) {
+        const title = item.slice(1, -1).trim();
         listItemsHTML += `<li style="list-style-type: none; font-weight: 700; color: var(--accent-blue); margin-top: 10px; margin-left: -18px;">${title}</li>`;
       } else {
         songCount++;
@@ -1504,8 +1504,8 @@ function renderTickets(tickets) {
       let listItemsHTML = '';
 
       rawItems.forEach(item => {
-        if (item.startsWith('[Encore') || item.startsWith('[Set')) {
-          const title = item.replace(/^\[|\]$/g, '');
+        if (item.startsWith('[') && item.endsWith(']')) {
+          const title = item.slice(1, -1).trim();
           listItemsHTML += `<li style="list-style-type: none; font-weight: 700; color: var(--accent-blue); margin-top: 8px; margin-left: -15px;">${title}</li>`;
         } else {
           cardSongCount++;
