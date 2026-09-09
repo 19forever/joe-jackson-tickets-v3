@@ -10,7 +10,7 @@
   - "No records found for this query. Explore 50+ tours, filter by city, or click 'Help Us Find' to see what's still missing."
 
 ## Corrections 
-- Error/feature: remember sort param when coming back from edit in other categories but Tickets
+- DONE: Error/feature: remember sort param when coming back from edit in other categories but Tickets
 - Q: articles
   - new category?
   - different approach
@@ -20,23 +20,23 @@
   - get rid of Select Scan File for Record
   - get rid of Missing Scans Check
   - add control of mandatory fields (only Year actually)
-- Error. Q: Search button searching within Tour names too (confusing?)
+- DONE: Error. Q: Search button searching within Tour names too (confusing?)
 - Error: Logoff button visible even when I am logged-off (only on iOS)
 - Error: Tour search list visible for public (only on iOS)
 - 
 - Nice to have: better mobile styles.css
 - 
 - Q: how to handle Contributors/Donors?
-  - get rid of completely?
-  - if keep - show them or not?
-  - maintaining Rolf´s info?
-  - what about ebay/internet source?
-  - what about anonymouses / nicks?
+  DONE - get rid of completely?
+  DONE - if keep - show them or not?
+  DONE - maintaining Rolf´s info?
+  DONE - what about ebay/internet source?
+  DONE - what about anonymouses / nicks?
   - what about NULL or multiple source
     - because there more images for one show, but just one Donor Line
     - maybe like images - comma separated with the same order like images
 - Q: Reviews as a unique category?
-- Q: added Support Band field or just text into NOTES
+- DONE: Q: added Support Band field or just text into NOTES
 - DONE: get rid of Ticket button with it´s number (all buttons showe up when admin mode)
   - when Tickets and Passes then it stay like this
 - Q: is searching by cities (countries) necessary? what other search shortcuts would be useful?
