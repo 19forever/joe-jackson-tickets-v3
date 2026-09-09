@@ -1860,4 +1860,87 @@ a[href^="mailto:"]:hover {
   .tickets-container.grid-view .card-donor {
     font-size: 0.68rem !important;
   }
-  
+
+  /* 6. List View (Seznam) - Ultrakompaktní jednorandkový proužek */
+  .tickets-container.list-view .ticket-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: 6px 8px !important;
+    gap: 8px !important;
+    min-height: unset !important;
+    height: auto !important;
+  }
+
+  .tickets-container.list-view .card-img-wrapper {
+    width: 32px !important;
+    height: 32px !important;
+    flex-shrink: 0 !important;
+    border-radius: 4px !important;
+  }
+
+  .tickets-container.list-view .card-content {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    flex: 1 !important;
+    padding: 0 !important;
+    gap: 1px !important;
+    min-width: 0 !important;
+  }
+
+  /* Schováme dárce v seznamu pro úsporu vertikálního místa */
+  .tickets-container.list-view .card-donor {
+    display: none !important;
+  }
+
+  .tickets-container.list-view .card-meta-line1 {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  .tickets-container.list-view .card-date {
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+  }
+
+  .tickets-container.list-view .category-badge {
+    font-size: 0.65rem !important;
+    padding: 1px 4px !important;
+  }
+
+  .tickets-container.list-view .card-location-line2 {
+    font-size: 0.72rem !important;
+    color: var(--text-muted) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Tlačítka akcí zarovnaná vpravo vedle textu */
+  .tickets-container.list-view .card-actions-grid {
+    display: flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    margin-left: auto !important;
+    margin-top: 0 !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
+  }
+
+  .tickets-container.list-view .card-actions-grid .icon-btn {
+    height: 26px !important;
+    min-width: 26px !important;
+    padding: 0 5px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .tickets-container.list-view .card-actions-grid .grid-slot-empty {
+    display: none !important;
+  }
