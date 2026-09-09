@@ -1682,7 +1682,7 @@ a[href^="mailto:"]:hover {
 }
 
 /* ==========================================
-   ULTRA-COMPACT MOBILE OVERHAUL (max-width: 768px)
+   FIXED COMPACT MOBILE OVERHAUL (max-width: 768px)
    ========================================== */
 @media (max-width: 768px) {
   body {
@@ -1727,7 +1727,7 @@ a[href^="mailto:"]:hover {
     justify-content: center !important;
   }
 
-  /* 2. Štíhlý On This Day Banner */
+  /* 2. On This Day Banner */
   .on-this-day-banner.active {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -1751,7 +1751,7 @@ a[href^="mailto:"]:hover {
     font-size: 0.7rem !important;
   }
 
-  /* 3. Category Tabs - úzká lišta */
+  /* 3. Category Tabs */
   .category-tabs {
     margin-bottom: 8px !important;
     gap: 4px !important;
@@ -1762,63 +1762,69 @@ a[href^="mailto:"]:hover {
     font-size: 0.75rem !important;
   }
 
-  /* 4. Controls - Maximálně úsporný layout */
+  /* 4. Controls Panel - Stabilní Flexbox */
   .controls {
     display: flex !important;
-    flex-direction: column !important;
-    gap: 5px !important;
-    padding: 6px !important;
+    flex-wrap: wrap !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    padding: 8px !important;
+  }
+
+  .search-input-wrapper {
+    flex: 1 1 100% !important;
+    width: 100% !important;
   }
 
   .search-input-wrapper input {
-    height: 32px !important;
-    font-size: 0.8rem !important;
+    height: 34px !important;
+    font-size: 0.85rem !important;
   }
 
   #tourFilter, #cityFilter, #sortFilter {
-    width: 100% !important;
-    height: 32px !important;
+    flex: 1 1 calc(50% - 4px) !important;
+    width: calc(50% - 4px) !important;
+    height: 34px !important;
     font-size: 0.78rem !important;
   }
 
-  /* Jediný spodní řádek pro všechny drobné nástroje */
-  .controls-bottom-row {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 4px !important;
+  #tourFilter {
+    flex: 1 1 100% !important;
     width: 100% !important;
   }
 
   .action-buttons-group {
     display: flex !important;
     gap: 4px !important;
-    flex: 1 !important;
+    flex: 1 1 auto !important;
   }
 
   .surprise-btn {
-    height: 32px !important;
-    min-width: 32px !important;
-    padding: 0 6px !important;
-    font-size: 0.8rem !important;
-    flex: 1 !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    padding: 0 8px !important;
+    font-size: 0.85rem !important;
   }
 
   #pageSizeFilter {
-    width: 70px !important;
-    height: 32px !important;
+    width: 75px !important;
+    height: 34px !important;
     font-size: 0.75rem !important;
     padding: 0 2px !important;
+    flex: 0 0 auto !important;
   }
 
   .layout-toggles {
     display: flex !important;
     gap: 2px !important;
+    flex: 0 0 auto !important;
   }
 
   .layout-toggles .toggle-btn {
-    width: 32px !important;
-    height: 32px !important;
+    width: 34px !important;
+    height: 34px !important;
     font-size: 0.9rem !important;
   }
 
