@@ -1593,7 +1593,7 @@ function filterData(keepSavedPage = false) {
     filteredTickets = filteredTickets.filter(t => !isValidValue(t.SOUBOR_SKEN));
   } else if (sort === 'missing_setlists_only' || sort === 'missing_setlists') {
     filteredTickets = filteredTickets.filter(t => {
-      const setlistUrl = isValidValue(t.SETLIST_URL) ? t.SETLIST_URL.trim() : (isValidValue(t.SETLIST_FM_URL) ? t.SETLIST_FM_URL.trim() : '');
+      const setlistUrl = isValidValue(t.SETLIST_URL) ? t.SETLIST_URL.trim() : '';
       const songCount = getSetlistSongCount(t.SETLIST);
       const hasSongs = isValidValue(t.SETLIST) && songCount > 0;
       return !hasSongs || !setlistUrl;
@@ -1647,7 +1647,7 @@ function renderTickets(tickets) {
     const itemId = t.ID_MEMORABILIA || t.ID_LISTKU;
     const songCount = getSetlistSongCount(t.SETLIST);
     const hasSetlist = isValidValue(t.SETLIST) && songCount > 0;
-    const setlistUrl = isValidValue(t.SETLIST_URL) ? t.SETLIST_URL.trim() : (isValidValue(t.SETLIST_FM_URL) ? t.SETLIST_FM_URL.trim() : '');
+    const setlistUrl = isValidValue(t.SETLIST_URL) ? t.SETLIST_URL.trim() : '';
     const hasLineup = isValidValue(t.LINEUP);
 
     const skenFiles = (t.SOUBOR_SKEN || '').split(',').map(s => s.trim()).filter(Boolean);
