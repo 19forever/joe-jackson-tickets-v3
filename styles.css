@@ -1250,284 +1250,192 @@ header {
   }
 }
 
+/* ==========================================
+   CLEAN MOBILE LAYOUT OVERHAUL (max-width: 768px)
+   ========================================== */
 @media (max-width: 768px) {
   body {
-    padding: 0 12px 20px 12px;
+    padding: 0 10px 20px 10px;
   }
 
+  /* 1. Kompaktní hlavička */
   .top-header-container {
     position: relative;
-    top: auto;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
+    padding: 10px 0;
+    margin-bottom: 10px;
   }
 
   header {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+    align-items: stretch;
+    gap: 10px;
   }
 
-  .btn-contribute {
-    font-size: 0.8rem;
-    padding: 6px 12px;
+  /* Tlačítka v hlavičce – kompaktní scrollable řada nebo čistý flex wrap */
+  header > div:last-child {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    justify-content: flex-start;
+  }
+
+  .btn-contribute, .btn-bmc {
+    min-height: 36px !important;
+    height: 36px !important;
+    padding: 0 10px !important;
+    font-size: 0.75rem !important;
+    flex: 1 1 auto;
+    justify-content: center;
   }
 
   .title-area h1 {
     font-size: 1.1rem;
-    flex-wrap: wrap;
   }
 
-  .on-this-day-banner.active {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    padding: 12px;
+  .title-area p {
+    font-size: 0.78rem;
   }
 
-  .otd-left {
-    align-items: flex-start;
-  }
-
-  .otd-text p {
-    font-size: 0.82rem;
-    line-height: 1.35;
-  }
-
-  .otd-btn {
-    width: 100%;
-    text-align: center;
-    padding: 10px;
-  }
-
+  /* 2. Ovládací prváky (Controls) – Úhledná mřížka */
   .controls {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    padding: 12px;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+    padding: 8px !important;
   }
 
-  .search-input-wrapper {
-    width: 100%;
-  }
-
-  .search-input-wrapper input,
-  .controls select {
-    font-size: 16px !important;
+  .search-input-wrapper,
+  #tourFilter {
+    grid-column: span 2 !important;
     width: 100% !important;
-    height: 40px !important;
   }
 
   #cityFilter,
   #sortFilter,
-  #pageSizeFilter,
-  #tourFilter {
+  #pageSizeFilter {
     width: 100% !important;
-    min-width: unset !important;
-    max-width: unset !important;
+    height: 36px !important;
+    font-size: 0.82rem !important;
+  }
+
+  .action-buttons-group {
+    grid-column: span 1 !important;
+    display: flex !important;
+    gap: 6px !important;
   }
 
   .surprise-btn {
-    width: 100%;
-    height: 40px;
-    justify-content: center;
-  }
-
-  .layout-toggles {
-    justify-content: center;
-    width: 100%;
-  }
-
-  .toggle-btn {
-    flex-grow: 1;
-    height: 40px;
-  }
-
-  .tickets-container.grid-view {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-
-  .tickets-container.list-view .ticket-card {
-    flex-direction: row;
-    align-items: center;
-    padding: 3px 6px;
-    gap: 6px;
-  }
-
-  .tickets-container.list-view .card-img-wrapper {
-    width: 32px;
-    height: 24px;
-  }
-}
-
-/* Mobile Touch & Layout Optimization */
-@media (max-width: 640px) {
-  .category-tabs {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    white-space: nowrap !important;
-    -webkit-overflow-scrolling: touch !important;
-    gap: 8px !important;
-    padding-bottom: 8px !important;
-    scrollbar-width: none !important;
-  }
-
-  .category-tabs::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .tab-btn {
-    flex-shrink: 0 !important;
-    white-space: nowrap !important;
-  }
-
-  .controls {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    flex-direction: unset !important;
-    gap: 8px !important;
-    padding: 8px !important;
-  }
-
-  .search-input-wrapper {
-    grid-column: span 2 !important;
-    width: 100% !important;
-  }
-
-  #tourFilter {
-    grid-column: span 2 !important;
-    width: 100% !important;
-  }
-
-  #cityFilter {
-    grid-column: span 1 !important;
-    width: 100% !important;
-  }
-
-  #sortFilter {
-    grid-column: span 1 !important;
-    width: 100% !important;
-  }
-
-  #pageSizeFilter {
-    grid-column: span 1 !important;
-    width: 100% !important;
+    flex: 1 !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    font-size: 0.9rem !important;
   }
 
   .layout-toggles {
     grid-column: span 1 !important;
-    width: 100% !important;
     display: flex !important;
     gap: 4px !important;
-    justify-content: stretch !important;
   }
 
   .layout-toggles .toggle-btn {
     flex: 1 !important;
+    height: 36px !important;
+    min-height: 36px !important;
   }
 
-  .action-buttons-group {
-    grid-column: span 2 !important;
+  .search-input-wrapper input {
+    height: 38px !important;
+    font-size: 0.88rem !important;
+  }
+
+  /* 3. Grid View - Karta na mobilu */
+  .tickets-container.grid-view {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .card-actions-grid {
     display: flex !important;
-    gap: 8px !important;
-    width: 100% !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-end !important;
+    gap: 6px !important;
   }
 
-  .action-buttons-group .surprise-btn {
-    flex: 1 !important;
+  .card-actions-grid .icon-btn {
+    width: auto !important;
+    min-width: 36px !important;
+    height: 32px !important;
+    padding: 0 8px !important;
   }
 
+  .card-actions-grid .grid-slot-empty {
+    display: none !important; /* Na mobilu schováme prázdné sloty */
+  }
+
+  /* 4. List View (Seznam) - Kompaktní 1-řádkový layout */
   .tickets-container.list-view .ticket-card {
+    display: flex !important;
     flex-direction: row !important;
-    align-items: flex-start !important;
-    padding: 10px 12px !important;
+    align-items: center !important;
+    padding: 8px 10px !important;
     gap: 10px !important;
   }
 
   .tickets-container.list-view .card-img-wrapper {
-    width: 44px !important;
-    height: 33px !important;
-    margin-top: 2px !important;
+    width: 42px !important;
+    height: 32px !important;
+    flex-shrink: 0 !important;
   }
 
   .tickets-container.list-view .card-content {
+    display: flex !important;
     flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 6px !important;
     flex: 1 !important;
-    width: 100% !important;
+    gap: 2px !important;
+    padding: 0 !important;
+    overflow: hidden;
+  }
+
+  .tickets-container.list-view .card-donor {
+    font-size: 0.7rem !important;
+    margin: 0 !important;
   }
 
   .tickets-container.list-view .card-meta-line1 {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
     width: 100% !important;
     height: auto !important;
-    min-width: unset !important;
-    justify-content: space-between !important;
-    margin-bottom: 2px !important;
+    margin: 0 !important;
+  }
+
+  .tickets-container.list-view .card-date {
+    font-size: 0.82rem !important;
   }
 
   .tickets-container.list-view .card-location-line2 {
-    width: 100% !important;
+    font-size: 0.78rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
     height: auto !important;
-    line-height: 1.4 !important;
-    white-space: normal !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
-    font-size: 0.8rem !important;
-    color: var(--text-muted) !important;
-    margin-bottom: 4px !important;
+    line-height: 1.2 !important;
   }
 
   .tickets-container.list-view .card-actions-grid {
-    grid-template-columns: repeat(7, 1fr) !important;
-    max-width: 280px !important;
-    width: 100% !important;
-    margin-left: auto !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
     gap: 4px !important;
-    height: auto !important;
+    margin-left: 0 !important;
+    max-width: none !important;
   }
 
-  .tickets-container.list-view .card-actions-grid .grid-slot-empty {
-    height: 44px !important;
-  }
-
-  .tab-btn,
-  .btn-contribute,
-  .font-switcher-select,
-  .controls select,
-  .search-input-wrapper input,
-  .surprise-btn,
-  .toggle-btn,
-  .page-btn,
-  .otd-btn,
-  .jj-modal-actions button,
-  .jj-modal-actions .btn-secondary,
-  .jj-modal-actions .otd-btn,
-  #adminLoginLink,
-  #adminLockBtn,
-  .tickets-container.list-view .card-actions-grid .icon-btn,
-  .tickets-container.list-view .card-actions-grid .badge-setlist,
-  .tickets-container.list-view .card-actions-grid .badge-setlist-empty,
-  .tickets-container.list-view .card-actions-grid .badge-unverified,
-  .tickets-container.list-view .card-actions-grid .btn-action-video,
-  .tickets-container.list-view .card-actions-grid .btn-action-lineup,
-  .tickets-container.list-view .card-actions-grid .btn-action-edit,
-  .tickets-container.list-view .card-actions-grid .btn-action-related,
-  .tickets-container.list-view .card-actions-grid .btn-action-category {
-    min-height: 44px !important;
-    height: 44px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    box-sizing: border-box !important;
-  }
-
-  .search-input-wrapper input {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
+  .tickets-container.list-view .card-actions-grid .icon-btn {
+    height: 28px !important;
+    min-height: 28px !important;
+    padding: 0 6px !important;
+    font-size: 0.75rem !important;
   }
 }
 
