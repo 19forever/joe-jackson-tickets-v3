@@ -1439,39 +1439,6 @@ header {
   }
 }
 
-@media (max-width: 600px) {
-  .control-panel,
-  .controls {
-    padding: 6px !important;
-    gap: 6px !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .card-actions-grid {
-    gap: 2px;
-  }
-
-  .card-actions-grid .icon-btn {
-    font-size: 0.72rem;
-    padding: 0 1px;
-    gap: 1px;
-  }
-
-  .card-meta-line1 {
-    font-size: 0.8rem;
-    gap: 4px;
-  }
-
-  .card-meta-line1 .card-date {
-    font-size: 0.8rem;
-  }
-
-  .card-location-line2 {
-    font-size: 0.78rem;
-  }
-}
-
 /* Zamezení přetažení a výběru obrázků */
 .ticket-card img, 
 .card-img-wrapper img, 
@@ -1947,12 +1914,4 @@ a[href^="mailto:"]:hover {
   height: 18px;
   flex-shrink: 0;
   fill: currentColor;
-}
-
-@media (max-width: 640px) {
-  .btn-bmc {
-    min-height: 44px !important;
-    height: 44px !important;
-    padding: 0 12px !important;
-  }
 }
