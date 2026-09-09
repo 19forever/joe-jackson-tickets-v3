@@ -1946,6 +1946,7 @@ a[href^="mailto:"]:hover {
   }
 
   /* 7. Oprava Dárce (Donor -> by) v Grid View */
+  /* Finální úprava: by + mezera a zrušení modrého zvýraznění */
   .tickets-container.grid-view .card-donor {
     font-size: 0.72rem !important;
     white-space: nowrap !important;
@@ -1955,20 +1956,19 @@ a[href^="mailto:"]:hover {
     color: var(--text-muted) !important;
   }
 
-  /* Schováme prvních cca 63px (text "Donor: 👤 ") oříznutím vlevo */
   .tickets-container.grid-view .card-donor i {
     display: inline-block !important;
     font-style: normal !important;
     position: relative !important;
     left: -63px !important;
+    color: var(--text-muted) !important;
   }
 
-  /* Vložíme "by " na začátek */
   .tickets-container.grid-view .card-donor::before {
-    content: "by " !important;
+    content: "by\a0" !important; /* \a0 je pevná nezlomitelná mezera */
     font-style: italic !important;
     color: var(--text-muted) !important;
     font-size: 0.72rem !important;
+    text-decoration: none !important;
   }
-}
-
+  
