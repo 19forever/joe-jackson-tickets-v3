@@ -1945,8 +1945,7 @@ a[href^="mailto:"]:hover {
     display: none !important;
   }
 
-  /* 7. Oprava Dárce (Donor -> by) v Grid View */
-  /* Finální úprava: by + mezera a zrušení modrého zvýraznění */
+  /* Čisté zobrazení: pouze ikona panáčka a jméno dárce */
   .tickets-container.grid-view .card-donor {
     font-size: 0.72rem !important;
     white-space: nowrap !important;
@@ -1960,15 +1959,11 @@ a[href^="mailto:"]:hover {
     display: inline-block !important;
     font-style: normal !important;
     position: relative !important;
-    left: -63px !important;
+    left: -48px !important; /* Ořízne pouze slovo "Donor:" a nechá ikonu panáčka i jméno */
     color: var(--text-muted) !important;
   }
 
   .tickets-container.grid-view .card-donor::before {
-    content: "by\a0" !important; /* \a0 je pevná nezlomitelná mezera */
-    font-style: italic !important;
-    color: var(--text-muted) !important;
-    font-size: 0.72rem !important;
-    text-decoration: none !important;
+    display: none !important; /* Odstraní jakékoliv vkládané "by" */
   }
   
