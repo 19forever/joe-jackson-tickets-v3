@@ -1084,18 +1084,26 @@ function getContributeUrlForTicket(t) {
 function openDirectImagePreview(startIndex) {
   if (!filteredTickets || filteredTickets.length === 0) return;
 
+  // 1. Ošetření rozsahu startIndex
+  if (startIndex < 0) startIndex = 0;
+  if (startIndex >= filteredTickets.length) startIndex = filteredTickets.length - 1;
+
   if (activeViewerInstance) {
     activeViewerInstance.destroy();
     activeViewerInstance = null;
   }
 
+  const WINDOW_SIZE = 10; // Načítáme 10 lístků před a 10 za aktuální položkou
+  const minTicketIdx = Math.max(0, startIndex - WINDOW_SIZE);
+  const maxTicketIdx = Math.min(filteredTickets.length - 1, startIndex + WINDOW_SIZE);
+
   const container = document.createElement('div');
   container.style.display = 'none';
 
-  // Struktura uchovávající index lístku i pod-index skenu (a, b, c...)
   const imageTicketMap = [];
 
-  filteredTickets.forEach((ticket, ticketIdx) => {
+  for (let tIdx = minTicketIdx; tIdx <= maxTicketIdx; tIdx++) {
+    const ticket = filteredTickets[tIdx];
     const rawSken = (ticket.SOUBOR_SKEN && isValidValue(ticket.SOUBOR_SKEN)) ? ticket.SOUBOR_SKEN : '';
     const skenFiles = rawSken.split(',').map(s => s.trim()).filter(Boolean);
     const totalScans = skenFiles.length;
@@ -1106,7 +1114,7 @@ function openDirectImagePreview(startIndex) {
       img.alt = `Missing scan for ${formatDisplayDate(ticket.DATUM)}`;
       img.dataset.isMissing = 'true';
       container.appendChild(img);
-      imageTicketMap.push({ ticketIdx, scanIdx: 0, totalScans: 0 });
+      imageTicketMap.push({ globalTicketIdx: tIdx, scanIdx: 0, totalScans: 0 });
     } else {
       skenFiles.forEach((file, scanIdx) => {
         const img = document.createElement('img');
@@ -1118,16 +1126,17 @@ function openDirectImagePreview(startIndex) {
           this.dataset.isMissing = 'true';
         };
         container.appendChild(img);
-        imageTicketMap.push({ ticketIdx, scanIdx, totalScans });
+        imageTicketMap.push({ globalTicketIdx: tIdx, scanIdx, totalScans });
       });
     }
-  });
+  }
 
   document.body.appendChild(container);
 
-  // Spočítáme startovní index prvního skenu z vybraného lístku
-  let initialImageIndex = imageTicketMap.findIndex(item => item.ticketIdx === startIndex);
+  let initialImageIndex = imageTicketMap.findIndex(item => item.globalTicketIdx === startIndex);
   if (initialImageIndex === -1) initialImageIndex = 0;
+
+  let isRebuilding = false; // Zamezí zacyklení při obnově okna
 
   activeViewerInstance = new Viewer(container, {
     backdrop: true,
@@ -1144,30 +1153,30 @@ function openDirectImagePreview(startIndex) {
       flipVertical: 0
     },
     hidden: function() {
-      if (activeViewerInstance) {
-        activeViewerInstance.destroy();
-        activeViewerInstance = null;
+      if (!isRebuilding) {
+        if (activeViewerInstance) {
+          activeViewerInstance.destroy();
+          activeViewerInstance = null;
+        }
+        if (container.parentNode) document.body.removeChild(container);
       }
-      if (container.parentNode) document.body.removeChild(container);
     },
     title: function() {
       const activeImgIndex = (activeViewerInstance && typeof activeViewerInstance.index === 'number') 
         ? activeViewerInstance.index 
         : initialImageIndex;
 
-      const mapItem = imageTicketMap[activeImgIndex] || { ticketIdx: startIndex, scanIdx: 0, totalScans: 1 };
-      const t = filteredTickets[mapItem.ticketIdx];
+      const mapItem = imageTicketMap[activeImgIndex] || { globalTicketIdx: startIndex, scanIdx: 0, totalScans: 1 };
+      const t = filteredTickets[mapItem.globalTicketIdx];
       if (!t) return '';
 
       const topRow = [];
 
-      // Vytvoření přípony a, b, c... v případě více skenů pro jeden koncert
-      const currentTicketPos = mapItem.ticketIdx + 1;
+      const currentTicketPos = mapItem.globalTicketIdx + 1;
       let posString = `${currentTicketPos}`;
 
       if (mapItem.totalScans > 1) {
-        // Převod pod-indexu (0, 1, 2...) na písmeno ('a', 'b', 'c'...)
-        const letter = String.fromCharCode(97 + mapItem.scanIdx); 
+        const letter = String.fromCharCode(97 + mapItem.scanIdx);
         posString += letter;
       }
 
@@ -1197,9 +1206,19 @@ function openDirectImagePreview(startIndex) {
     },
     viewed: function() {
       const activeImgIndex = activeViewerInstance ? activeViewerInstance.index : initialImageIndex;
-      const mapItem = imageTicketMap[activeImgIndex] || { ticketIdx: startIndex };
-      const ticketIdx = mapItem.ticketIdx;
-      const t = filteredTickets[ticketIdx];
+      const mapItem = imageTicketMap[activeImgIndex] || { globalTicketIdx: startIndex };
+      const currentGlobalIdx = mapItem.globalTicketIdx;
+      const t = filteredTickets[currentGlobalIdx];
+
+      // DYNAMICKÉ DOČÍTÁNÍ: Pokud se uživatel přiblíží k okraji okna (< 3 položky od okraje), posuneme okno
+      const distanceFromMin = currentGlobalIdx - minTicketIdx;
+      const distanceFromMax = maxTicketIdx - currentGlobalIdx;
+
+      if ((distanceFromMin < 3 && minTicketIdx > 0) || (distanceFromMax < 3 && maxTicketIdx < filteredTickets.length - 1)) {
+        isRebuilding = true;
+        openDirectImagePreview(currentGlobalIdx);
+        return;
+      }
 
       setTimeout(() => {
         const titleEl = document.querySelector('.viewer-title');
@@ -1231,7 +1250,7 @@ function openDirectImagePreview(startIndex) {
               btn.innerHTML = '💡 Read Full Note / Review';
               btn.onclick = (e) => {
                 e.stopPropagation();
-                openNoteModal(ticketIdx);
+                openNoteModal(currentGlobalIdx);
               };
               noteBlock.appendChild(btn);
             }
