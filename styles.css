@@ -1966,4 +1966,24 @@ a[href^="mailto:"]:hover {
   .tickets-container.grid-view .card-donor::before {
     display: none !important; /* Odstraní jakékoliv vkládané "by" */
   }
+
+  /* 1. Schování odznaku kategorie (TICKET/PASS) v mobilní mřížce */
+  .tickets-container.grid-view .category-badge {
+    display: none !important;
+  }
+
+  /* 2. Zjednodušení setlist tlačítka (schováme notu, necháme jen číslo) */
+  .tickets-container.grid-view .badge-setlist,
+  .tickets-container.grid-view .btn-action-setlist {
+    min-width: 26px !important;
+    padding: 0 4px !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* Schováme emoji/text noty uvnitř tlačítka setlistu */
+  .tickets-container.grid-view .badge-setlist::first-letter,
+  .tickets-container.grid-view .btn-action-setlist::first-letter {
+    font-size: 0 !important;
+  }
+
   
