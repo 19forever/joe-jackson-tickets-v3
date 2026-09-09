@@ -1093,7 +1093,7 @@ function openDirectImagePreview(startIndex) {
     activeViewerInstance = null;
   }
 
-  const WINDOW_SIZE = 10; // Načítáme 10 lístků před a 10 za aktuální položkou
+  const WINDOW_SIZE = 20; // Načítáme 20 lístků před a 10 za aktuální položkou
   const minTicketIdx = Math.max(0, startIndex - WINDOW_SIZE);
   const maxTicketIdx = Math.min(filteredTickets.length - 1, startIndex + WINDOW_SIZE);
 
