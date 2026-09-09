@@ -1861,20 +1861,20 @@ a[href^="mailto:"]:hover {
     font-size: 0.68rem !important;
   }
 
-  /* 6. List View (Seznam) - Ultrakompaktní jednorandkový proužek */
+  /* 6. List View (Seznam) - Čisté řádkové rozvržení zarovnané doleva */
   .tickets-container.list-view .ticket-card {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    padding: 6px 8px !important;
-    gap: 8px !important;
+    padding: 8px 10px !important;
+    gap: 10px !important;
     min-height: unset !important;
     height: auto !important;
   }
 
   .tickets-container.list-view .card-img-wrapper {
-    width: 32px !important;
-    height: 32px !important;
+    width: 36px !important;
+    height: 36px !important;
     flex-shrink: 0 !important;
     border-radius: 4px !important;
   }
@@ -1883,64 +1883,73 @@ a[href^="mailto:"]:hover {
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
+    align-items: flex-start !important;
     flex: 1 !important;
     padding: 0 !important;
-    gap: 1px !important;
+    gap: 2px !important;
     min-width: 0 !important;
+    text-align: left !important;
   }
 
-  /* Schováme dárce v seznamu pro úsporu vertikálního místa */
   .tickets-container.list-view .card-donor {
     display: none !important;
   }
 
+  /* 1. řádek: Datum vlevo, kategorie/badge vpravo */
   .tickets-container.list-view .card-meta-line1 {
     display: flex !important;
     align-items: center !important;
-    gap: 6px !important;
-    margin: 0 !important;
+    justify-content: space-between !important;
     width: 100% !important;
+    margin: 0 !important;
   }
 
   .tickets-container.list-view .card-date {
-    font-size: 0.78rem !important;
+    font-size: 0.8rem !important;
     font-weight: 700 !important;
     white-space: nowrap !important;
   }
 
   .tickets-container.list-view .category-badge {
     font-size: 0.65rem !important;
-    padding: 1px 4px !important;
+    padding: 1px 5px !important;
+    margin: 0 !important;
+    max-width: 100px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
+  /* 2. řádek: Lokace zarovnaná dovedle/doleva, oříznutá */
   .tickets-container.list-view .card-location-line2 {
-    font-size: 0.72rem !important;
+    font-size: 0.74rem !important;
     color: var(--text-muted) !important;
+    text-align: left !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    width: 100% !important;
     margin: 0 !important;
-    line-height: 1.2 !important;
+    line-height: 1.25 !important;
   }
 
-  /* Tlačítka akcí zarovnaná vpravo vedle textu */
+  /* Akční ikony pod textem zarovnané doprava */
   .tickets-container.list-view .card-actions-grid {
     display: flex !important;
     align-items: center !important;
-    gap: 3px !important;
-    margin-left: auto !important;
-    margin-top: 0 !important;
-    width: auto !important;
-    flex-shrink: 0 !important;
+    justify-content: flex-end !important;
+    gap: 4px !important;
+    margin-top: 3px !important;
+    width: 100% !important;
   }
 
   .tickets-container.list-view .card-actions-grid .icon-btn {
-    height: 26px !important;
-    min-width: 26px !important;
-    padding: 0 5px !important;
-    font-size: 0.72rem !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    padding: 0 4px !important;
+    font-size: 0.7rem !important;
   }
 
   .tickets-container.list-view .card-actions-grid .grid-slot-empty {
     display: none !important;
   }
+  
