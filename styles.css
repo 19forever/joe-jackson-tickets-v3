@@ -1992,3 +1992,14 @@ header {
   cursor: pointer !important;
   vertical-align: middle !important;
 }
+
+a[href^="mailto:"] {
+  color: #d97706; /* Teplá oranžová / amber */
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s ease;
+}
+
+a[href^="mailto:"]:hover {
+  color: #f59e0b; /* Světlejší jasná oranžová při najetí myší */
+}
