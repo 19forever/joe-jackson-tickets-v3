@@ -1556,11 +1556,8 @@ function filterData(keepSavedPage = false) {
     const city = (t.MESTO || '').toLowerCase();
     const country = (t.STAT || '').toLowerCase();
     const category = (t.KATEGORIE || '').toLowerCase();
-    const supportingAct = (t.SUPPORTING_ACT || '').toLowerCase();
     const lineup = (t.LINEUP || '').toLowerCase();
     const setlist = (t.SETLIST || '').toLowerCase();
-    const tourName = (t.TOUR_NAME || '').toLowerCase();
-    const tourId = (t.TOUR_ID || '').toLowerCase();
 
     const dateMatch = dateCandidates.length > 0 && matchDateAgainstCandidates(t.DATUM, dateCandidates);
 
@@ -1572,11 +1569,8 @@ function filterData(keepSavedPage = false) {
       category.includes(query) ||
       rawDate.includes(query) ||
       formattedDate.includes(query) ||
-      supportingAct.includes(query) ||
       lineup.includes(query) ||
-      setlist.includes(query) ||
-      tourName.includes(query) ||
-      tourId.includes(query);
+      setlist.includes(query);
 
     const qMatch = !query || dateMatch || textMatch;
     const cMatch = !selectedCity || city === selectedCity.toLowerCase();
