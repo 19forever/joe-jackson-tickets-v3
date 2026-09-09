@@ -1682,200 +1682,167 @@ a[href^="mailto:"]:hover {
 }
 
 /* ==========================================
-   PRECISION MOBILE OVERHAUL (max-width: 768px)
+   ULTRA-COMPACT MOBILE OVERHAUL (max-width: 768px)
    ========================================== */
 @media (max-width: 768px) {
   body {
-    padding: 0 10px 16px 10px !important;
+    padding: 0 8px 12px 8px !important;
   }
 
-  /* 1. Hlavička - kompaktní flex layout */
+  /* 1. Ultrakompaktní hlavička */
   .top-header-container {
     position: relative !important;
-    padding: 8px 0 !important;
-    margin-bottom: 10px !important;
+    padding: 4px 0 !important;
+    margin-bottom: 8px !important;
   }
 
   header {
     flex-direction: column !important;
     align-items: stretch !important;
-    gap: 8px !important;
+    gap: 6px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .title-area h1 {
+    font-size: 1.05rem !important;
+  }
+
+  .title-area p {
+    font-size: 0.72rem !important;
+    margin-top: 2px !important;
   }
 
   header > div:last-child {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 6px !important;
+    gap: 4px !important;
   }
 
   .btn-contribute, .btn-bmc {
-    height: 34px !important;
-    min-height: 34px !important;
-    padding: 0 10px !important;
-    font-size: 0.75rem !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    padding: 0 8px !important;
+    font-size: 0.7rem !important;
     flex: 1 1 auto !important;
     justify-content: center !important;
   }
 
-  /* 2. On This Day Banner - oprava přetékání */
+  /* 2. Štíhlý On This Day Banner */
   .on-this-day-banner.active {
     flex-direction: column !important;
     align-items: stretch !important;
-    padding: 10px 12px !important;
-    gap: 8px !important;
+    padding: 8px 10px !important;
+    gap: 6px !important;
+    margin-bottom: 8px !important;
   }
 
   .otd-left {
-    display: flex !important;
-    align-items: flex-start !important;
-    gap: 8px !important;
-  }
-
-  .otd-text {
-    flex: 1 !important;
+    gap: 6px !important;
   }
 
   .otd-text p {
-    font-size: 0.8rem !important;
-    line-height: 1.3 !important;
+    font-size: 0.75rem !important;
+    line-height: 1.25 !important;
   }
 
   .otd-btn {
     width: 100% !important;
-    height: 34px !important;
-    font-size: 0.75rem !important;
-    padding: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    height: 30px !important;
+    font-size: 0.7rem !important;
   }
 
-  /* 3. Controls Bar - štíhlý 1-sloupcový & flex řádkový layout */
-  .controls {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 6px !important;
-    padding: 8px !important;
-  }
-
-  .search-input-wrapper,
-  #tourFilter,
-  #cityFilter,
-  #sortFilter {
-    grid-column: span 2 !important;
-    width: 100% !important;
-  }
-
-  #pageSizeFilter {
-    grid-column: span 1 !important;
-    height: 36px !important;
-  }
-
-  .layout-toggles {
-    grid-column: span 1 !important;
-    justify-content: flex-end !important;
-    display: flex !important;
+  /* 3. Category Tabs - úzká lišta */
+  .category-tabs {
+    margin-bottom: 8px !important;
     gap: 4px !important;
   }
 
-  .layout-toggles .toggle-btn {
-    flex: 1 !important;
-    height: 36px !important;
+  .tab-btn {
+    padding: 4px 10px !important;
+    font-size: 0.75rem !important;
   }
 
-  .action-buttons-group {
-    grid-column: span 2 !important;
+  /* 4. Controls - Maximálně úsporný layout */
+  .controls {
     display: flex !important;
-    gap: 6px !important;
-  }
-
-  .surprise-btn {
-    flex: 1 !important;
-    height: 36px !important;
-    font-size: 0.85rem !important;
+    flex-direction: column !important;
+    gap: 5px !important;
+    padding: 6px !important;
   }
 
   .search-input-wrapper input {
-    height: 36px !important;
-    font-size: 0.85rem !important;
+    height: 32px !important;
+    font-size: 0.8rem !important;
   }
 
-  /* 4. Grid View - Karta na mobilu */
+  #tourFilter, #cityFilter, #sortFilter {
+    width: 100% !important;
+    height: 32px !important;
+    font-size: 0.78rem !important;
+  }
+
+  /* Jediný spodní řádek pro všechny drobné nástroje */
+  .controls-bottom-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 4px !important;
+    width: 100% !important;
+  }
+
+  .action-buttons-group {
+    display: flex !important;
+    gap: 4px !important;
+    flex: 1 !important;
+  }
+
+  .surprise-btn {
+    height: 32px !important;
+    min-width: 32px !important;
+    padding: 0 6px !important;
+    font-size: 0.8rem !important;
+    flex: 1 !important;
+  }
+
+  #pageSizeFilter {
+    width: 70px !important;
+    height: 32px !important;
+    font-size: 0.75rem !important;
+    padding: 0 2px !important;
+  }
+
+  .layout-toggles {
+    display: flex !important;
+    gap: 2px !important;
+  }
+
+  .layout-toggles .toggle-btn {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.9rem !important;
+  }
+
+  /* 5. Grid View / List View úpravy karet */
   .tickets-container.grid-view {
     grid-template-columns: 1fr !important;
-    gap: 12px !important;
+    gap: 10px !important;
   }
 
   .card-actions-grid {
     display: flex !important;
     flex-wrap: wrap !important;
     justify-content: flex-end !important;
-    gap: 6px !important;
+    gap: 4px !important;
   }
 
   .card-actions-grid .icon-btn {
     width: auto !important;
-    min-width: 36px !important;
-    height: 32px !important;
-    padding: 0 8px !important;
+    min-width: 32px !important;
+    height: 28px !important;
+    padding: 0 6px !important;
   }
 
   .card-actions-grid .grid-slot-empty {
     display: none !important;
-  }
-
-  /* 5. List View (Seznam) - Čisté řádky */
-  .tickets-container.list-view .ticket-card {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    padding: 6px 8px !important;
-    gap: 8px !important;
-  }
-
-  .tickets-container.list-view .card-img-wrapper {
-    width: 36px !important;
-    height: 26px !important;
-    flex-shrink: 0 !important;
-  }
-
-  .tickets-container.list-view .card-content {
-    display: flex !important;
-    flex-direction: column !important;
-    flex: 1 !important;
-    gap: 2px !important;
-    padding: 0 !important;
-    min-width: 0 !important;
-  }
-
-  .tickets-container.list-view .card-meta-line1 {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    width: 100% !important;
-  }
-
-  .tickets-container.list-view .card-date {
-    font-size: 0.8rem !important;
-  }
-
-  .tickets-container.list-view .card-location-line2 {
-    font-size: 0.75rem !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
-
-  .tickets-container.list-view .card-actions-grid {
-    display: flex !important;
-    gap: 4px !important;
-    margin-left: auto !important;
-  }
-
-  .tickets-container.list-view .card-actions-grid .icon-btn {
-    height: 28px !important;
-    min-width: 28px !important;
-    padding: 0 4px !important;
-    font-size: 0.75rem !important;
   }
 }
