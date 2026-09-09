@@ -2003,3 +2003,48 @@ a[href^="mailto:"] {
 a[href^="mailto:"]:hover {
   color: #f59e0b; /* Světlejší jasná oranžová při najetí myší */
 }
+
+/* ==========================================
+   Buy Me a Coffee Button Integration
+   ========================================== */
+.btn-bmc {
+  background-color: var(--accent-yellow);
+  color: #000000;
+  border: 1px solid var(--accent-yellow);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+}
+
+.btn-bmc:hover {
+  background-color: var(--accent-yellow-bright);
+  border-color: var(--accent-yellow-bright);
+  color: #000000;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+}
+
+.btn-bmc svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  fill: currentColor;
+}
+
+@media (max-width: 640px) {
+  .btn-bmc {
+    min-height: 44px !important;
+    height: 44px !important;
+    padding: 0 12px !important;
+  }
+}
