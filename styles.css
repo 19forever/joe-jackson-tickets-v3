@@ -1986,4 +1986,44 @@ a[href^="mailto:"]:hover {
     font-size: 0 !important;
   }
 
+  /* Admin Editor - Mobilní optimalizace formulářů */
+  .admin-editor-container, 
+  .editor-section {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 8px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Všechna políčka a řádky ve formuláři pod sebe */
+  .form-row, 
+  .form-group-inline {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .form-group, 
+  .admin-editor-container input, 
+  .admin-editor-container select, 
+  .admin-editor-container textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Tlačítka akcí v editoru přehledně pod sebe / do mřížky */
+  .editor-actions, 
+  .editor-top-bar {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .editor-actions button, 
+  .editor-top-bar button {
+    flex: 1 1 calc(50% - 4px) !important; /* Tlačítka 2 vedle sebe na mobilu */
+    height: 36px !important;
+    font-size: 0.78rem !important;
+  }
   
