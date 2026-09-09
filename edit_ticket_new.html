@@ -401,9 +401,10 @@
 
     .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 
     @media (max-width: 768px) {
-      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
     }
 
     .form-group {
@@ -630,7 +631,7 @@
           </div>
           <div class="form-group">
             <label for="edit_KATEGORIE">Category (KATEGORIE)</label>
-            <select id="edit_KATEGORIE" name="KATEGORIE">
+            <select id="edit_KATEGORIE" name="KATEGORIE" onchange="handleCategoryChange()">
               <option value="Tickets">Tickets</option>
               <option value="Passes">Passes</option>
               <option value="Programs">Programs</option>
@@ -638,6 +639,12 @@
               <option value="T-shirts">T-shirts</option>
               <option value="Tour Items">Tour Items</option>
               <option value="Memorabilia">Memorabilia</option>
+            </select>
+          </div>
+          <div class="form-group" id="subcategoryWrapper" style="display: none;">
+            <label for="edit_SUBCATEGORY">Subcategory (SUBCATEGORY)</label>
+            <select id="edit_SUBCATEGORY" name="SUBCATEGORY">
+              <!-- Dynamicky se naplní v JavaScriptu -->
             </select>
           </div>
           <div class="form-group">
@@ -785,9 +792,51 @@
     const fields = [
       'ID_MEMORABILIA', 'SHOW_ID', 'TOUR_ID', 'TOUR_NAME', 'DATUM', 'MESTO', 'STAT', 'VENUE',
       'STATUS', 'ORIGINAL_DATE', 'NOTE',
-      'KATEGORIE', 'SOUBOR_SKEN', 'CONTRIBUTOR', 'LINEUP', 'SETLIST',
+      'KATEGORIE', 'SUBCATEGORY', 'SOUBOR_SKEN', 'CONTRIBUTOR', 'LINEUP', 'SETLIST',
       'POCET_SKLADEB', 'SETLIST_URL', 'YOUTUBE_URL', 'REVIEW_URL'
     ];
+
+    const SUBCATEGORY_MAP = {
+      'Tickets': [
+        { value: 'Standard Ticket', label: 'Standard Ticket' },
+        { value: 'Fan Ticket', label: 'Fan Ticket' },
+        { value: 'Advance Sale', label: 'Advance Sale' },
+        { value: 'Buying on the Door', label: 'Buying on the Door' }
+      ],
+      'Passes': [
+        { value: 'Textile', label: 'Textile' },
+        { value: 'Plastic', label: 'Plastic' },
+        { value: 'Paper', label: 'Paper' },
+        { value: 'Laminated', label: 'Laminated' }
+      ]
+    };
+
+    function handleCategoryChange(selectedSubcategory = '') {
+      const katEl = getField('KATEGORIE');
+      const wrapper = document.getElementById('subcategoryWrapper');
+      const subkatEl = getField('SUBCATEGORY');
+
+      if (!katEl || !wrapper || !subkatEl) return;
+
+      const mainCategory = katEl.value;
+      const options = SUBCATEGORY_MAP[mainCategory];
+
+      if (options && options.length > 0) {
+        subkatEl.innerHTML = '<option value="">-- Select Subcategory --</option>';
+        options.forEach(opt => {
+          const el = document.createElement('option');
+          el.value = opt.value;
+          el.textContent = opt.label;
+          if (opt.value === selectedSubcategory) el.selected = true;
+          subkatEl.appendChild(el);
+        });
+        wrapper.style.display = 'flex';
+      } else {
+        subkatEl.innerHTML = '';
+        subkatEl.value = '';
+        wrapper.style.display = 'none';
+      }
+    }
 
     function getField(name) {
       if (!name) return null;
@@ -1228,7 +1277,8 @@
               opt.value.toLowerCase() === val.toLowerCase()
             );
             el.value = matchingOpt ? matchingOpt.value : (val || 'Tickets');
-          } else {
+            handleCategoryChange(r.SUBCATEGORY ? String(r.SUBCATEGORY).trim() : '');
+          } else if (f !== 'SUBCATEGORY') {
             el.value = val;
           }
         }
@@ -1282,7 +1332,8 @@
       fields.forEach(f => {
         const el = getField(f);
         if (el) {
-          fullDbData[currentRecordIndex][f] = el.value.trim();
+          const val = el.value.trim();
+          fullDbData[currentRecordIndex][f] = val !== '' ? val : null;
         }
       });
     }
