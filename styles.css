@@ -1828,27 +1828,36 @@ a[href^="mailto:"]:hover {
     font-size: 0.9rem !important;
   }
 
-  /* 5. Grid View / List View úpravy karet */
+  /* 5. Grid View - Mobilní mřížka (2 sloupce pro telefony, 3 pro tablety) */
   .tickets-container.grid-view {
-    grid-template-columns: 1fr !important;
-    gap: 10px !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
   }
 
-  .card-actions-grid {
-    display: flex !important;
+  /* Přizpůsobení karty pro užší sloupce */
+  .tickets-container.grid-view .ticket-card {
+    border-radius: 6px !important;
+  }
+
+  .tickets-container.grid-view .card-img-wrapper {
+    height: 120px !important; /* Menší výška obrázku v 2-sloupcové mřížce */
+  }
+
+  .tickets-container.grid-view .card-content {
+    padding: 8px !important;
+  }
+
+  .tickets-container.grid-view .card-meta-line1 {
+    font-size: 0.75rem !important;
     flex-wrap: wrap !important;
-    justify-content: flex-end !important;
-    gap: 4px !important;
   }
 
-  .card-actions-grid .icon-btn {
-    width: auto !important;
-    min-width: 32px !important;
-    height: 28px !important;
-    padding: 0 6px !important;
+  .tickets-container.grid-view .card-location-line2 {
+    font-size: 0.72rem !important;
+    line-height: 1.2 !important;
   }
 
-  .card-actions-grid .grid-slot-empty {
-    display: none !important;
+  .tickets-container.grid-view .card-donor {
+    font-size: 0.68rem !important;
   }
-}
+  
