@@ -1828,19 +1828,18 @@ a[href^="mailto:"]:hover {
     font-size: 0.9rem !important;
   }
 
-  /* 5. Grid View - Mobilní mřížka (2 sloupce pro telefony, 3 pro tablety) */
+  /* 5. Grid View - Mobilní mřížka (2 sloupce) */
   .tickets-container.grid-view {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
   }
 
-  /* Přizpůsobení karty pro užší sloupce */
   .tickets-container.grid-view .ticket-card {
     border-radius: 6px !important;
   }
 
   .tickets-container.grid-view .card-img-wrapper {
-    height: 120px !important; /* Menší výška obrázku v 2-sloupcové mřížce */
+    height: 120px !important;
   }
 
   .tickets-container.grid-view .card-content {
@@ -1857,11 +1856,7 @@ a[href^="mailto:"]:hover {
     line-height: 1.2 !important;
   }
 
-  .tickets-container.grid-view .card-donor {
-    font-size: 0.68rem !important;
-  }
-
-  /* 6. List View (Seznam) - Čisté řádkové rozvržení zarovnané doleva */
+  /* 6. List View (Seznam) - Čisté řádkové rozvržení */
   .tickets-container.list-view .ticket-card {
     display: flex !important;
     flex-direction: row !important;
@@ -1895,7 +1890,6 @@ a[href^="mailto:"]:hover {
     display: none !important;
   }
 
-  /* 1. řádek: Datum vlevo, kategorie/badge vpravo */
   .tickets-container.list-view .card-meta-line1 {
     display: flex !important;
     align-items: center !important;
@@ -1919,7 +1913,6 @@ a[href^="mailto:"]:hover {
     text-overflow: ellipsis !important;
   }
 
-  /* 2. řádek: Lokace zarovnaná dovedle/doleva, oříznutá */
   .tickets-container.list-view .card-location-line2 {
     font-size: 0.74rem !important;
     color: var(--text-muted) !important;
@@ -1932,7 +1925,6 @@ a[href^="mailto:"]:hover {
     line-height: 1.25 !important;
   }
 
- /* Tlačítka si drží přirozenou šířku a neroztahují se do stran */
   .tickets-container.list-view .card-actions-grid {
     display: flex !important;
     justify-content: flex-end !important;
@@ -1941,9 +1933,9 @@ a[href^="mailto:"]:hover {
   }
 
   .tickets-container.list-view .card-actions-grid .icon-btn {
-    width: auto !important;          /* Zruší roztahování do šířky */
-    flex: 0 0 auto !important;       /* Zapoví tlačítku zabírat zbytkové místo */
-    min-width: 38px !important;      /* Kompaktní minimální šířka pro prst */
+    width: auto !important;
+    flex: 0 0 auto !important;
+    min-width: 38px !important;
     height: 28px !important;
     padding: 0 8px !important;
     font-size: 0.78rem !important;
@@ -1953,27 +1945,30 @@ a[href^="mailto:"]:hover {
     display: none !important;
   }
 
- /* Čisté skrytí ikony i textu Donor: v Grid View */
+  /* 7. Oprava Dárce (Donor -> by) v Grid View */
   .tickets-container.grid-view .card-donor {
     font-size: 0.72rem !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
     color: var(--text-muted) !important;
   }
 
-  /* Zneviditelníme vnitřní text "Donor: 👤 " přes clip-path / indent */
+  /* Schováme prvních cca 63px (text "Donor: 👤 ") oříznutím vlevo */
   .tickets-container.grid-view .card-donor i {
-    font-style: normal !important;
     display: inline-block !important;
-    font-size: 0 !important; /* Shodí velikost textu "Donor: 👤 " na nulu */
+    font-style: normal !important;
+    position: relative !important;
+    left: -63px !important;
   }
 
-  /* Do pseudoprveku vložíme "by " a vráti se původní jméno */
-  .tickets-container.grid-view .card-donor i::before {
+  /* Vložíme "by " na začátek */
+  .tickets-container.grid-view .card-donor::before {
     content: "by " !important;
-    font-size: 0.72rem !important;
     font-style: italic !important;
     color: var(--text-muted) !important;
+    font-size: 0.72rem !important;
   }
-  
+}
+
