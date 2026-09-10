@@ -1438,10 +1438,17 @@
             currentScans.push(result.fileName);
             skenInput.value = currentScans.join(', ');
             
+            // 1. Zápis do pole a generování miniatury
             updateImageFromInput();
+
+            // 2. OKAMŽITÝ NÁHLED: Přepíšeme zdroj hlavního náhledu lokálním DataURL
+            const previewImg = document.getElementById('previewImg');
+            if (previewImg && compressedResult.dataUrl) {
+              previewImg.src = compressedResult.dataUrl;
+            }
           }
 
-          showStatus(`✅ Photo uploaded & linked: ${result.fileName}`, 'green');
+          showStatus(`✅ Photo uploaded & linked: ${result.fileName} (Deploying to web...)`, 'green');
         } else {
           throw new Error(result.error || 'Upload failed');
         }
