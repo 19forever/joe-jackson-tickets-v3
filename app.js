@@ -41,19 +41,21 @@ const MISSING_TICKET_SVG = `data:image/svg+xml;utf8,${encodeURIComponent(`
 </svg>
 `)}`;
 
-// Pomocné funkce pro ochranu před DOM XSS (Sanitizace)
+// Pomocné funkce pro ochranu před DOM XSS (Striktní Sanitizace včetně uvozovek pro atributy)
 function escapeHtml(text) {
-  if (!text) return '';
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  if (!text && text !== 0) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function escapeHtmlWithBreaks(text) {
-  if (!text) return '';
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML.replace(/\\n/g, '<br>').replace(/\r?\n/g, '<br>');
+  if (!text && text !== 0) return '';
+  const escaped = escapeHtml(text);
+  return escaped.replace(/\\n/g, '<br>').replace(/\r?\n/g, '<br>');
 }
 
 // Pomocná funkce pro spočítání reálných skenů
@@ -772,9 +774,9 @@ function openVideoModal(ticketIndex) {
 
   let headerContent = '';
   if (formattedDate && locStr) {
-    headerContent = `${formattedDate} — ${locStr}`;
+    headerContent = `${escapeHtml(formattedDate)} — ${escapeHtml(locStr)}`;
   } else {
-    headerContent = formattedDate || locStr || 'Live Performance';
+    headerContent = escapeHtml(formattedDate || locStr || 'Live Performance');
   }
 
   if (videoCenter) {
@@ -784,13 +786,13 @@ function openVideoModal(ticketIndex) {
       headerElem.className = 'jj-modal-concert-header';
       videoCenter.insertBefore(headerElem, frameWrapper);
     }
-    headerElem.innerHTML = `<h4>${escapeHtml(headerContent)}</h4>`;
+    headerElem.innerHTML = `<h4>${headerContent}</h4>`;
   }
 
   const rawSken = (t && t.SOUBOR_SKEN && isValidValue(t.SOUBOR_SKEN)) ? t.SOUBOR_SKEN : '';
   const skenFiles = rawSken.split(',').map(s => s.trim()).filter(Boolean);
   const firstImgFile = skenFiles[0] || '';
-  const imgSrc = isValidValue(firstImgFile) ? `./scans/${firstImgFile}` : MISSING_TICKET_SVG;
+  const imgSrc = isValidValue(firstImgFile) ? `./scans/${encodeURIComponent(firstImgFile)}` : MISSING_TICKET_SVG;
 
   let lineupHTML = `<h4 style="color: var(--accent-blue);">👥 Band Line-up</h4>`;
   if (t && isValidValue(t.LINEUP)) {
@@ -830,18 +832,18 @@ function openVideoModal(ticketIndex) {
     frameWrapper.innerHTML = `
       <div class="jj-audio-player-wrapper">
         <img src="${imgSrc}" class="jj-audio-ticket-preview" alt="Ticket scan" onerror="this.onerror=null; this.src='${MISSING_TICKET_SVG}';">
-        <audio controls autoplay src="${mediaInfo.src}" style="width: 100%; max-width: 500px; display: block;"></audio>
+        <audio controls autoplay src="${escapeHtml(mediaInfo.src)}" style="width: 100%; max-width: 500px; display: block;"></audio>
       </div>
     `;
   } else if (mediaInfo.type === 'archive') {
     frameWrapper.innerHTML = `
       <div class="jj-audio-player-wrapper">
         <img src="${imgSrc}" class="jj-audio-ticket-preview" alt="Ticket scan" onerror="this.onerror=null; this.src='${MISSING_TICKET_SVG}';">
-        <iframe id="videoIframe" src="${mediaInfo.src}" style="width: 100%; max-width: 500px; height: 60px; border: none; border-radius: 4px;" allow="autoplay"></iframe>
+        <iframe id="videoIframe" src="${escapeHtml(mediaInfo.src)}" style="width: 100%; max-width: 500px; height: 60px; border: none; border-radius: 4px;" allow="autoplay"></iframe>
       </div>
     `;
   } else {
-    frameWrapper.innerHTML = `<iframe id="videoIframe" src="${mediaInfo.src}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+    frameWrapper.innerHTML = `<iframe id="videoIframe" src="${escapeHtml(mediaInfo.src)}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
   }
 
   modal.classList.add('active');
@@ -905,18 +907,17 @@ function openNoteModal(ticketIndex) {
   }
 
   let metaHTML = '';
-if (displayDate) {
-  metaHTML += `<strong>Date:</strong> ${escapeHtml(displayDate)}<br/>`;
-}
-if (locationText) {
-  metaHTML += `<strong>Location:</strong> ${escapeHtml(locationText)}<br/>`;
-}
-if (isValidValue(tourName)) {
-  metaHTML += `<strong>Tour:</strong> ${escapeHtml(tourName)}`;
-}
+  if (displayDate) {
+    metaHTML += `<strong>Date:</strong> ${escapeHtml(displayDate)}<br/>`;
+  }
+  if (locationText) {
+    metaHTML += `<strong>Location:</strong> ${escapeHtml(locationText)}<br/>`;
+  }
+  if (isValidValue(tourName)) {
+    metaHTML += `<strong>Tour:</strong> ${escapeHtml(tourName)}`;
+  }
 
   metaEl.innerHTML = metaHTML;
-
   bodyEl.innerHTML = escapeHtmlWithBreaks(t.NOTE || '');
 
   modal.classList.add('active');
@@ -1050,7 +1051,7 @@ function checkOnThisDayAnniversary() {
     if (!banner || !titleEl || !btn) return;
 
     let locationText = formatLocationText(selected);
-    let text = `<strong>${yearsAgo} years ago</strong> (${formatDisplayDate(selected.DATUM)}): Joe Jackson played in ${escapeHtml(locationText)}`;
+    let text = `<strong>${yearsAgo} years ago</strong> (${escapeHtml(formatDisplayDate(selected.DATUM))}): Joe Jackson played in ${escapeHtml(locationText)}`;
     if (anniversaries.length > 1) {
       text += ` <em>(+${anniversaries.length - 1} more show today)</em>`;
     }
@@ -1130,7 +1131,7 @@ function openDirectImagePreview(startIndex) {
     } else {
       skenFiles.forEach((file, scanIdx) => {
         const img = document.createElement('img');
-        img.src = `./scans/${file}`;
+        img.src = `./scans/${encodeURIComponent(file)}`;
         img.alt = `${formatDisplayDate(ticket.DATUM)} - ${formatLocationText(ticket)}`;
         img.onerror = function() {
           this.onerror = null;
@@ -1258,12 +1259,14 @@ function openDirectImagePreview(startIndex) {
             noteBlock.style.marginTop = '4px';
             noteBlock.style.opacity = '0.9';
 
-            noteBlock.innerHTML = `💡 Note: ${cleanNote} `;
+            const noteText = document.createElement('span');
+            noteText.textContent = `💡 Note: ${cleanNote} `;
+            noteBlock.appendChild(noteText);
 
             if (isTruncated) {
               const btn = document.createElement('button');
               btn.className = 'viewer-note-btn';
-              btn.innerHTML = '💡 Read Full Note / Review';
+              btn.textContent = '💡 Read Full Note / Review';
               btn.onclick = (e) => {
                 e.stopPropagation();
                 openNoteModal(currentGlobalIdx);
@@ -1315,7 +1318,7 @@ function openQuickImageModal(scanFileName, ticketObj) {
   } else {
     skenFiles.forEach((file) => {
       const img = document.createElement('img');
-      img.src = `./scans/${file}`;
+      img.src = `./scans/${encodeURIComponent(file)}`;
       img.alt = file;
       img.onerror = function() {
         this.onerror = null;
@@ -1370,12 +1373,12 @@ function openQuickImageModal(scanFileName, ticketObj) {
       }
 
       const donor = ticketObj.PRISPEVATEL || ticketObj.CONTRIBUTOR;
-const hasConsent = ticketObj.CONTRIBUTOR_CONSENT !== false && ticketObj.CONTRIBUTOR_CONSENT !== 'false';
+      const hasConsent = ticketObj.CONTRIBUTOR_CONSENT !== false && ticketObj.CONTRIBUTOR_CONSENT !== 'false';
 
-if (isValidValue(donor)) {
-  const displayDonor = hasConsent ? donor : 'Anonymous';
-  parts.push(`👤 Donor: ${displayDonor}`);
-}
+      if (isValidValue(donor)) {
+        const displayDonor = hasConsent ? donor : 'Anonymous';
+        parts.push(`👤 Donor: ${displayDonor}`);
+      }
 
       return parts.join(' | ');
     },
@@ -1401,11 +1404,13 @@ if (isValidValue(donor)) {
           noteBlock.style.marginTop = '4px';
           noteBlock.style.opacity = '0.9';
 
-          noteBlock.innerHTML = `💡 Note: ${cleanNote} `;
+          const noteText = document.createElement('span');
+          noteText.textContent = `💡 Note: ${cleanNote} `;
+          noteBlock.appendChild(noteText);
 
           const btn = document.createElement('button');
           btn.className = 'viewer-note-btn';
-          btn.innerHTML = '💡 Read Full Note / Review';
+          btn.textContent = '💡 Read Full Note / Review';
           btn.onclick = (e) => {
             e.stopPropagation();
             const ticketIdx = filteredTickets.indexOf(ticketObj);
@@ -1685,7 +1690,7 @@ function renderTickets(tickets) {
     const skenFiles = (t.SOUBOR_SKEN || '').split(',').map(s => s.trim()).filter(Boolean);
     const isMissingScan = skenFiles.length === 0;
     const firstImgFile = skenFiles[0] || '';
-    const imgSrc = isValidValue(firstImgFile) ? `./scans/${firstImgFile}` : MISSING_TICKET_SVG;
+    const imgSrc = isValidValue(firstImgFile) ? `./scans/${encodeURIComponent(firstImgFile)}` : MISSING_TICKET_SVG;
     const locationText = formatLocationText(t);
 
     card.onclick = (e) => {
@@ -1705,7 +1710,7 @@ function renderTickets(tickets) {
           listItemsHTML += `<li style="list-style-type: none; font-weight: 700; color: var(--accent-blue); margin-top: 8px; margin-left: -15px;">${escapeHtml(title)}</li>`;
         } else {
           cardSongCount++;
-          listItemsHTML += `<li value="${escapeHtml(cardSongCount)}">${escapeHtml(item)}</li>`;
+          listItemsHTML += `<li value="${cardSongCount}">${escapeHtml(item)}</li>`;
         }
       });
 
@@ -1750,19 +1755,19 @@ function renderTickets(tickets) {
       statusBadgeHTML = ` <span class="badge-status-cancelled">❌ Cancelled</span>`;
     } else if (statusVal === 'RESCHEDULED') {
       const origText = isValidValue(t.ORIGINAL_DATE) ? ` (Originally: ${formatDisplayDate(t.ORIGINAL_DATE)})` : '';
-      statusBadgeHTML = ` <span class="badge-status-rescheduled" title="Rescheduled show${origText}">🔄 Rescheduled</span>`;
+      statusBadgeHTML = ` <span class="badge-status-rescheduled" title="${escapeHtml(`Rescheduled show${origText}`)}">🔄 Rescheduled</span>`;
     }
 
-   // Načtení jména dárce a stavu souhlasu
-const donorName = t.PRISPEVATEL || t.CONTRIBUTOR;
-const hasConsent = t.CONTRIBUTOR_CONSENT !== false && t.CONTRIBUTOR_CONSENT !== 'false';
+    // Načtení jména dárce a stavu souhlasu
+    const donorName = t.PRISPEVATEL || t.CONTRIBUTOR;
+    const hasConsent = t.CONTRIBUTOR_CONSENT !== false && t.CONTRIBUTOR_CONSENT !== 'false';
 
-let donorHTML = '';
+    let donorHTML = '';
 
-if (isValidValue(donorName)) {
-  const displayDonor = hasConsent ? escapeHtml(donorName) : 'Anonymous';
-  donorHTML = `<div class="card-donor" style="margin-bottom: 6px;" title="Donor / Contributor"><i>Donor: 👤 ${displayDonor}</i></div>`;
-}
+    if (isValidValue(donorName)) {
+      const displayDonor = hasConsent ? escapeHtml(donorName) : 'Anonymous';
+      donorHTML = `<div class="card-donor" style="margin-bottom: 6px;" title="Donor / Contributor"><i>Donor: 👤 ${displayDonor}</i></div>`;
+    }
 
     const line1HTML = `
      <div class="card-meta-line1">
@@ -1818,7 +1823,7 @@ if (isValidValue(donorName)) {
       const title = count > 1 ? `${count} ${defaultTitle}` : defaultTitle.replace(/s$/, '');
 
       return `
-        <button class="icon-btn btn-action-related btn-action-category ticket-badge" data-scan="${rawRelScan}" data-ticket="${relTicketJson}" title="${escapeHtml(title)}${hasRelScan ? '' : ' (Missing scan)'}" onclick="event.stopPropagation(); handleRelatedBadgeClick(this);">
+        <button class="icon-btn btn-action-related btn-action-category ticket-badge" data-scan="${escapeHtml(rawRelScan)}" data-ticket="${relTicketJson}" title="${escapeHtml(title)}${hasRelScan ? '' : ' (Missing scan)'}" onclick="event.stopPropagation(); handleRelatedBadgeClick(this);">
           ${defaultIcon}${countLabel}
         </button>`;
     };
@@ -1860,7 +1865,7 @@ if (isValidValue(donorName)) {
         </button>`;
     } else if (setlistUrl) {
       slot7HTML = `
-        <button class="icon-btn badge-setlist-empty" title="Setlist empty — click to edit on Setlist.fm" onclick="event.stopPropagation(); openSetlistExitModal('${setlistUrl}');">
+        <button class="icon-btn badge-setlist-empty" title="Setlist empty — click to edit on Setlist.fm" onclick="event.stopPropagation(); openSetlistExitModal('${escapeHtml(setlistUrl)}');">
           ✏️
         </button>`;
     } else {
@@ -1878,7 +1883,7 @@ if (isValidValue(donorName)) {
       const formUrl = `ticket_form.html?${formParams.toString()}`;
 
       slot7HTML = `
-        <button class="icon-btn badge-setlist-sl" title="When you create or find the setlist link, send us a note" onclick="event.stopPropagation(); window.location.href='${formUrl}';">
+        <button class="icon-btn badge-setlist-sl" title="When you create or find the setlist link, send us a note" onclick="event.stopPropagation(); window.location.href='${escapeHtml(formUrl)}';">
           SL
         </button>`;
     }
@@ -1889,10 +1894,12 @@ if (isValidValue(donorName)) {
       ? `<div class="scan-count-badge" title="This record contains ${totalScansCount} scans"><span class="badge-icon">🖼️</span> ${totalScansCount}</div>`
       : '';
 
+    const altText = escapeHtml(`Joe Jackson Concert ${t.DATUM ? formatDisplayDate(t.DATUM) : (t.TOUR_NAME || 'Archive Item')} - ${locationText || 'Live Performance'} (${catName})`);
+
     card.innerHTML = `
       <div class="card-img-wrapper" title="${isMissingScan ? 'Missing scan - Click to preview' : 'Click to view scan'}">
         ${scanCountBadgeHTML}
-        <img src="${imgSrc}" loading="lazy" alt="Joe Jackson Concert ${t.DATUM ? formatDisplayDate(t.DATUM) : (t.TOUR_NAME || 'Archive Item')} - ${locationText || 'Live Performance'} (${catName})" onerror="this.onerror=null; this.src='${MISSING_TICKET_SVG}';">
+        <img src="${imgSrc}" loading="lazy" alt="${altText}" onerror="this.onerror=null; this.src='${MISSING_TICKET_SVG}';">
       </div>
       <div class="card-content">
         ${donorHTML}
