@@ -810,7 +810,7 @@ function openVideoModal(ticketIndex) {
     rawItems.forEach(item => {
       if (item.startsWith('[') && item.endsWith(']')) {
         const title = item.slice(1, -1).trim();
-        listItemsHTML += `<li style="list-style-type: none; font-weight: 700; color: var(--accent-blue); margin-top: 10px; margin-left: -18px;">${title}</li>`;
+        listItemsHTML += `<li style="list-style-type: none; font-weight: 700; color: var(--accent-blue); margin-top: 10px; margin-left: -18px;">${escapeHtml(title)}</li>`;
       } else {
         songCount++;
         listItemsHTML += `<li value="${songCount}">${escapeHtml(item)}</li>`;
@@ -1702,7 +1702,7 @@ function renderTickets(tickets) {
       rawItems.forEach(item => {
         if (item.startsWith('[') && item.endsWith(']')) {
           const title = item.slice(1, -1).trim();
-          listItemsHTML += `<li style="list-style-type: none; font-weight: 700; color: var(--accent-blue); margin-top: 8px; margin-left: -15px;">${title}</li>`;
+          listItemsHTML += `<li style="list-style-type: none; font-weight: 700; color: var(--accent-blue); margin-top: 8px; margin-left: -15px;">${escapeHtml(title)}</li>`;
         } else {
           cardSongCount++;
           listItemsHTML += `<li value="${cardSongCount}">${item}</li>`;
@@ -1766,9 +1766,9 @@ if (isValidValue(donorName)) {
 
     const line1HTML = `
      <div class="card-meta-line1">
-       <span class="card-date">${displayDate}</span>
+       <span class="card-date">${escapeHtml(displayDate)}</span>
         <div class="card-meta-right">
-        <span class="category-badge">${catIcon} ${singleCat}</span>
+        <span class="category-badge">${catIcon} ${escapeHtml(singleCat)}</span>
       ${statusBadgeHTML}
         </div>
       </div>
@@ -1778,9 +1778,9 @@ if (isValidValue(donorName)) {
     const noteHTML = formattedNote ? `<div class="card-note-line" onclick="event.stopPropagation(); openNoteModal(${globalIndex});">💡 ${formattedNote}</div>` : '';
     
     const line2HTML = `
-      <div class="card-location-line2">${locationText || (isValidValue(t.TOUR_NAME) ? t.TOUR_NAME : '')}</div>
-      ${noteHTML}
-    `;
+  <div class="card-location-line2">${escapeHtml(locationText || (isValidValue(t.TOUR_NAME) ? t.TOUR_NAME : ''))}</div>
+  ${noteHTML}
+`;
 
     const relatedItems = getRelatedItems(t);
 
@@ -1818,7 +1818,7 @@ if (isValidValue(donorName)) {
       const title = count > 1 ? `${count} ${defaultTitle}` : defaultTitle.replace(/s$/, '');
 
       return `
-        <button class="icon-btn btn-action-related btn-action-category ticket-badge" data-scan="${rawRelScan}" data-ticket="${relTicketJson}" title="${title}${hasRelScan ? '' : ' (Missing scan)'}" onclick="event.stopPropagation(); handleRelatedBadgeClick(this);">
+        <button class="icon-btn btn-action-related btn-action-category ticket-badge" data-scan="${rawRelScan}" data-ticket="${relTicketJson}" title="${escapeHtml(title)}${hasRelScan ? '' : ' (Missing scan)'}" onclick="event.stopPropagation(); handleRelatedBadgeClick(this);">
           ${defaultIcon}${countLabel}
         </button>`;
     };
