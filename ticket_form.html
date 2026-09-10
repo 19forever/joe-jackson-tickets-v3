@@ -152,8 +152,9 @@
       <input type="hidden" name="_captcha" value="false">
       <input type="hidden" name="_template" value="table">
       
-      <!-- Skryté pole, které předá finální jméno dárce (Jméno nebo '?') -->
+      <!-- Skrytá pole pro informace dárce a nahraný soubor -->
       <input type="hidden" id="finalContributor" name="Donor Credit (For Museum Card)" value="">
+      <input type="hidden" id="uploadedFileName" name="Uploaded Scan Filename" value="">
 
       <!-- 1. Concert Date -->
       <div class="form-group">
@@ -220,6 +221,9 @@
   <script src="image-compressor.js"></script>
 
   <script>
+    // URL adresa vašeho Cloudflare Workeru pro ukládání do /scans/
+    const WORKER_UPLOAD_URL = 'https://jj-upload-scan.marek-kraus.workers.dev/';
+
     let selectedFileBlob = null;
 
     // Předvyplnění z URL parametrů
@@ -257,7 +261,6 @@
         submitBtn.disabled = true;
         submitBtn.textContent = '⚡ Optimizing photo...';
 
-        // Komprese pomocí zkompilovaného modulu image-compressor.js
         const compressor = window.ImageCompressor || ImageCompressor;
         const compressedResult = await compressor.compress(file, {
           maxWidth: 1400,
@@ -265,9 +268,7 @@
           quality: 0.82
         });
 
-        // Uložení optimalizovaného souboru do proměnné
         selectedFileBlob = compressedResult.file;
-
         const compKB = Math.round(compressedResult.compressedSize / 1024);
 
         statusMsg.className = 'success';
@@ -276,7 +277,6 @@
 
       } catch (err) {
         console.error("Compression error:", err);
-        // Při selhání komprese se použije původní soubor
         selectedFileBlob = file;
       } finally {
         submitBtn.disabled = false;
@@ -284,7 +284,7 @@
       }
     });
 
-    // Odeslání přes Formsubmit.co
+    // Odeslání formuláře
     document.getElementById('contribForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -292,21 +292,52 @@
       const submitBtn = document.getElementById('submitBtn');
       const statusMsg = document.getElementById('statusMessage');
 
-      // Vyřešení souhlasu pro jméno dárce
       const consent = document.getElementById('publishConsent').checked;
       const rawName = document.getElementById('contributor').value.trim();
       document.getElementById('finalContributor').value = consent ? rawName : '?';
 
       submitBtn.disabled = true;
-      submitBtn.textContent = '⏳ Sending memorabilia...';
       statusMsg.style.display = 'none';
 
       try {
+        let uploadedFileName = '';
+
+        // 1. KROK: Nahraní obrázku do /scans/ na GitHubu přes Cloudflare Worker
+        if (selectedFileBlob) {
+          submitBtn.textContent = '☁️ Uploading scan to repository...';
+
+          const uploadFormData = new FormData();
+          
+          // Vytvoření čitelného názvu souboru na základě data a městské lokace
+          const rawDate = document.getElementById('date').value.trim() || 'nodate';
+          const rawCity = document.getElementById('city_country').value.trim().split(',')[0] || 'nosite';
+          const safeCity = rawCity.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const customFileName = `scan_${rawDate}_${safeCity}_${Date.now()}.webp`;
+
+          uploadFormData.append('file', selectedFileBlob, customFileName);
+
+          const uploadRes = await fetch(WORKER_UPLOAD_URL, {
+            method: 'POST',
+            body: uploadFormData
+          });
+
+          const uploadResult = await uploadRes.json();
+
+          if (uploadResult.success && uploadResult.fileName) {
+            uploadedFileName = uploadResult.fileName;
+            document.getElementById('uploadedFileName').value = uploadedFileName;
+          } else {
+            console.warn("Worker upload warning:", uploadResult);
+          }
+        }
+
+        // 2. KROK: Odeslání formuláře s detaily přes Formsubmit.co
+        submitBtn.textContent = '⏳ Sending memorabilia information...';
+
         const formData = new FormData(form);
 
-        // Pokud máme připravený zkomprimovaný soubor z Canvasu, nahradíme jím přílohu
         if (selectedFileBlob) {
-          formData.set('Attachment', selectedFileBlob, selectedFileBlob.name);
+          formData.set('Attachment', selectedFileBlob, uploadedFileName || selectedFileBlob.name);
         }
 
         const response = await fetch(form.action, {
@@ -318,16 +349,17 @@
         if (response.ok) {
           statusMsg.className = 'success';
           statusMsg.style.display = 'block';
-          statusMsg.innerHTML = '🎉 <strong>Thank you!</strong> Your memorabilia contribution has been sent successfully. We will review it shortly.';
+          statusMsg.innerHTML = '🎉 <strong>Thank you!</strong> Your memorabilia contribution and photo scan have been successfully uploaded to the archive repository.';
           form.reset();
           selectedFileBlob = null;
         } else {
           throw new Error(`HTTP ${response.status}`);
         }
       } catch (err) {
+        console.error("Submission Error:", err);
         statusMsg.className = 'error';
         statusMsg.style.display = 'block';
-        statusMsg.innerHTML = '❌ <strong>Submission Error:</strong> Could not send form. Please try again.';
+        statusMsg.innerHTML = '❌ <strong>Submission Error:</strong> Could not complete upload. Please try again or contact us.';
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = '🚀 Submit Memorabilia to Archive';
