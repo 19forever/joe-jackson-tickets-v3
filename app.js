@@ -1358,9 +1358,12 @@ function openQuickImageModal(scanFileName, ticketObj) {
       }
 
       const donor = ticketObj.PRISPEVATEL || ticketObj.CONTRIBUTOR;
-      if (isValidValue(donor)) {
-        parts.push(`👤 Donor: ${donor}`);
-      }
+const hasConsent = ticketObj.CONTRIBUTOR_CONSENT !== false && ticketObj.CONTRIBUTOR_CONSENT !== 'false';
+
+if (isValidValue(donor)) {
+  const displayDonor = hasConsent ? donor : 'Anonymous';
+  parts.push(`👤 Donor: ${displayDonor}`);
+}
 
       return parts.join(' | ');
     },
@@ -1739,18 +1742,15 @@ function renderTickets(tickets) {
     }
 
    // Načtení jména dárce a stavu souhlasu
-    const donorName = t.PRISPEVATEL || t.CONTRIBUTOR;
-    const hasConsent = t.CONTRIBUTOR_CONSENT !== false && t.CONTRIBUTOR_CONSENT !== 'false';
+const donorName = t.PRISPEVATEL || t.CONTRIBUTOR;
+const hasConsent = t.CONTRIBUTOR_CONSENT !== false && t.CONTRIBUTOR_CONSENT !== 'false';
 
-    let donorHTML = '';
+let donorHTML = '';
 
-    if (isValidValue(donorName)) {
-      if (hasConsent) {
-        donorHTML = `<div class="card-donor" style="margin-bottom: 6px;" title="Donor / Contributor"><i>Donor: 👤 ${donorName}</i></div>`;
-      } else {
-        donorHTML = `<div class="card-donor" style="margin-bottom: 6px;" title="Donor / Contributor"><i>Donor: 👤 Anonymous</i></div>`;
-      }
-    }
+if (isValidValue(donorName)) {
+  const displayDonor = hasConsent ? donorName : 'Anonymous';
+  donorHTML = `<div class="card-donor" style="margin-bottom: 6px;" title="Donor / Contributor"><i>Donor: 👤 ${displayDonor}</i></div>`;
+}
 
     const line1HTML = `
      <div class="card-meta-line1">
