@@ -1423,12 +1423,20 @@
     }
 
     function updateYtPreview() {
-      const url = getField('YOUTUBE_URL')?.value.trim();
-      const prevEl = document.getElementById('ytPreview');
-      if (!prevEl) return;
-      if (url) prevEl.innerHTML = `<a href="${url}" target="_blank" rel="noopener">▶️ Test YouTube Video Link</a>`;
-      else prevEl.innerHTML = '';
-    }
+  const url = getField('YOUTUBE_URL')?.value.trim();
+  const prevEl = document.getElementById('ytPreview');
+  if (!prevEl) return;
+  
+  prevEl.innerHTML = '';
+  if (url) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.textContent = '▶️ Test YouTube Video Link';
+    prevEl.appendChild(a);
+  }
+}
 
     function recalculateSongCount() {
       const val = getField('SETLIST')?.value || '';
