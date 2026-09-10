@@ -41,6 +41,21 @@ const MISSING_TICKET_SVG = `data:image/svg+xml;utf8,${encodeURIComponent(`
 </svg>
 `)}`;
 
+// Pomocné funkce pro ochranu před DOM XSS (Sanitizace)
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function escapeHtmlWithBreaks(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML.replace(/\\n/g, '<br>').replace(/\r?\n/g, '<br>');
+}
+
 // Pomocná funkce pro spočítání reálných skenů
 function getScanCount(scanField) {
   if (!scanField || typeof scanField !== 'string') return 0;
@@ -780,7 +795,7 @@ function openVideoModal(ticketIndex) {
   let lineupHTML = `<h4 style="color: var(--accent-blue);">👥 Band Line-up</h4>`;
   if (t && isValidValue(t.LINEUP)) {
     const members = t.LINEUP.split(/[;/]/).map(m => m.trim()).filter(Boolean);
-    lineupHTML += `<ul style="padding-left: 18px; color: var(--text-main); font-size: 0.85rem; line-height: 1.6;">${members.map(m => `<li>${m}</li>`).join('')}</ul>`;
+    lineupHTML += `<ul style="padding-left: 18px; color: var(--text-main); font-size: 0.85rem; line-height: 1.6;">${members.map(m => `<li>${escapeHtml(m)}</li>`).join('')}</ul>`;
   } else {
     lineupHTML += `<p style="color: var(--text-muted); font-size: 0.85rem;">No line-up details available for this show.</p>`;
   }
@@ -798,7 +813,7 @@ function openVideoModal(ticketIndex) {
         listItemsHTML += `<li style="list-style-type: none; font-weight: 700; color: var(--accent-blue); margin-top: 10px; margin-left: -18px;">${title}</li>`;
       } else {
         songCount++;
-        listItemsHTML += `<li value="${songCount}">${item}</li>`;
+        listItemsHTML += `<li value="${songCount}">${escapeHtml(item)}</li>`;
       }
     });
 
@@ -902,10 +917,7 @@ function openNoteModal(ticketIndex) {
 
   metaEl.innerHTML = metaHTML;
 
-  let rawNote = String(t.NOTE || '');
-  rawNote = rawNote.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-  const formattedNote = rawNote.replace(/\\n/g, '<br>').replace(/\r?\n/g, '<br>');
-  bodyEl.innerHTML = formattedNote;
+  bodyEl.innerHTML = escapeHtmlWithBreaks(t.NOTE || '');
 
   modal.classList.add('active');
 }
@@ -1748,7 +1760,7 @@ const hasConsent = t.CONTRIBUTOR_CONSENT !== false && t.CONTRIBUTOR_CONSENT !== 
 let donorHTML = '';
 
 if (isValidValue(donorName)) {
-  const displayDonor = hasConsent ? donorName : 'Anonymous';
+  const displayDonor = hasConsent ? escapeHtml(donorName) : 'Anonymous';
   donorHTML = `<div class="card-donor" style="margin-bottom: 6px;" title="Donor / Contributor"><i>Donor: 👤 ${displayDonor}</i></div>`;
 }
 
@@ -1762,8 +1774,7 @@ if (isValidValue(donorName)) {
       </div>
     `;
     
-    let rawCardNote = isValidValue(t.NOTE) ? String(t.NOTE).replace(/&lt;/g, '<').replace(/&gt;/g, '>') : '';
-    const formattedNote = rawCardNote.replace(/\\n/g, '<br>').replace(/\r?\n/g, '<br>');
+    const formattedNote = isValidValue(t.NOTE) ? escapeHtmlWithBreaks(t.NOTE) : '';
     const noteHTML = formattedNote ? `<div class="card-note-line" onclick="event.stopPropagation(); openNoteModal(${globalIndex});">💡 ${formattedNote}</div>` : '';
     
     const line2HTML = `
