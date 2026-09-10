@@ -1705,7 +1705,7 @@ function renderTickets(tickets) {
           listItemsHTML += `<li style="list-style-type: none; font-weight: 700; color: var(--accent-blue); margin-top: 8px; margin-left: -15px;">${escapeHtml(title)}</li>`;
         } else {
           cardSongCount++;
-          listItemsHTML += `<li value="${cardSongCount}">${item}</li>`;
+          listItemsHTML += `<li value="${cardSongCount}">${escapeHtml(item)}</li>`;
         }
       });
 
