@@ -1197,9 +1197,13 @@ function openDirectImagePreview(startIndex) {
         topRow.push(`🏛️ ${t.VENUE}`);
       }
 
+     // Zobrazení dárce v hlavičce prohlížeče obrázků
       const donor = t.PRISPEVATEL || t.CONTRIBUTOR;
+      const hasConsent = t.CONTRIBUTOR_CONSENT !== false && t.CONTRIBUTOR_CONSENT !== 'false';
+
       if (isValidValue(donor)) {
-        topRow.push(`👤 Donor: ${donor}`);
+        const displayDonor = hasConsent ? donor : 'Anonymous';
+        topRow.push(`👤 Donor: ${displayDonor}`);
       }
 
       return topRow.join(' | ');
@@ -1734,15 +1738,19 @@ function renderTickets(tickets) {
       statusBadgeHTML = ` <span class="badge-status-rescheduled" title="Rescheduled show${origText}">🔄 Rescheduled</span>`;
     }
 
-    // Načtení jména dárce a stavu souhlasu
-const donorName = t.PRISPEVATEL || t.CONTRIBUTOR;
-// Pokud je v databázi false nebo 'false', souhlas není udělen. Ve všech ostatních případech (true, null) se považuje za udělený.
-const hasConsent = t.CONTRIBUTOR_CONSENT !== false && t.CONTRIBUTOR_CONSENT !== 'false';
+   // Načtení jména dárce a stavu souhlasu
+    const donorName = t.PRISPEVATEL || t.CONTRIBUTOR;
+    const hasConsent = t.CONTRIBUTOR_CONSENT !== false && t.CONTRIBUTOR_CONSENT !== 'false';
 
-// Sestavení HTML
-const donorHTML = (isValidValue(donorName) && hasConsent) 
-  ? `<div class="card-donor" style="margin-bottom: 6px;" title="Donor / Contributor"><i>Donor: 👤 ${donorName}</i></div>` 
-  : '';
+    let donorHTML = '';
+
+    if (isValidValue(donorName)) {
+      if (hasConsent) {
+        donorHTML = `<div class="card-donor" style="margin-bottom: 6px;" title="Donor / Contributor"><i>Donor: 👤 ${donorName}</i></div>`;
+      } else {
+        donorHTML = `<div class="card-donor" style="margin-bottom: 6px;" title="Donor / Contributor"><i>Donor: 👤 Anonymous</i></div>`;
+      }
+    }
 
     const line1HTML = `
      <div class="card-meta-line1">
@@ -1753,7 +1761,7 @@ const donorHTML = (isValidValue(donorName) && hasConsent)
         </div>
       </div>
     `;
-
+    
     let rawCardNote = isValidValue(t.NOTE) ? String(t.NOTE).replace(/&lt;/g, '<').replace(/&gt;/g, '>') : '';
     const formattedNote = rawCardNote.replace(/\\n/g, '<br>').replace(/\r?\n/g, '<br>');
     const noteHTML = formattedNote ? `<div class="card-note-line" onclick="event.stopPropagation(); openNoteModal(${globalIndex});">💡 ${formattedNote}</div>` : '';
