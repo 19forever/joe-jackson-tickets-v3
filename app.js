@@ -784,7 +784,7 @@ function openVideoModal(ticketIndex) {
       headerElem.className = 'jj-modal-concert-header';
       videoCenter.insertBefore(headerElem, frameWrapper);
     }
-    headerElem.innerHTML = `<h4>${headerContent}</h4>`;
+    headerElem.innerHTML = `<h4>${escapeHtml(headerContent)}</h4>`;
   }
 
   const rawSken = (t && t.SOUBOR_SKEN && isValidValue(t.SOUBOR_SKEN)) ? t.SOUBOR_SKEN : '';
@@ -1050,7 +1050,7 @@ function checkOnThisDayAnniversary() {
     if (!banner || !titleEl || !btn) return;
 
     let locationText = formatLocationText(selected);
-    let text = `<strong>${yearsAgo} years ago</strong> (${formatDisplayDate(selected.DATUM)}): Joe Jackson played in ${locationText}`;
+    let text = `<strong>${yearsAgo} years ago</strong> (${formatDisplayDate(selected.DATUM)}): Joe Jackson played in ${escapeHtml(locationText)}`;
     if (anniversaries.length > 1) {
       text += ` <em>(+${anniversaries.length - 1} more show today)</em>`;
     }
@@ -1705,7 +1705,7 @@ function renderTickets(tickets) {
           listItemsHTML += `<li style="list-style-type: none; font-weight: 700; color: var(--accent-blue); margin-top: 8px; margin-left: -15px;">${escapeHtml(title)}</li>`;
         } else {
           cardSongCount++;
-          listItemsHTML += `<li value="${cardSongCount}">${escapeHtml(item)}</li>`;
+          listItemsHTML += `<li value="${escapeHtml(cardSongCount)}">${escapeHtml(item)}</li>`;
         }
       });
 
@@ -1715,7 +1715,7 @@ function renderTickets(tickets) {
     }
     if (hasLineup) {
       const members = t.LINEUP.split(/[;/]/).map(m => m.trim()).filter(Boolean);
-      collapsibleHTML += `<div class="collapsible-content" id="lineup-${globalIndex}"><ul>${members.map(m => `<li>${m}</li>`).join('')}</ul></div>`;
+      collapsibleHTML += `<div class="collapsible-content" id="lineup-${globalIndex}"><ul>${members.map(m => `<li>${escapeHtml(m)}</li>`).join('')}</ul></div>`;
     }
 
     const catName = getTicketCategory(t);
