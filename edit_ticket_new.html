@@ -1827,7 +1827,11 @@
 
       } catch (err) {
         console.error("Scan folder error:", err);
-        container.innerHTML = `<div style="font-size: 0.75rem; color: #f87171; padding: 8px; background: rgba(220,38,38,0.1); border-radius: 4px; line-height: 1.4;">❌ ${err.message}</div>`;
+        container.innerHTML = '';
+const errDiv = document.createElement('div');
+errDiv.style.cssText = 'font-size: 0.75rem; color: #f87171; padding: 8px; background: rgba(220,38,38,0.1); border-radius: 4px; line-height: 1.4;';
+errDiv.textContent = `❌ ${err.message}`;
+container.appendChild(errDiv);
         showStatus('❌ Failed to scan /scans/ folder: ' + err.message, 'red');
       } finally {
         if (scanBtn) scanBtn.disabled = false;
