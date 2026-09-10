@@ -154,6 +154,7 @@
       
       <!-- Skrytá pole pro informace dárce a nahraný soubor -->
       <input type="hidden" id="finalContributor" name="Donor Credit (For Museum Card)" value="">
+      <input type="hidden" id="finalConsent" name="CONTRIBUTOR_CONSENT" value="true">
       <input type="hidden" id="uploadedFileName" name="Uploaded Scan Filename" value="">
 
       <!-- 1. Concert Date -->
@@ -294,7 +295,10 @@
 
       const consent = document.getElementById('publishConsent').checked;
       const rawName = document.getElementById('contributor').value.trim();
-      document.getElementById('finalContributor').value = consent ? rawName : '?';
+
+      // Nastavení hodnot pro DB a e-mail
+      document.getElementById('finalContributor').value = rawName;
+      document.getElementById('finalConsent').value = consent ? "true" : "false";
 
       submitBtn.disabled = true;
       statusMsg.style.display = 'none';
@@ -315,6 +319,8 @@
           const customFileName = `scan_${rawDate}_${safeCity}_${Date.now()}.webp`;
 
           uploadFormData.append('file', selectedFileBlob, customFileName);
+          uploadFormData.append('contributor', rawName);
+          uploadFormData.append('contributor_consent', consent);
 
           const uploadRes = await fetch(WORKER_UPLOAD_URL, {
             method: 'POST',
