@@ -216,6 +216,9 @@
     <div id="statusMessage"></div>
   </div>
 
+  <!-- Načtení modulu pro klientskou kompresi obrázků -->
+  <script src="image-compressor.js"></script>
+
   <script>
     let selectedFileBlob = null;
 
@@ -242,11 +245,42 @@
       }
     });
 
-    // Uložení vybraného souboru
-    document.getElementById('scan_file').addEventListener('change', function(e) {
+    // Klientská komprese vybrané fotky/skenu před připravením k odeslání
+    document.getElementById('scan_file').addEventListener('change', async function(e) {
       const file = e.target.files[0];
-      if (file) {
+      if (!file) return;
+
+      const submitBtn = document.getElementById('submitBtn');
+      const statusMsg = document.getElementById('statusMessage');
+
+      try {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⚡ Optimizing photo...';
+
+        // Komprese pomocí zkompilovaného modulu image-compressor.js
+        const compressor = window.ImageCompressor || ImageCompressor;
+        const compressedResult = await compressor.compress(file, {
+          maxWidth: 1400,
+          maxHeight: 1400,
+          quality: 0.82
+        });
+
+        // Uložení optimalizovaného souboru do proměnné
+        selectedFileBlob = compressedResult.file;
+
+        const compKB = Math.round(compressedResult.compressedSize / 1024);
+
+        statusMsg.className = 'success';
+        statusMsg.style.display = 'block';
+        statusMsg.innerHTML = `📸 Photo compressed (${compressedResult.width}×${compressedResult.height}px, ${compKB} KB). Ready to submit!`;
+
+      } catch (err) {
+        console.error("Compression error:", err);
+        // Při selhání komprese se použije původní soubor
         selectedFileBlob = file;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🚀 Submit Memorabilia to Archive';
       }
     });
 
@@ -270,6 +304,7 @@
       try {
         const formData = new FormData(form);
 
+        // Pokud máme připravený zkomprimovaný soubor z Canvasu, nahradíme jím přílohu
         if (selectedFileBlob) {
           formData.set('Attachment', selectedFileBlob, selectedFileBlob.name);
         }
