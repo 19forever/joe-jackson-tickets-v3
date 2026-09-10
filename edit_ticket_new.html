@@ -728,7 +728,13 @@
         <div class="grid-2">
           <div class="form-group">
             <label for="edit_SOUBOR_SKEN">Scan Image Filename(s) (SOUBOR_SKEN)</label>
-            <input type="text" id="edit_SOUBOR_SKEN" name="SOUBOR_SKEN" placeholder="file1.jpg, file2.jpg" oninput="updateImageFromInput()">
+            <div class="input-with-btn">
+              <input type="text" id="edit_SOUBOR_SKEN" name="SOUBOR_SKEN" placeholder="file1.jpg, file2.jpg" oninput="updateImageFromInput()">
+              <input type="file" id="admin_file_input" accept="image/*" style="display: none;" onchange="handleAdminFileUpload(this)">
+              <button type="button" class="btn-token" onclick="document.getElementById('admin_file_input').click()" title="Compress and upload new scan directly to /scans/">
+                📤 Upload Scan
+              </button>
+            </div>
           </div>
           <div class="form-group">
             <label for="edit_CONTRIBUTOR">Donor / Contributor (CONTRIBUTOR)</label>
@@ -782,7 +788,13 @@
 
   </div>
 
+  <!-- Načtení modulu pro klientskou kompresi obrázků -->
+  <script src="image-compressor.js"></script>
+
   <script>
+    // URL vašeho Cloudflare Workeru pro ukládání do /scans/
+    const WORKER_UPLOAD_URL = 'https://jj-upload-scan.marek-kraus.workers.dev';
+
     let fullDbData = [];
     let activeIndices = [];
     let currentRecordIndex = -1;
@@ -1387,6 +1399,61 @@
       if (countEl) countEl.value = songs.length;
     }
 
+    // === ADMIN FILE UPLOAD HANDLER ===
+    async function handleAdminFileUpload(fileInput) {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      try {
+        showStatus('⚡ Optimizing photo on canvas...', 'yellow');
+
+        const compressor = window.ImageCompressor || ImageCompressor;
+        const compressedResult = await compressor.compress(file, {
+          maxWidth: 1400,
+          maxHeight: 1400,
+          quality: 0.82
+        });
+
+        showStatus('☁️ Uploading optimized scan to GitHub /scans/...', 'yellow');
+
+        const rawDate = getField('DATUM')?.value.trim() || 'nodate';
+        const rawCity = getField('MESTO')?.value.trim() || 'nosite';
+        const safeCity = rawCity.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const customFileName = `scan_${rawDate}_${safeCity}_${Date.now()}.webp`;
+
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', compressedResult.file, customFileName);
+
+        const response = await fetch(WORKER_UPLOAD_URL, {
+          method: 'POST',
+          body: uploadFormData
+        });
+
+        const result = await response.json();
+
+        if (result.success && result.fileName) {
+          const skenInput = getField('SOUBOR_SKEN');
+          if (skenInput) {
+            const currentScans = skenInput.value.split(',').map(s => s.trim()).filter(Boolean);
+            currentScans.push(result.fileName);
+            skenInput.value = currentScans.join(', ');
+            
+            updateImageFromInput();
+          }
+
+          showStatus(`✅ Photo uploaded & linked: ${result.fileName}`, 'green');
+        } else {
+          throw new Error(result.error || 'Upload failed');
+        }
+
+      } catch (err) {
+        console.error('Admin upload error:', err);
+        showStatus(`❌ Upload error: ${err.message}`, 'red');
+      } finally {
+        fileInput.value = '';
+      }
+    }
+
     // === SETLIST.FM INTEGRATION (Cloudflare Worker Proxy) ===
     function extractSetlistId(urlOrId) {
       if (!urlOrId) return '';
@@ -1398,7 +1465,6 @@
       return trimmed;
     }
 
-    // 1. STÁHNUTÍ PÍSNÍ Z ZADANÉ URL
     async function fetchSetlistSongs() {
       const urlInput = getField('SETLIST_URL');
       const url = urlInput ? urlInput.value.trim() : '';
@@ -1461,7 +1527,6 @@
     }
     window.fetchSetlistSongs = fetchSetlistSongs;
 
-    // 2. INTELIGENTNÍ AUTO-FIND SETLIST PODLE DATA S POTVRZENÍM
     async function autoSearchSetlistByDate() {
       const datumVal = (getField('DATUM')?.value || '').trim();
       if (!datumVal || !/^\d{4}-\d{2}-\d{2}$/.test(datumVal)) {
