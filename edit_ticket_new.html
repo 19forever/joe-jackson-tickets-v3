@@ -737,10 +737,15 @@
             </div>
           </div>
           <div class="form-group">
-            <label for="edit_CONTRIBUTOR">Donor / Contributor (CONTRIBUTOR)</label>
-            <input type="text" id="edit_CONTRIBUTOR" name="CONTRIBUTOR" placeholder="e.g. Bert Bos, Netherlands">
-          </div>
-        </div>
+  <label for="edit_CONTRIBUTOR">Donor / Contributor (CONTRIBUTOR)</label>
+  <input type="text" id="edit_CONTRIBUTOR" name="CONTRIBUTOR" placeholder="e.g. Bert Bos, Netherlands">
+  
+  <label style="display: flex; align-items: center; gap: 8px; margin-top: 6px; cursor: pointer; text-transform: none; font-size: 0.8rem;">
+    <input type="checkbox" id="edit_CONTRIBUTOR_CONSENT" name="CONTRIBUTOR_CONSENT" checked style="width: 16px; height: 16px; accent-color: var(--accent-yellow);">
+    <span>Public consent granted (Show donor name on museum card)</span>
+  </label>
+</div>
+      </div>
       </div>
 
       <div class="form-panel">
@@ -804,7 +809,7 @@
     const fields = [
       'ID_MEMORABILIA', 'SHOW_ID', 'TOUR_ID', 'TOUR_NAME', 'DATUM', 'MESTO', 'STAT', 'VENUE',
       'STATUS', 'ORIGINAL_DATE', 'NOTE',
-      'KATEGORIE', 'SUBCATEGORY', 'SOUBOR_SKEN', 'CONTRIBUTOR', 'LINEUP', 'SETLIST',
+      'KATEGORIE', 'SUBCATEGORY', 'SOUBOR_SKEN', 'CONTRIBUTOR', 'CONTRIBUTOR_CONSENT', 'LINEUP', 'SETLIST',
       'POCET_SKLADEB', 'SETLIST_URL', 'YOUTUBE_URL', 'REVIEW_URL'
     ];
 
@@ -1262,49 +1267,58 @@
     }
 
     function loadRecordByIndex(index) {
-      if (!fullDbData || fullDbData.length === 0) return;
-      if (index < 0) index = 0;
-      if (index >= fullDbData.length) index = fullDbData.length - 1;
+  if (!fullDbData || fullDbData.length === 0) return;
+  if (index < 0) index = 0;
+  if (index >= fullDbData.length) index = fullDbData.length - 1;
 
-      currentRecordIndex = index;
-      const r = fullDbData[index] || {};
+  currentRecordIndex = index;
+  const r = fullDbData[index] || {};
 
-      const posInActive = activeIndices.indexOf(index);
-      document.getElementById('recordCounter').textContent = `Record ${posInActive + 1} of ${activeIndices.length}`;
-      document.getElementById('recordIdTitle').textContent = r.ID_MEMORABILIA || r.ID_LISTKU || `#${index + 1}`;
+  const posInActive = activeIndices.indexOf(index);
+  document.getElementById('recordCounter').textContent = `Record ${posInActive + 1} of ${activeIndices.length}`;
+  document.getElementById('recordIdTitle').textContent = r.ID_MEMORABILIA || r.ID_LISTKU || `#${index + 1}`;
 
-      const select = document.getElementById('recordSelect');
-      if (select) select.value = index;
+  const select = document.getElementById('recordSelect');
+  if (select) select.value = index;
 
-      document.getElementById('prevBtn').disabled = (posInActive <= 0);
-      document.getElementById('nextBtn').disabled = (posInActive >= activeIndices.length - 1);
+  document.getElementById('prevBtn').disabled = (posInActive <= 0);
+  document.getElementById('nextBtn').disabled = (posInActive >= activeIndices.length - 1);
 
-      fields.forEach(f => {
-        const el = getField(f);
-        if (el) {
-          let val = r[f] !== undefined && r[f] !== null ? String(r[f]).trim() : '';
-          
-          if (f === 'KATEGORIE' && el.tagName === 'SELECT') {
-            const matchingOpt = Array.from(el.options).find(opt => 
-              opt.value.toLowerCase() === val.toLowerCase()
-            );
-            el.value = matchingOpt ? matchingOpt.value : (val || 'Tickets');
-            handleCategoryChange(r.SUBCATEGORY ? String(r.SUBCATEGORY).trim() : '');
-          } else if (f !== 'SUBCATEGORY') {
-            el.value = val;
-          }
-        }
-      });
+  fields.forEach(f => {
+    const el = getField(f);
+    if (el) {
+      let val = r[f] !== undefined && r[f] !== null ? String(r[f]).trim() : '';
 
-      const existingSelect = document.getElementById('existingToursSelect');
-      if (existingSelect) {
-        existingSelect.value = r.TOUR_NAME ? r.TOUR_NAME.trim() : '';
+      // Ošetření pro Checkbox souhlasu donora
+      if (f === 'CONTRIBUTOR_CONSENT' && el.type === 'checkbox') {
+        // Výchozí hodnota je true (pokud v DB není výslovně false)
+        el.checked = r.CONTRIBUTOR_CONSENT !== false && r.CONTRIBUTOR_CONSENT !== 'false';
+      } 
+      // Ošetření pro výberovou kategorii (SELECT)
+      else if (f === 'KATEGORIE' && el.tagName === 'SELECT') {
+        const matchingOpt = Array.from(el.options).find(opt => 
+          opt.value.toLowerCase() === val.toLowerCase()
+        );
+        el.value = matchingOpt ? matchingOpt.value : (val || 'Tickets');
+        handleCategoryChange(r.SUBCATEGORY ? String(r.SUBCATEGORY).trim() : '');
+      } 
+      // Ostatní běžná textová/číselná pole (mimo SUBCATEGORY, kterou řeší handleCategoryChange)
+      else if (f !== 'SUBCATEGORY') {
+        el.value = val;
       }
-
-      updateImageFromInput();
-      updateYtPreview();
-      populateLineupDropdown();
     }
+  });
+
+  // Pomocné aktualizace výběrových dropdownů a náhledů
+  const existingSelect = document.getElementById('existingToursSelect');
+  if (existingSelect) {
+    existingSelect.value = r.TOUR_NAME ? r.TOUR_NAME.trim() : '';
+  }
+
+  updateImageFromInput();
+  updateYtPreview();
+  populateLineupDropdown();
+}
 
     function navigateRecord(delta) {
       saveCurrentFormToMemory();
@@ -1339,16 +1353,24 @@
     }
 
     function saveCurrentFormToMemory() {
-      if (currentRecordIndex < 0 || !fullDbData[currentRecordIndex]) return;
-      syncShowId();
-      fields.forEach(f => {
-        const el = getField(f);
-        if (el) {
-          const val = el.value.trim();
-          fullDbData[currentRecordIndex][f] = val !== '' ? val : null;
-        }
-      });
+  if (currentRecordIndex < 0 || !fullDbData[currentRecordIndex]) return;
+  syncShowId();
+
+  fields.forEach(f => {
+    const el = getField(f);
+    if (el) {
+      // Ošetření pro Checkbox (uložení boolean hodnota true/false)
+      if (el.type === 'checkbox') {
+        fullDbData[currentRecordIndex][f] = el.checked;
+      } 
+      // Ošetření pro běžná textová/select políčka
+      else {
+        const val = el.value.trim();
+        fullDbData[currentRecordIndex][f] = val !== '' ? val : null;
+      }
     }
+  });
+}
 
     function updateImageFromInput() {
       const skenVal = getField('SOUBOR_SKEN')?.value || '';
