@@ -1734,11 +1734,15 @@ function renderTickets(tickets) {
       statusBadgeHTML = ` <span class="badge-status-rescheduled" title="Rescheduled show${origText}">🔄 Rescheduled</span>`;
     }
 
-    // Zobrazení Jména Donora / Přispěvatele se srozumitelným štítkem a kurzívou
-    const donorName = t.PRISPEVATEL || t.CONTRIBUTOR;
-    const donorHTML = isValidValue(donorName) 
-      ? `<div class="card-donor" style="margin-bottom: 6px;" title="Donor / Contributor"><i>Donor: 👤 ${donorName}</i></div>` 
-      : '';
+    // Načtení jména dárce a stavu souhlasu
+const donorName = t.PRISPEVATEL || t.CONTRIBUTOR;
+// Pokud je v databázi false nebo 'false', souhlas není udělen. Ve všech ostatních případech (true, null) se považuje za udělený.
+const hasConsent = t.CONTRIBUTOR_CONSENT !== false && t.CONTRIBUTOR_CONSENT !== 'false';
+
+// Sestavení HTML
+const donorHTML = (isValidValue(donorName) && hasConsent) 
+  ? `<div class="card-donor" style="margin-bottom: 6px;" title="Donor / Contributor"><i>Donor: 👤 ${donorName}</i></div>` 
+  : '';
 
     const line1HTML = `
      <div class="card-meta-line1">
