@@ -1032,19 +1032,23 @@
     function populateLocationDropdowns() {
       const citiesList = document.getElementById('citiesList');
       const countriesList = document.getElementById('countriesList');
+      const donorsList = document.getElementById('donorsList');
       if (!citiesList || !countriesList) return;
 
       citiesList.innerHTML = '';
       countriesList.innerHTML = '';
+      if (donorsList) donorsList.innerHTML = '';
       cityToCountryMap.clear();
 
       const citiesSet = new Set();
       const countriesSet = new Set();
+      const donorsSet = new Set();
 
       if (Array.isArray(fullDbData)) {
         fullDbData.forEach(r => {
           const city = (r.MESTO || '').trim();
           const country = (r.STAT || '').trim();
+          const donor = (r.PRISPEVATEL || r.CONTRIBUTOR || '').trim();
 
           if (city) {
             citiesSet.add(city);
@@ -1054,6 +1058,9 @@
           }
           if (country) {
             countriesSet.add(country);
+          }
+          if (donor) {
+            donorsSet.add(donor);
           }
         });
       }
@@ -1069,6 +1076,14 @@
         opt.value = country;
         countriesList.appendChild(opt);
       });
+
+      if (donorsList) {
+        Array.from(donorsSet).sort().forEach(donor => {
+          const opt = document.createElement('option');
+          opt.value = donor;
+          donorsList.appendChild(opt);
+        });
+      }
     }
 
     function autoCompleteCountry() {
