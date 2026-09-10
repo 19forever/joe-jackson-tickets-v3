@@ -905,15 +905,15 @@ function openNoteModal(ticketIndex) {
   }
 
   let metaHTML = '';
-  if (displayDate) {
-    metaHTML += `<strong>Date:</strong> ${displayDate}<br/>`;
-  }
-  if (locationText) {
-    metaHTML += `<strong>Location:</strong> ${locationText}<br/>`;
-  }
-  if (isValidValue(tourName)) {
-    metaHTML += `<strong>Tour:</strong> ${tourName}`;
-  }
+if (displayDate) {
+  metaHTML += `<strong>Date:</strong> ${escapeHtml(displayDate)}<br/>`;
+}
+if (locationText) {
+  metaHTML += `<strong>Location:</strong> ${escapeHtml(locationText)}<br/>`;
+}
+if (isValidValue(tourName)) {
+  metaHTML += `<strong>Tour:</strong> ${escapeHtml(tourName)}`;
+}
 
   metaEl.innerHTML = metaHTML;
 
