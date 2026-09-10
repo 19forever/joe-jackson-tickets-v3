@@ -104,3 +104,6 @@ const ImageCompressor = {
     });
   }
 };
+
+// Exponování pro použití v běžných skriptech bez ES6 importů
+window.ImageCompressor = ImageCompressor;
