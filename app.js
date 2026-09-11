@@ -1,8 +1,180 @@
+// ============================================================================
+// 1. SDÍLENÉ UTILITY A POMOCNÉ FUNKCE (Musí být definovány jako první)
+// ============================================================================
+
+function safeGetStorage(key, defaultVal = null) {
+  if (typeof StorageService !== 'undefined') {
+    return StorageService.get(key, defaultVal);
+  }
+  try {
+    const val = localStorage.getItem(key);
+    return val !== null ? val : defaultVal;
+  } catch (e) {
+    return defaultVal;
+  }
+}
+
+function safeSetStorage(key, val) {
+  if (typeof StorageService !== 'undefined') {
+    StorageService.set(key, val);
+    return;
+  }
+  try {
+    localStorage.setItem(key, val);
+  } catch (e) {}
+}
+
+function safeRemoveStorage(key) {
+  if (typeof StorageService !== 'undefined') {
+    StorageService.remove(key);
+    return;
+  }
+  try {
+    localStorage.removeItem(key);
+  } catch (e) {}
+}
+
+function safeGetSession(key) {
+  try {
+    return sessionStorage.getItem(key);
+  } catch (e) {
+    return null;
+  }
+}
+
+function safeSetSession(key, val) {
+  try {
+    sessionStorage.setItem(key, val);
+  } catch (e) {}
+}
+
+function safeRemoveSession(key) {
+  try {
+    sessionStorage.removeItem(key);
+  } catch (e) {}
+}
+
+function checkIsAdmin() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const storedPat = safeGetStorage('gh_token') || safeGetStorage('jj_github_pat');
+  const adminParam = urlParams.get('admin') === '1';
+  const adminFlag = safeGetStorage('jj_admin_mode') === 'true';
+  const hasPat = !!(storedPat && storedPat.trim().length > 0);
+  return adminParam || adminFlag || hasPat;
+}
+
+window.lockAdminSession = function() {
+  if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
+    supabaseClient.auth.signOut();
+  }
+
+  if (typeof StorageService !== 'undefined') {
+    StorageService.setGitHubConfig({ token: '' });
+    StorageService.remove('jj_admin_mode');
+  } else {
+    safeRemoveStorage('jj_github_pat');
+    safeRemoveStorage('gh_token');
+    safeRemoveStorage('jj_admin_mode');
+  }
+  safeRemoveSession('jj_admin_mode');
+
+  localStorage.removeItem('sb-access-token');
+  localStorage.removeItem('sb-refresh-token');
+
+  const url = new URL(window.location.href);
+  if (url.searchParams.has('admin')) {
+    url.searchParams.delete('admin');
+    window.location.href = url.pathname;
+  } else {
+    window.location.href = 'index.html';
+  }
+};
+
+function escapeHtml(text) {
+  if (!text && text !== 0) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function escapeHtmlWithBreaks(text) {
+  if (!text && text !== 0) return '';
+  const escaped = escapeHtml(text);
+  return escaped.replace(/\\n/g, '<br>').replace(/\r?\n/g, '<br>');
+}
+
+function isValidValue(val) {
+  if (!val) return false;
+  const clean = String(val).trim().toLowerCase();
+  return clean !== '' && clean !== 'není k dispozici' && clean !== 'n/a' && clean !== 'undefined' && clean !== 'null' && clean !== 'missing' && clean !== 'missing_item.svg';
+}
+
+function getScanCount(scanField) {
+  if (!scanField || typeof scanField !== 'string') return 0;
+  return scanField.split(',')
+    .map(f => f.trim())
+    .filter(f => f.length > 0 && f.toLowerCase() !== 'missing_item.svg').length;
+}
+
+function getSetlistSongCount(setlistStr) {
+  if (!isValidValue(setlistStr)) return 0;
+  return setlistStr
+    .split(',')
+    .map(s => s.trim())
+    .filter(s => s.length > 0 && !(s.startsWith('[') && s.endsWith(']'))).length;
+}
+
+function formatDisplayDate(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return '';
+  const parts = dateStr.trim().split('-');
+  if (parts.length !== 3) return dateStr;
+
+  const year = parts[0];
+  const monthIdx = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  if (isNaN(day) || monthIdx < 0 || monthIdx > 11) return dateStr;
+
+  let suffix = "th";
+  if (day % 10 === 1 && day !== 11) suffix = "st";
+  else if (day % 10 === 2 && day !== 12) suffix = "nd";
+  else if (day % 10 === 3 && day !== 13) suffix = "rd";
+
+  return `${day}${suffix} ${months[monthIdx]} ${year}`;
+}
+
+function formatLocationText(t) {
+  if (!t) return '';
+  let locationParts = [];
+  if (isValidValue(t.MESTO)) locationParts.push(t.MESTO);
+  if (isValidValue(t.STAT)) locationParts.push(t.STAT);
+  
+  let locStr = locationParts.join(', ');
+  if (isValidValue(t.VENUE)) {
+    locStr += locStr ? ` - ${t.VENUE}` : t.VENUE;
+  }
+  if (!locStr && isValidValue(t.TOUR_NAME)) {
+    locStr = t.TOUR_NAME;
+  }
+  return locStr;
+}
+
+// ============================================================================
+// 2. STAV A PROMĚNNÉ APLIKACE
+// ============================================================================
+
 let allTickets = [];
 let filteredTickets = [];
 let currentLayout = 'grid';
 
-// Načtení uložené stránky z paměti (defaultně 1)
 const savedPage = safeGetStorage('jj_museum_page');
 let currentPage = savedPage ? parseInt(savedPage, 10) : 1;
 
@@ -12,7 +184,6 @@ let currentCategory = 'Tickets';
 let activeViewerInstance = null;
 let quickViewerInstance = null;
 
-// Missing ticket placeholder (SVG)
 const MISSING_TICKET_SVG = `data:image/svg+xml;utf8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
   <defs>
@@ -40,9 +211,6 @@ const MISSING_TICKET_SVG = `data:image/svg+xml;utf8,${encodeURIComponent(`
   <text x="490" y="260" font-family="-apple-system, sans-serif" font-size="11" fill="#4b5563" text-anchor="middle">WANTED</text>
 </svg>
 `)}`;
-
-// Note: HTML sanitization, validation, formatting and storage helper functions 
-// are now moved to shared 'utils.js' and 'auth.js' modules.
 
 const isAdmin = checkIsAdmin();
 
@@ -80,7 +248,6 @@ function updateUrlParams() {
   const params = new URLSearchParams(window.location.search);
   const hadAdmin = params.has('admin');
 
-  // Search
   const searchVal = document.getElementById('searchInput')?.value?.trim();
   if (searchVal) {
     params.set('search', searchVal);
@@ -90,7 +257,6 @@ function updateUrlParams() {
     params.delete('q');
   }
 
-  // Category
   if (currentCategory && currentCategory !== 'ALL') {
     params.set('category', currentCategory);
     params.delete('cat');
@@ -99,13 +265,11 @@ function updateUrlParams() {
     params.delete('cat');
   }
 
-  // View layout
   if (currentLayout) {
     params.set('view', currentLayout);
     params.delete('layout');
   }
 
-  // Sort
   const sortVal = document.getElementById('sortFilter')?.value;
   if (sortVal) {
     params.set('sort', sortVal);
@@ -147,20 +311,17 @@ function initializeStateFromUrlAndStorage() {
   const urlSort = urlParams.get('sort');
   const urlView = urlParams.get('view') || urlParams.get('layout');
 
-  // 1. Category
   const resolvedCategory = resolveCategoryFromUrl(urlCategory);
   if (resolvedCategory) {
     currentCategory = resolvedCategory;
   }
 
-  // 2. View layout preference (fallback to StorageService)
   const savedView = safeGetStorage('jj_museum_view');
   const resolvedView = (urlView === 'list' || urlView === 'grid') 
     ? urlView 
     : (savedView === 'list' || savedView === 'grid' ? savedView : 'grid');
   setLayout(resolvedView, false);
 
-  // 3. Sort order preference (fallback to StorageService)
   const sortSelect = document.getElementById('sortFilter');
   const savedSort = safeGetStorage('jj_museum_sort');
   const resolvedSort = normalizeSortParam(urlSort) || normalizeSortParam(savedSort) || 'random';
@@ -169,7 +330,6 @@ function initializeStateFromUrlAndStorage() {
     safeSetStorage('jj_museum_sort', resolvedSort);
   }
 
-  // 4. Page Size preference (fallback to StorageService z settings.html)
   const pageSizeSelect = document.getElementById('pageSizeFilter');
   const savedPageSize = safeGetStorage('jj_museum_pagesize', '50');
   pageSize = savedPageSize === 'ALL' ? 'ALL' : parseInt(savedPageSize, 10);
@@ -177,7 +337,6 @@ function initializeStateFromUrlAndStorage() {
     pageSizeSelect.value = savedPageSize;
   }
 
-  // 5. Search
   const searchInput = document.getElementById('searchInput');
   if (urlSearch && searchInput) {
     searchInput.value = urlSearch;
@@ -251,13 +410,12 @@ function initTheme() {
   }
 }
 
-// Initialization - NAČÍTÁNÍ ZE SUPABASE
+// INICIALIZACE PO NAČTENÍ DOM
 window.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initFontSwitcher();
   setupEventListeners();
 
-  // Show/Hide Admin links in Header
   const adminEditorLink = document.getElementById('adminEditorLink');
   const adminLoginLink = document.getElementById('adminLoginLink');
   const adminLockBtn = document.getElementById('adminLockBtn');
@@ -272,14 +430,12 @@ window.addEventListener('DOMContentLoaded', () => {
     if (adminLoginLink) adminLoginLink.style.display = 'inline-flex';
   }
 
-  // Funkce pro načtení dat z databáze Supabase
   async function loadDataFromSupabase() {
     try {
       if (typeof supabaseClient === 'undefined') {
         throw new Error("Supabase klient není načten! Zkontrolujte import supabase-client.js v HTML.");
       }
 
-      // Dotaz na tabulku 'tickets' v Supabase
       const { data, error } = await supabaseClient
         .from('tickets')
         .select('*');
@@ -297,7 +453,7 @@ window.addEventListener('DOMContentLoaded', () => {
       updateYearBadge();
       populateFilters();
       initializeStateFromUrlAndStorage();
-      filterData(true); // Ponechat uložení stránky při prvním načtení
+      filterData(true);
       checkOnThisDayAnniversary();
     } catch (err) {
       console.error("Chyba při načítání ze Supabase:", err.message);
@@ -323,7 +479,7 @@ function setupEventListeners() {
   document.getElementById('tourFilter')?.addEventListener('change', () => {
     updateUrlParams();
     filterData(false);
-    });
+  });
   
   const sortSelect = document.getElementById('sortFilter');
   if (sortSelect) {
@@ -339,7 +495,6 @@ function setupEventListeners() {
   document.getElementById('btnGrid')?.addEventListener('click', () => setLayout('grid'));
   document.getElementById('btnList')?.addEventListener('click', () => setLayout('list'));
 
-  // Global event delegation for ticket/poster icon badges & data-scan elements
   document.addEventListener('click', (e) => {
     const scanBadge = e.target.closest('.ticket-badge, [data-scan]');
     if (scanBadge) {
@@ -404,12 +559,6 @@ function reshuffleAndRender() {
   }
   updateUrlParams();
   filterData(false);
-}
-
-function isValidValue(val) {
-  if (!val) return false;
-  const clean = String(val).trim().toLowerCase();
-  return clean !== '' && clean !== 'není k dispozici' && clean !== 'n/a' && clean !== 'undefined' && clean !== 'null' && clean !== 'missing' && clean !== 'missing_item.svg';
 }
 
 const MONTH_NAMES_MAP = {
@@ -546,36 +695,11 @@ function matchDateAgainstCandidates(dateStr, candidates) {
   });
 }
 
-function formatDisplayDate(dateStr) {
-  if (!dateStr || typeof dateStr !== 'string') return '';
-  const parts = dateStr.trim().split('-');
-  if (parts.length !== 3) return dateStr;
-
-  const year = parts[0];
-  const monthIdx = parseInt(parts[1], 10) - 1;
-  const day = parseInt(parts[2], 10);
-
-  const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-
-  if (isNaN(day) || monthIdx < 0 || monthIdx > 11) return dateStr;
-
-  let suffix = "th";
-  if (day % 10 === 1 && day !== 11) suffix = "st";
-  else if (day % 10 === 2 && day !== 12) suffix = "nd";
-  else if (day % 10 === 3 && day !== 13) suffix = "rd";
-
-  return `${day}${suffix} ${months[monthIdx]} ${year}`;
-}
-
 function getMediaEmbedInfo(url) {
   if (!url || typeof url !== 'string') return null;
   const cleanUrl = url.trim();
   if (!cleanUrl) return null;
 
-  // 1. YouTube
   const ytRegex = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/i;
   const ytMatch = cleanUrl.match(ytRegex);
   if (ytMatch && ytMatch[2].length === 11) {
@@ -585,7 +709,6 @@ function getMediaEmbedInfo(url) {
     };
   }
 
-  // 2. Archive.org (details -> embed)
   const archiveRegex = /^(?:https?:\/\/)?(?:www\.)?archive\.org\/(?:details|embed)\/([^/?#]+)/i;
   const archiveMatch = cleanUrl.match(archiveRegex);
   if (archiveMatch && archiveMatch[1]) {
@@ -596,7 +719,6 @@ function getMediaEmbedInfo(url) {
     };
   }
 
-  // 3. Direct Audio (.mp3, .ogg, .wav)
   const audioRegex = /\.(mp3|ogg|wav)(\?.*)?$/i;
   if (audioRegex.test(cleanUrl)) {
     return {
@@ -613,22 +735,6 @@ function getYouTubeEmbedUrl(url) {
   return (info && (info.type === 'youtube' || info.type === 'archive')) ? info.src : null;
 }
 
-function formatLocationText(t) {
-  let locationParts = [];
-  if (isValidValue(t.MESTO)) locationParts.push(t.MESTO);
-  if (isValidValue(t.STAT)) locationParts.push(t.STAT);
-  
-  let locStr = locationParts.join(', ');
-  if (isValidValue(t.VENUE)) {
-    locStr += locStr ? ` - ${t.VENUE}` : t.VENUE;
-  }
-  if (!locStr && isValidValue(t.TOUR_NAME)) {
-    locStr = t.TOUR_NAME;
-  }
-  return locStr;
-}
-
-// Video / Media Modal Management
 function openVideoModal(ticketIndex) {
   let t = (typeof ticketIndex === 'number') ? filteredTickets[ticketIndex] : null;
   let rawUrl = t ? t.YOUTUBE_URL : ticketIndex;
@@ -845,7 +951,7 @@ function handleSearchInput() {
   safeSetSession('jj_museum_search', val);
   if (clearBtn) clearBtn.style.display = val.trim().length > 0 ? 'block' : 'none';
   updateUrlParams();
-  filterData(false); // Resetovat na 1. stránku při psaní vyhledávání
+  filterData(false);
 }
 
 function clearSearchInput() {
@@ -855,7 +961,7 @@ function clearSearchInput() {
   safeRemoveSession('jj_museum_search');
   if (clearBtn) clearBtn.style.display = 'none';
   updateUrlParams();
-  filterData(false); // Resetovat na 1. stránku při vymazání hledání
+  filterData(false);
 }
 
 function openSurpriseTicket() {
@@ -982,7 +1088,6 @@ function getContributeUrlForTicket(t) {
 function openDirectImagePreview(startIndex) {
   if (!filteredTickets || filteredTickets.length === 0) return;
 
-  // 1. Ošetření rozsahu startIndex
   if (startIndex < 0) startIndex = 0;
   if (startIndex >= filteredTickets.length) startIndex = filteredTickets.length - 1;
 
@@ -991,7 +1096,7 @@ function openDirectImagePreview(startIndex) {
     activeViewerInstance = null;
   }
 
-  const WINDOW_SIZE = 20; // Načítáme 20 lístků před a 10 za aktuální položkou
+  const WINDOW_SIZE = 20;
   const minTicketIdx = Math.max(0, startIndex - WINDOW_SIZE);
   const maxTicketIdx = Math.min(filteredTickets.length - 1, startIndex + WINDOW_SIZE);
 
@@ -1034,21 +1139,13 @@ function openDirectImagePreview(startIndex) {
   let initialImageIndex = imageTicketMap.findIndex(item => item.globalTicketIdx === startIndex);
   if (initialImageIndex === -1) initialImageIndex = 0;
 
-  let isRebuilding = false; // Zamezí zacyklení při obnově okna
+  let isRebuilding = false;
 
   activeViewerInstance = new Viewer(container, {
     backdrop: true,
     toolbar: {
-      zoomIn: 0,
-      zoomOut: 0,
-      oneToOne: 0,
-      reset: 0,
-      prev: 1,
-      next: 1,
-      rotateLeft: 0,
-      rotateRight: 0,
-      flipHorizontal: 0,
-      flipVertical: 0
+      zoomIn: 0, zoomOut: 0, oneToOne: 0, reset: 0, prev: 1, next: 1,
+      rotateLeft: 0, rotateRight: 0, flipHorizontal: 0, flipVertical: 0
     },
     hidden: function() {
       if (!isRebuilding) {
@@ -1069,7 +1166,6 @@ function openDirectImagePreview(startIndex) {
       if (!t) return '';
 
       const topRow = [];
-
       const currentTicketPos = mapItem.globalTicketIdx + 1;
       let posString = `${currentTicketPos}`;
 
@@ -1095,7 +1191,6 @@ function openDirectImagePreview(startIndex) {
         topRow.push(`🏛️ ${t.VENUE}`);
       }
 
-     // Zobrazení dárce v hlavičce prohlížeče obrázků
       const donor = t.PRISPEVATEL || t.CONTRIBUTOR;
       const hasConsent = t.CONTRIBUTOR_CONSENT !== false && t.CONTRIBUTOR_CONSENT !== 'false';
 
@@ -1112,7 +1207,6 @@ function openDirectImagePreview(startIndex) {
       const currentGlobalIdx = mapItem.globalTicketIdx;
       const t = filteredTickets[currentGlobalIdx];
 
-      // DYNAMICKÉ DOČÍTÁNÍ: Pokud se uživatel přiblíží k okraji okna (< 3 položky od okraje), posuneme okno
       const distanceFromMin = currentGlobalIdx - minTicketIdx;
       const distanceFromMax = maxTicketIdx - currentGlobalIdx;
 
@@ -1219,16 +1313,8 @@ function openQuickImageModal(scanFileName, ticketObj) {
   quickViewerInstance = new Viewer(container, {
     backdrop: true,
     toolbar: {
-      zoomIn: 0,
-      zoomOut: 0,
-      oneToOne: 0,
-      reset: 0,
-      prev: 1,
-      next: 1,
-      rotateLeft: 0,
-      rotateRight: 0,
-      flipHorizontal: 0,
-      flipVertical: 0
+      zoomIn: 0, zoomOut: 0, oneToOne: 0, reset: 0, prev: 1, next: 1,
+      rotateLeft: 0, rotateRight: 0, flipHorizontal: 0, flipVertical: 0
     },
     hidden: function() {
       if (quickViewerInstance) {
@@ -1524,7 +1610,6 @@ function filterData(keepSavedPage = false) {
     filteredTickets = filteredTickets.filter(t => isValidValue(t.SOUBOR_SKEN));
   }
 
-  // Pokud keepSavedPage NENÍ true, zresetuje se stránka na 1
   if (!keepSavedPage) {
     currentPage = 1;
     safeSetStorage('jj_museum_page', 1);
@@ -1643,7 +1728,6 @@ function renderTickets(tickets) {
       statusBadgeHTML = ` <span class="badge-status-rescheduled" title="${escapeHtml(`Rescheduled show${origText}`)}">🔄 Rescheduled</span>`;
     }
 
-    // Načtení jména dárce a stavu souhlasu
     const donorName = t.PRISPEVATEL || t.CONTRIBUTOR;
     const hasConsent = t.CONTRIBUTOR_CONSENT !== false && t.CONTRIBUTOR_CONSENT !== 'false';
 
@@ -1713,7 +1797,6 @@ function renderTickets(tickets) {
         </button>`;
     };
 
-    // Odkazové ikony pro související předměty (Postery, Pasy, Merch) se generují pouze v ADMIN režimu
     let slot3HTML = '<div class="grid-slot-empty"></div>';
     let slot4HTML = '<div class="grid-slot-empty"></div>';
     let slot5HTML = '<div class="grid-slot-empty"></div>';
@@ -1773,7 +1856,6 @@ function renderTickets(tickets) {
         </button>`;
     }
 
-    // Výpočet počtu skenů pro vytvoření odznaku v rohu náhledu
     const totalScansCount = getScanCount(t.SOUBOR_SKEN);
     const scanCountBadgeHTML = totalScansCount > 1 
       ? `<div class="scan-count-badge" title="This record contains ${totalScansCount} scans"><span class="badge-icon">🖼️</span> ${totalScansCount}</div>`
@@ -1867,7 +1949,6 @@ function toggleCollapsible(id) {
   if (el) el.classList.toggle('open');
 }
 
-// Global image protection: suppress right-click context menu and drag operations on images
 document.addEventListener('contextmenu', (e) => {
   if (e.target && e.target.closest('img')) {
     e.preventDefault();
