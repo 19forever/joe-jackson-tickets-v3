@@ -80,23 +80,23 @@ Níže je přehled nálezů rozdělený podle architektury, code smells, duplici
 
 ### 4. Bezpečnostní rizika (Security Vulnerabilities)
 
-* **Riziko DOM XSS (Cross-Site Scripting)**
-* **Závažnost:** **Vysoká**
-* **Problém:** Aplikace na mnoha místech bere neosetřená data z databáze nebo textových polí a přímým přiřazením přes `innerHTML` je vykresluje do stránky.
+* DONE **Riziko DOM XSS (Cross-Site Scripting)**
+* DONE **Závažnost:** **Vysoká**
+* DONE **Problém:** Aplikace na mnoha místech bere neosetřená data z databáze nebo textových polí a přímým přiřazením přes `innerHTML` je vykresluje do stránky.
 
 
-* **Příklad:** V `openNoteModal` (soubor `app.js`) se provádí pouze základní nahrazení `<` a `>` pomocí `.replace()`, ale následně se kód vkládá do `bodyEl.innerHTML`. Pokud by se do databáze v poli `NOTE` nebo `CONTRIBUTOR` dostal škodlivý skript, spustí se v prohlížeči uživatele/admina.
+* DONE **Příklad:** V `openNoteModal` (soubor `app.js`) se provádí pouze základní nahrazení `<` a `>` pomocí `.replace()`, ale následně se kód vkládá do `bodyEl.innerHTML`. Pokud by se do databáze v poli `NOTE` nebo `CONTRIBUTOR` dostal škodlivý skript, spustí se v prohlížeči uživatele/admina.
 
 
-* **Řešení:** Používat `textContent` pro čistý text, nebo sanitizační knihovnu (např. `DOMPurify`) před vložením do `innerHTML`.
+* DONE **Řešení:** Používat `textContent` pro čistý text, nebo sanitizační knihovnu (např. `DOMPurify`) před vložením do `innerHTML`.
 
 
-* **Autentizace a autorizace závislá na klintské vrstvě (Bypass Admin Módu)**
-* **Závažnost:** **Střední až Vysoká**
-* **Problém:** Funkce v `app.js` spoléhá na hodnotu v `localStorage` (`jj_admin_mode === 'true'`) nebo URL parametr `?admin=1`. Jakýkoliv běžný uživatel si může v konzoli nastavit `localStorage.setItem('jj_admin_mode', 'true')` a zpřístupnit si admin ovládací prvky v UI.
+* DONE **Autentizace a autorizace závislá na klintské vrstvě (Bypass Admin Módu)**
+* DONE **Závažnost:** **Střední až Vysoká**
+* DONE **Problém:** Funkce v `app.js` spoléhá na hodnotu v `localStorage` (`jj_admin_mode === 'true'`) nebo URL parametr `?admin=1`. Jakýkoliv běžný uživatel si může v konzoli nastavit `localStorage.setItem('jj_admin_mode', 'true')` a zpřístupnit si admin ovládací prvky v UI.
 
 
-* **Řešení:** Zabezpečení musí ležet výhradně na databázových pravidlech (Supabase RLS – Row Level Security). V RLS pravidlech Supabase musí být operace `INSERT`, `UPDATE` a `DELETE` povoleny výhradně pro roli `authenticated`.
+* DONE **Řešení:** Zabezpečení musí ležet výhradně na databázových pravidlech (Supabase RLS – Row Level Security). V RLS pravidlech Supabase musí být operace `INSERT`, `UPDATE` a `DELETE` povoleny výhradně pro roli `authenticated`.
 
 
 
