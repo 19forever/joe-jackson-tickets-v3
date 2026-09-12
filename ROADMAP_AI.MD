@@ -5,6 +5,9 @@ An interactive digital museum and historical archive dedicated to Joe Jackson's 
 
 ---
 
+new: checking youtube videos link life
+
+
 ## 🚀 Active Feature Backlog & Next Priorities (Up Next)
 
 ### 1. `Viewer.js` Refactoring (Time-Machine & Related Media)
