@@ -478,6 +478,17 @@
     }
     .btn-search-setlist:hover { background-color: #15803d; }
 
+    <!-- Nový form-panel pro Audit Log -->
+<div class="form-panel">
+  <h3 style="display: flex; justify-content: space-between; align-items: center;">
+    <span>📜 Audit Log (Změny)</span>
+    <span id="auditLogCount" style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">0 záznamů</span>
+  </h3>
+  <div id="auditLogContainer" style="max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+    <!-- Sem se dynamicky načtou změny -->
+  </div>
+</div>
+    
     .action-bar {
       display: flex;
       gap: 12px;
@@ -2043,6 +2054,80 @@ container.appendChild(errDiv);
         el.style.color = '#fbbf24';
       }
     }
+
+    // Načtení auditních logů z DB pro konkrétní relaci
+async function loadAuditLogsForRecord(recordId) {
+  const container = document.getElementById('auditLogContainer');
+  const countBadge = document.getElementById('auditLogCount');
+  if (!container) return;
+
+  if (!recordId) {
+    container.innerHTML = '<div style="font-size: 0.8rem; color: var(--text-muted);">Žádné ID záznamu.</div>';
+    return;
+  }
+
+  container.innerHTML = '<div style="font-size: 0.8rem; color: var(--accent-yellow);">⏳ Načítám historii změn...</div>';
+
+  try {
+    const { data: logs, error } = await supabaseClient
+      .from('audit_logs')
+      .select('*')
+      .eq('record_id', String(recordId))
+      .order('created_at', { ascending: false })
+      .limit(10); // Omezíme na posledních 10 změn, aby byl výpis kompaktní
+
+    if (error) throw error;
+
+    if (countBadge) countBadge.textContent = `${logs ? logs.length : 0} záznamů`;
+
+    if (!logs || logs.length === 0) {
+      container.innerHTML = '<div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Zatím nebyly zaznamenány žádné editační změny.</div>';
+      return;
+    }
+
+    container.innerHTML = '';
+
+    logs.forEach(log => {
+      const logItem = document.createElement('div');
+      logItem.style.cssText = 'background: #0d0d0d; border: 1px solid var(--border-color-light); border-radius: 6px; padding: 8px 10px; font-size: 0.78rem;';
+
+      // Formátování data (např. 15.09.2026 14:20)
+      const dateObj = new Date(log.created_at);
+      const formattedDate = dateObj.toLocaleString('cs-CZ', { dateStyle: 'short', timeStyle: 'short' });
+      const user = log.changed_by_email || log.changed_by || 'Neznámý uživatel';
+
+      // Zpracování uloženého JSONu se změnami
+      let diffHtml = '';
+      if (log.changed_fields && typeof log.changed_fields === 'object') {
+        const changes = Object.entries(log.changed_fields).map(([field, values]) => {
+          const oldVal = values.old !== null && values.old !== undefined ? values.old : '<i>prázdné</i>';
+          const newVal = values.new !== null && values.new !== undefined ? values.new : '<i>prázdné</i>';
+          return `<span style="color: var(--text-muted);">${field}:</span> <span style="color: #ef4444; text-decoration: line-through;">${oldVal}</span> ➔ <span style="color: #4ade80;">${newVal}</span>`;
+        });
+        diffHtml = changes.join(' | ');
+      } else {
+        diffHtml = `<span style="color: var(--text-muted);">${log.action_type || 'Změna'}</span>`;
+      }
+
+      logItem.innerHTML = `
+        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 3px;">
+          <span style="color: var(--accent-yellow); font-weight: 600;">👤 ${user}</span>
+          <span style="color: var(--text-muted); font-size: 0.72rem;">⏱️ ${formattedDate}</span>
+        </div>
+        <div style="line-height: 1.35; word-break: break-word;">
+          ${diffHtml}
+        </div>
+      `;
+
+      container.appendChild(logItem);
+    });
+
+  } catch (err) {
+    console.error('Chyba při načítání audit_logs:', err);
+    container.innerHTML = `<div style="font-size: 0.78rem; color: #f87171;">❌ Nelze načíst historii: ${err.message}</div>`;
+  }
+}
+    
   </script>
 </body>
 </html>
