@@ -478,17 +478,6 @@
     }
     .btn-search-setlist:hover { background-color: #15803d; }
 
-    <!-- Nový form-panel pro Audit Log -->
-<div class="form-panel">
-  <h3 style="display: flex; justify-content: space-between; align-items: center;">
-    <span>📜 Audit Log (Změny)</span>
-    <span id="auditLogCount" style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">0 záznamů</span>
-  </h3>
-  <div id="auditLogContainer" style="max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
-    <!-- Sem se dynamicky načtou změny -->
-  </div>
-</div>
-    
     .action-bar {
       display: flex;
       gap: 12px;
@@ -795,6 +784,19 @@
         </div>
       </div>
 
+      <!-- ... předchozí form-panel ... -->
+
+      <!-- Nový form-panel pro Audit Log -->
+      <div class="form-panel">
+        <h3 style="display: flex; justify-content: space-between; align-items: center;">
+          <span>📜 Audit Log (Změny)</span>
+          <span id="auditLogCount" style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">0 záznamů</span>
+        </h3>
+        <div id="auditLogContainer" style="max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+          <!-- Sem se dynamicky načtou změny -->
+        </div>
+      </div>
+      
       <div class="action-bar">
         <button class="btn-submit" type="button" onclick="downloadCSVExport()">💾 Download CSV Export</button>
         <button class="btn-github" type="button" onclick="saveCurrentRecordToSupabase()">🚀 Save to Supabase</button>
