@@ -784,10 +784,14 @@
         </div>
       </div>
 
-      <!-- ... předchozí form-panel ... -->
+      <div class="action-bar">
+        <button class="btn-submit" type="button" onclick="downloadCSVExport()">💾 Download CSV Export</button>
+        <button class="btn-github" type="button" onclick="saveCurrentRecordToSupabase()">🚀 Save to Supabase</button>
+      </div>
 
-      <!-- Nový form-panel pro Audit Log -->
-      <div class="form-panel">
+      <div id="statusMessage"></div>
+
+            <div class="form-panel">
         <h3 style="display: flex; justify-content: space-between; align-items: center;">
           <span>📜 Audit Log (changes)</span>
           <span id="auditLogCount" style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">0 records</span>
@@ -797,12 +801,6 @@
         </div>
       </div>
       
-      <div class="action-bar">
-        <button class="btn-submit" type="button" onclick="downloadCSVExport()">💾 Download CSV Export</button>
-        <button class="btn-github" type="button" onclick="saveCurrentRecordToSupabase()">🚀 Save to Supabase</button>
-      </div>
-
-      <div id="statusMessage"></div>
     </form>
 
   </div>
@@ -2057,16 +2055,11 @@ container.appendChild(errDiv);
       }
     }
 
-    // Načtení auditních logů z DB pro konkrétní relaci
-async function loadAuditLogsForRecord(recordId) {
+// Načtení posledních změn ze všech záznamů
+async function loadGlobalAuditLogs() {
   const container = document.getElementById('auditLogContainer');
   const countBadge = document.getElementById('auditLogCount');
   if (!container) return;
-
-  if (!recordId) {
-    container.innerHTML = '<div style="font-size: 0.8rem; color: var(--text-muted);">Žádné ID záznamu.</div>';
-    return;
-  }
 
   container.innerHTML = '<div style="font-size: 0.8rem; color: var(--accent-yellow);">⏳ Načítám historii změn...</div>';
 
@@ -2074,13 +2067,12 @@ async function loadAuditLogsForRecord(recordId) {
     const { data: logs, error } = await supabaseClient
       .from('audit_logs')
       .select('*')
-      .eq('record_id', String(recordId))
       .order('created_at', { ascending: false })
-      .limit(10); // Omezíme na posledních 10 změn, aby byl výpis kompaktní
+      .limit(15); // Zobrazí 15 nejnovějších změn napříč celou aplikací
 
     if (error) throw error;
 
-    if (countBadge) countBadge.textContent = `${logs ? logs.length : 0} záznamů`;
+    if (countBadge) countBadge.textContent = `${logs ? logs.length : 0} posledních změn`;
 
     if (!logs || logs.length === 0) {
       container.innerHTML = '<div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Zatím nebyly zaznamenány žádné editační změny.</div>';
@@ -2091,19 +2083,18 @@ async function loadAuditLogsForRecord(recordId) {
 
     logs.forEach(log => {
       const logItem = document.createElement('div');
-      logItem.style.cssText = 'background: #0d0d0d; border: 1px solid var(--border-color-light); border-radius: 6px; padding: 8px 10px; font-size: 0.78rem;';
+      logItem.style.cssText = 'background: #0d0d0d; border: 1px solid var(--border-color-light); border-radius: 6px; padding: 8px 10px; font-size: 0.78rem; text-align: left;';
 
-      // Formátování data (např. 15.09.2026 14:20)
       const dateObj = new Date(log.created_at);
       const formattedDate = dateObj.toLocaleString('cs-CZ', { dateStyle: 'short', timeStyle: 'short' });
       const user = log.changed_by_email || log.changed_by || 'Neznámý uživatel';
+      const recId = log.record_id ? `#${log.record_id}` : '';
 
-      // Zpracování uloženého JSONu se změnami
       let diffHtml = '';
       if (log.changed_fields && typeof log.changed_fields === 'object') {
         const changes = Object.entries(log.changed_fields).map(([field, values]) => {
-          const oldVal = values.old !== null && values.old !== undefined ? values.old : '<i>prázdné</i>';
-          const newVal = values.new !== null && values.new !== undefined ? values.new : '<i>prázdné</i>';
+          const oldVal = (values.old !== null && values.old !== undefined && values.old !== '') ? values.old : '<i>prázdné</i>';
+          const newVal = (values.new !== null && values.new !== undefined && values.new !== '') ? values.new : '<i>prázdné</i>';
           return `<span style="color: var(--text-muted);">${field}:</span> <span style="color: #ef4444; text-decoration: line-through;">${oldVal}</span> ➔ <span style="color: #4ade80;">${newVal}</span>`;
         });
         diffHtml = changes.join(' | ');
@@ -2113,7 +2104,10 @@ async function loadAuditLogsForRecord(recordId) {
 
       logItem.innerHTML = `
         <div style="display: flex; justify-content: space-between; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 3px;">
-          <span style="color: var(--accent-yellow); font-weight: 600;">👤 ${user}</span>
+          <div>
+            <span style="color: var(--accent-yellow); font-weight: 600;">👤 ${user}</span>
+            <span style="color: #888; font-size: 0.72rem; margin-left: 6px;">${recId}</span>
+          </div>
           <span style="color: var(--text-muted); font-size: 0.72rem;">⏱️ ${formattedDate}</span>
         </div>
         <div style="line-height: 1.35; word-break: break-word;">
