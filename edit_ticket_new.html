@@ -2070,7 +2070,7 @@ async function loadGlobalAuditLogs() {
       .from('audit_logs')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(15); // Zobrazí 15 nejnovějších změn napříč celou aplikací
+      .limit(15);
 
     if (error) throw error;
 
@@ -2089,20 +2089,45 @@ async function loadGlobalAuditLogs() {
 
       const dateObj = new Date(log.created_at);
       const formattedDate = dateObj.toLocaleString('cs-CZ', { dateStyle: 'short', timeStyle: 'short' });
-      const user = log.changed_by_email || log.changed_by || 'Unknown user';
+      
+      const user = log.user_email || log.user_id || 'Unknown user';
       const recId = log.record_id ? `#${log.record_id}` : '';
 
-      let diffHtml = '';
-      if (log.changed_fields && typeof log.changed_fields === 'object') {
-        const changes = Object.entries(log.changed_fields).map(([field, values]) => {
-          const oldVal = (values.old !== null && values.old !== undefined && values.old !== '') ? values.old : '<i>empty</i>';
-          const newVal = (values.new !== null && values.new !== undefined && values.new !== '') ? values.new : '<i>empty</i>';
-          return `<span style="color: var(--text-muted);">${field}:</span> <span style="color: #ef4444; text-decoration: line-through;">${oldVal}</span> ➔ <span style="color: #4ade80;">${newVal}</span>`;
-        });
-        diffHtml = changes.join(' | ');
+      const oldData = log.old_data || {};
+      const newData = log.new_data || {};
+
+      let changesList = [];
+
+      if (log.action === 'INSERT') {
+        changesList.push('<span style="color: #4ade80; font-weight: 600;">➕ New record created</span>');
+      } else if (log.action === 'DELETE') {
+        changesList.push('<span style="color: #ef4444; font-weight: 600;">🗑️ Record deleted</span>');
       } else {
-        diffHtml = `<span style="color: var(--text-muted);">${log.action_type || 'Change'}</span>`;
+        // Porovnání old_data vs new_data a nalezení konkrétních změn
+        const allKeys = new Set([...Object.keys(oldData), ...Object.keys(newData)]);
+
+        allKeys.forEach(key => {
+          // Ignorujeme systémové klíče nebo časová razítka, pokud v tabulce jsou
+          if (['created_at', 'updated_at'].includes(key)) return;
+
+          const oldVal = oldData[key];
+          const newVal = newData[key];
+
+          // Kontrola, zda se hodnota skutečně změnila
+          if (String(oldVal ?? '') !== String(newVal ?? '')) {
+            const formatVal = (v) => (v === null || v === undefined || v === '') ? '<i>empty</i>' : v;
+            changesList.push(
+              `<span style="color: var(--text-muted);">${key}:</span> ` +
+              `<span style="color: #ef4444; text-decoration: line-through;">${formatVal(oldVal)}</span> ➔ ` +
+              `<span style="color: #4ade80;">${formatVal(newVal)}</span>`
+            );
+          }
+        });
       }
+
+      const diffHtml = changesList.length > 0 
+        ? changesList.join(' | ') 
+        : `<span style="color: var(--text-muted);">${log.action || 'No field changes detected'}</span>`;
 
       logItem.innerHTML = `
         <div style="display: flex; justify-content: space-between; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 3px;">
