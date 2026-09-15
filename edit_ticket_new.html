@@ -962,6 +962,7 @@
 
       if (isAuthenticated) {
         await loadDataFromSupabase();
+        await loadGlobalAuditLogs();
       }
     });
 
@@ -1914,6 +1915,7 @@ container.appendChild(errDiv);
         populateLocationDropdowns();
         populateLineupDropdown();
         showStatus('✅ Record successfully saved to Supabase!', 'green');
+        await loadGlobalAuditLogs();
       } catch (err) {
         console.error("Save error:", err);
         showStatus('❌ Error saving to Supabase: ' + err.message, 'red');
