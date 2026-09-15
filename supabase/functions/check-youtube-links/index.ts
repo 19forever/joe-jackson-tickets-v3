@@ -6,10 +6,9 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
-  // Načteme záznamy, kde je YOUTUBE_URL vyplněné
   const { data: items, error } = await supabase
     .from('tickets')
-    .select('id, YOUTUBE_URL')
+    .select('ID_MEMORABILIA, YOUTUBE_URL')
     .not('YOUTUBE_URL', 'is', null)
 
   if (error) {
@@ -25,25 +24,20 @@ Deno.serve(async (req) => {
     let isAlive = false
 
     try {
-      // Použití YouTube oEmbed rozhraní bez nutnosti API klíče
       const checkUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(rawUrl)}&format=json`
       const res = await fetch(checkUrl)
-      
-      // HTTP 200 = video existuje a je veřejné
-      // HTTP 404/401 = neexistuje, je soukromé nebo smazané
       isAlive = res.ok
     } catch {
       isAlive = false
     }
 
-    // Aktualizace řádku v tabulce tickets
     await supabase
       .from('tickets')
       .update({ 
         is_alive: isAlive, 
         last_checked_at: new Date().toISOString() 
       })
-      .eq('id', item.id)
+      .eq('ID_MEMORABILIA', item.ID_MEMORABILIA)
 
     updatedCount++
   }
