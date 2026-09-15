@@ -2061,7 +2061,7 @@ async function loadGlobalAuditLogs() {
   const countBadge = document.getElementById('auditLogCount');
   if (!container) return;
 
-  container.innerHTML = '<div style="font-size: 0.8rem; color: var(--accent-yellow);">⏳ Načítám historii změn...</div>';
+  container.innerHTML = '<div style="font-size: 0.8rem; color: var(--accent-yellow);">⏳ Reading history of changes...</div>';
 
   try {
     const { data: logs, error } = await supabaseClient
@@ -2072,10 +2072,10 @@ async function loadGlobalAuditLogs() {
 
     if (error) throw error;
 
-    if (countBadge) countBadge.textContent = `${logs ? logs.length : 0} posledních změn`;
+    if (countBadge) countBadge.textContent = `${logs ? logs.length : 0} last changes`;
 
     if (!logs || logs.length === 0) {
-      container.innerHTML = '<div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Zatím nebyly zaznamenány žádné editační změny.</div>';
+      container.innerHTML = '<div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">No edit changes so far.</div>';
       return;
     }
 
@@ -2087,19 +2087,19 @@ async function loadGlobalAuditLogs() {
 
       const dateObj = new Date(log.created_at);
       const formattedDate = dateObj.toLocaleString('cs-CZ', { dateStyle: 'short', timeStyle: 'short' });
-      const user = log.changed_by_email || log.changed_by || 'Neznámý uživatel';
+      const user = log.changed_by_email || log.changed_by || 'Unknown user';
       const recId = log.record_id ? `#${log.record_id}` : '';
 
       let diffHtml = '';
       if (log.changed_fields && typeof log.changed_fields === 'object') {
         const changes = Object.entries(log.changed_fields).map(([field, values]) => {
-          const oldVal = (values.old !== null && values.old !== undefined && values.old !== '') ? values.old : '<i>prázdné</i>';
-          const newVal = (values.new !== null && values.new !== undefined && values.new !== '') ? values.new : '<i>prázdné</i>';
+          const oldVal = (values.old !== null && values.old !== undefined && values.old !== '') ? values.old : '<i>empty</i>';
+          const newVal = (values.new !== null && values.new !== undefined && values.new !== '') ? values.new : '<i>empty</i>';
           return `<span style="color: var(--text-muted);">${field}:</span> <span style="color: #ef4444; text-decoration: line-through;">${oldVal}</span> ➔ <span style="color: #4ade80;">${newVal}</span>`;
         });
         diffHtml = changes.join(' | ');
       } else {
-        diffHtml = `<span style="color: var(--text-muted);">${log.action_type || 'Změna'}</span>`;
+        diffHtml = `<span style="color: var(--text-muted);">${log.action_type || 'Change'}</span>`;
       }
 
       logItem.innerHTML = `
@@ -2119,8 +2119,8 @@ async function loadGlobalAuditLogs() {
     });
 
   } catch (err) {
-    console.error('Chyba při načítání audit_logs:', err);
-    container.innerHTML = `<div style="font-size: 0.78rem; color: #f87171;">❌ Nelze načíst historii: ${err.message}</div>`;
+    console.error('Error loading audit_logs:', err);
+    container.innerHTML = `<div style="font-size: 0.78rem; color: #f87171;">❌ Unable to load history: ${err.message}</div>`;
   }
 }
     
