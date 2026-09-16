@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contribute Memorabilia - Joe Jackson Archive</title>
+  <title>Contribute Memorabilia - Joe Jackson Museum</title>
   
   <!-- Favicon (JJ Icon) -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -143,7 +143,7 @@
 
   <div class="form-container">
     <p class="form-intro">
-      Help us preserve Joe Jackson's live concert history! Please submit your scan or photo below. <br>If you want to send us physical memorabilia, let us know at <a href="mailto:archive@joejackson.band">archive@joejackson.band</a> for shipping address.
+      Help us preserve Joe Jackson's live concert history! Please submit your scan or photo below. <br>If you want to send us physical memorabilia, let us know at <a href="mailto:museum@joejackson.band">museum@joejackson.band</a> for shipping address.
     </p>
 
     <!-- Odesílání přes Formsubmit.co -->
@@ -212,7 +212,7 @@
         <textarea id="notes" name="Notes" rows="3" placeholder="Concert memories, supporting act details, tour anecdotes..."></textarea>
       </div>
 
-      <button type="submit" id="submitBtn" class="btn-submit">🚀 Submit Memorabilia to Archive</button>
+      <button type="submit" id="submitBtn" class="btn-submit">🚀 Submit Memorabilia to Museum</button>
     </form>
 
     <div id="statusMessage"></div>
@@ -281,7 +281,7 @@
         selectedFileBlob = file;
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = '🚀 Submit Memorabilia to Archive';
+        submitBtn.textContent = '🚀 Submit Memorabilia to Museum';
       }
     });
 
@@ -355,7 +355,7 @@
         if (response.ok) {
           statusMsg.className = 'success';
           statusMsg.style.display = 'block';
-          statusMsg.innerHTML = '🎉 <strong>Thank you!</strong> Your memorabilia contribution and photo scan have been successfully uploaded to the archive repository.';
+          statusMsg.innerHTML = '🎉 <strong>Thank you!</strong> Your memorabilia contribution and photo scan have been successfully uploaded to the museum repository.';
           form.reset();
           selectedFileBlob = null;
         } else {
@@ -368,7 +368,7 @@
         statusMsg.innerHTML = '❌ <strong>Submission Error:</strong> Could not complete upload. Please try again or contact us.';
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = '🚀 Submit Memorabilia to Archive';
+        submitBtn.textContent = '🚀 Submit Memorabilia to Museum';
       }
     });
   </script>
