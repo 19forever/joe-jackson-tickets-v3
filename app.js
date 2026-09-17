@@ -1196,7 +1196,7 @@ function openDirectImagePreview(startIndex) {
 
       if (isValidValue(donor)) {
         const displayDonor = hasConsent ? donor : 'Anonymous';
-        topRow.push(`👤 Donor: ${displayDonor}`);
+        topRow.push(`👤 Contributed by ${displayDonor}`);
       }
 
       return topRow.join(' | ');
@@ -1348,7 +1348,7 @@ function openQuickImageModal(scanFileName, ticketObj) {
 
       if (isValidValue(donor)) {
         const displayDonor = hasConsent ? donor : 'Anonymous';
-        parts.push(`👤 Donor: ${displayDonor}`);
+        parts.push(`👤 Contributed by ${displayDonor}`);
       }
 
       return parts.join(' | ');
@@ -1735,7 +1735,7 @@ function renderTickets(tickets) {
 
     if (isValidValue(donorName)) {
       const displayDonor = hasConsent ? escapeHtml(donorName) : 'Anonymous';
-      donorHTML = `<div class="card-donor" style="margin-bottom: 6px;" title="Donor / Contributor"><i>Donor: 👤 ${displayDonor}</i></div>`;
+      donorHTML = `<div class="card-donor" style="margin-bottom: 6px;" title="Donor / Contributor"><i>Contributed by 👤 ${displayDonor}</i></div>`;
     }
 
     const line1HTML = `
