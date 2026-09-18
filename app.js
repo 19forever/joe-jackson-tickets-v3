@@ -1200,11 +1200,7 @@ function openDirectImagePreview(startIndex) {
         topRow.push(`👤 Contributed by ${displayDonor}`);
       }
 
-      // Vložení HTML s tlačítkem přímo na konec spodního řádku
-      const baseInfo = topRow.join(' | ');
-      const backBtnHtml = `<button class="viewer-back-btn" onclick="if(activeViewerInstance) activeViewerInstance.hide();">◄ Back to Museum</button>`;
-
-      return `${baseInfo} ${backBtnHtml}`;
+      return topRow.join(' | ');
     },
     viewed: function() {
       const activeImgIndex = activeViewerInstance ? activeViewerInstance.index : initialImageIndex;
@@ -1224,6 +1220,21 @@ function openDirectImagePreview(startIndex) {
       setTimeout(() => {
         const titleEl = document.querySelector('.viewer-title');
         if (titleEl && t) {
+          // Odstranění případného předchozího tlačítka zpět
+          const oldBackBtn = titleEl.querySelector('.viewer-back-btn');
+          if (oldBackBtn) oldBackBtn.remove();
+
+          // Vytvoření a vložení tlačítka Zpět
+          const backBtn = document.createElement('button');
+          backBtn.className = 'viewer-back-btn';
+          backBtn.textContent = '◄ Back to Museum';
+          backBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (activeViewerInstance) activeViewerInstance.hide();
+          };
+          titleEl.appendChild(backBtn);
+
+          // Odstranění starého bloku s poznámkou
           const oldNoteBlock = titleEl.querySelector('.viewer-note-block');
           if (oldNoteBlock) oldNoteBlock.remove();
 
