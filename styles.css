@@ -2038,19 +2038,9 @@ a[href^="mailto:"]:hover {
    GLOBAL VIEWER OVERRIDES (Platí pro mobil i desktop)
    ========================================== */
 
-/* Přenastavení křížku Viewer.js v pravém horním rohu na Back button */
+/* Skrytí tlačítka v pravém horním rohu */
 .viewer-button.viewer-close {
-  top: 16px !important;
-  right: 20px !important;
-  width: auto !important;
-  height: 34px !important;
-  background-color: #1a1a1a !important;
-  border: 1px solid var(--accent-yellow, #f59e0b) !important;
-  border-radius: 6px !important;
-  padding: 0 14px !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+  display: none !important;
 }
 
 .viewer-button.viewer-close::before {
@@ -2076,23 +2066,22 @@ a[href^="mailto:"]:hover {
   color: #000000 !important;
 }
 
-/* Tlačítko Back to Museum ve spodní liště Viewer.js */
+/* Tlačítko Back to Museum na samostatném řádku ve Viewer.js */
 .viewer-back-btn {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  margin-left: 10px !important;
+  margin-left: 0 !important;
   background-color: #1a1a1a !important;
   border: 1px solid var(--accent-yellow, #f59e0b) !important;
   color: var(--accent-yellow, #f59e0b) !important;
-  padding: 3px 10px !important;
+  padding: 4px 12px !important;
   border-radius: 4px !important;
   font-size: 0.75rem !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   cursor: pointer !important;
-  vertical-align: middle !important;
   transition: all 0.2s ease !important;
 }
 
