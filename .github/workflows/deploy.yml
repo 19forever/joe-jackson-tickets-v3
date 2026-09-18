@@ -31,4 +31,5 @@ jobs:
 
       - name: Deploy Edge Function
         run: |
+          supabase init --workdir . || true
           supabase functions deploy check-youtube-links --project-ref $PROJECT_ID
