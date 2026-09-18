@@ -52,6 +52,10 @@
     .subcat-chip .arrow:hover { color: var(--accent-yellow); }
     .subcat-chip .delete-btn { cursor: pointer; color: #f87171; font-weight: bold; margin-left: 4px; }
     .subcat-chip .delete-btn:hover { color: #ef4444; }
+
+    .visibility-btn { font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; font-weight: 600; cursor: pointer; }
+    .visibility-btn.public { background: rgba(22, 163, 74, 0.15); color: #4ade80; border: 1px solid #16a34a; }
+    .visibility-btn.hidden { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid #ef4444; }
   </style>
 </head>
 <body>
@@ -291,7 +295,7 @@
               <td><span class="badge">${item.count} items</span></td>
               <td>
                 <div class="edit-actions">
-                  <button class="btn" onclick="enableTourEdit(${idx})"> ✏️ </button>
+                  <button class="btn" onclick="enableTourEdit(${idx})" title="Edit Tour">✏️</button>
                 </div>
               </td>
             </tr>
@@ -343,7 +347,7 @@
               <td><span class="badge">${item.count} items</span></td>
               <td>
                 <div class="edit-actions">
-                  <button class="btn" onclick="enableLineupEdit(${idx})"> ✏️ </button>
+                  <button class="btn" onclick="enableLineupEdit(${idx})" title="Edit Lineup">✏️</button>
                 </div>
               </td>
             </tr>
@@ -395,7 +399,7 @@
 
 
     /* ==========================================================================
-       SECTION 3: CATEGORIES & SUBCATEGORIES LOGIC
+       SECTION 3: CATEGORIES & SUBCATEGORIES LOGIC (WITH PUBLIC VISIBILITY)
        ========================================================================== */
     async function loadCategoriesData() {
       const container = document.getElementById('categoriesContent');
@@ -425,6 +429,7 @@
         const subList = Array.isArray(cat.subcategories) ? cat.subcategories : [];
         const isFirst = idx === 0;
         const isLast = idx === categoriesData.length - 1;
+        const isPublic = cat.is_public !== false;
 
         return `
           <div class="card">
@@ -434,7 +439,10 @@
                 <button class="btn" onclick="moveCategory(${idx}, 1)" ${isLast ? 'disabled style="opacity:0.3;cursor:default;"' : ''} title="Move Down">⬇️</button>
                 <strong style="font-size: 1.1rem; color: #fff; margin-left: 6px;">${escapeHtml(cat.name)}</strong>
               </div>
-              <div style="display: flex; gap: 6px;">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <button class="visibility-btn ${isPublic ? 'public' : 'hidden'}" onclick="toggleCategoryVisibility('${cat.id}', ${isPublic})" title="Click to toggle public status">
+                  ${isPublic ? '👁️ Public' : '🙈 Hidden'}
+                </button>
                 <button class="btn" onclick="renameCategory('${cat.id}', '${escapeJsStr(cat.name)}')">✏️ Rename</button>
                 <button class="btn btn-danger" onclick="deleteCategory('${cat.id}', '${escapeJsStr(cat.name)}')">🗑️ Delete</button>
               </div>
@@ -465,6 +473,16 @@
           </div>
         `;
       }).join('');
+    }
+
+    async function toggleCategoryVisibility(catId, currentStatus) {
+      const newStatus = !currentStatus;
+      const { error } = await supabaseClient.from('categories').update({ is_public: newStatus }).eq('id', catId);
+      if (error) {
+        alert('Error changing category visibility: ' + error.message);
+      } else {
+        await loadCategoriesData();
+      }
     }
 
     async function moveCategory(index, direction) {
@@ -512,7 +530,7 @@
       if (!name) return;
 
       const nextOrder = categoriesData.length > 0 ? (Math.max(...categoriesData.map(c => c.display_order || 0)) + 1) : 1;
-      const { error } = await supabaseClient.from('categories').insert([{ name, subcategories: [], display_order: nextOrder }]);
+      const { error } = await supabaseClient.from('categories').insert([{ name, subcategories: [], display_order: nextOrder, is_public: true }]);
       if (error) alert('Error adding category: ' + error.message);
       else { input.value = ''; loadCategoriesData(); }
     }
