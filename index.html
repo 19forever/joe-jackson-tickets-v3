@@ -200,42 +200,6 @@
       }
       window.isAdminModeActive = isAdminModeActive;
 
-      // PŘEPIS FILTERDATA PRO VEŘEJNÝ MÓD
-      const originalFilterData = window.filterData;
-      window.filterData = function(keepSavedPage) {
-        if (typeof originalFilterData === 'function') {
-          originalFilterData.apply(this, arguments);
-        }
-
-        // Pokud UŽIVATEL NENÍ ADMIN, aplikujeme dodatečné filtry pro veřejnost
-        if (!isAdminModeActive() && typeof window.filteredTickets !== 'undefined' && Array.isArray(window.filteredTickets)) {
-          
-          // 1. Zjistíme seznam skrytých kategorií z databáze (publicCategoriesList)
-          let hiddenCategories = [];
-          if (typeof publicCategoriesList !== 'undefined' && Array.isArray(publicCategoriesList)) {
-            hiddenCategories = publicCategoriesList
-              .filter(c => c.is_public === false)
-              .map(c => (c.name || '').trim().toLowerCase());
-          }
-
-          // 2. Vyfiltrujeme položky (musí mít sken A NESMÍ patřit do skryté kategorie)
-          window.filteredTickets = window.filteredTickets.filter(t => {
-            const itemCat = typeof getTicketCategory === 'function' ? getTicketCategory(t).toLowerCase() : (t.KATEGORIE || '').toLowerCase();
-            if (hiddenCategories.includes(itemCat)) {
-              return false;
-            }
-
-            const sken = t.SOUBOR_SKEN || t.soubor_sken || '';
-            if (!sken || typeof sken !== 'string') return false;
-            const cleanSken = sken.trim().toLowerCase();
-            return cleanSken.length > 0 && cleanSken !== 'missing_item.svg';
-          });
-
-          // 3. Vykreslíme přefiltrovanou stránku
-          if (typeof renderPaginated === 'function') renderPaginated();
-        }
-      };
-
       // PRESMĚROVÁNÍ PŘI KLIKNUTÍ NA TLAČÍTKO ADMIN
       function handleAdminLogin() {
         const editQuery = typeof getEditUrlParams === 'function' ? getEditUrlParams() : '';
@@ -425,11 +389,6 @@
         }
 
         updateAdminSortAndControls();
-
-        // Spustíme filtraci se zachováním uložené stránky
-        if (typeof window.filterData === 'function') {
-          window.filterData(true);
-        }
 
         // Focus do vyhledávacího pole
         const searchInput = document.getElementById('searchInput');
