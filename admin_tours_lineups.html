@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tours & Lineups Admin - JJ Museum</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script src="storage-service.js"></script>
+  <script src="auth.js"></script>
+  <style>
+    :root {
+      --bg-main: #0f0f0f;
+      --bg-panel: #141414;
+      --accent-yellow: #f59e0b;
+      --text-main: #e0e0e0;
+      --border-color: #2a2a2a;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: var(--bg-main); color: var(--text-main); padding: 20px; max-width: 1100px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 20px; }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .logo { background-color: var(--accent-yellow); color: #000; width: 40px; height: 40px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.3rem; }
+    h1 { font-size: 1.3rem; color: #fff; margin: 0; }
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+    .btn { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .btn:hover { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+    .btn-green { background: #16a34a; border: none; font-weight: bold; }
+    .btn-green:hover { background: #15803d; color: #fff; }
+    .btn-danger { background: #ef4444; border: none; font-weight: bold; }
+    .btn-danger:hover { background: #dc2626; color: #fff; }
+    
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+    .tab-btn { background: #141414; border: 1px solid var(--border-color); color: #888; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+    .tab-btn.active { background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); }
+
+    .card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    input { background: #0d0d0d; border: 1px solid #333; color: #fff; padding: 8px 12px; border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 0.85rem; outline: none; }
+    input:focus { border-color: var(--accent-yellow); }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
+    th { color: var(--accent-yellow); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+    tr:hover { background: rgba(255,255,255,0.02); }
+    .badge { background: #222; border: 1px solid #333; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; color: #aaa; }
+  </style>
+</head>
+<body>
+
+  <!-- AUTH GATE MODAL -->
+  <div id="gateModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+    <div style="background: #141414; border: 1px solid #2a2a2a; border-radius: 12px; padding: 30px; width: 100%; max-width: 380px;">
+      <div style="text-align: center; font-size: 2rem; margin-bottom: 10px;">🔒</div>
+      <h2 style="text-align: center; color: #fff; margin-bottom: 6px; font-size: 1.25rem;">Admin Sign In</h2>
+      <p style="text-align: center; color: #9ca3af; font-size: 0.8rem; margin-bottom: 20px;">Enter your credentials to manage Tours & Lineups.</p>
+
+      <form onsubmit="event.preventDefault(); handleSupabaseLogin();">
+        <div style="margin-bottom: 12px;">
+          <input type="email" id="loginEmail" placeholder="name@example.com" required>
+        </div>
+        <div style="margin-bottom: 18px;">
+          <input type="password" id="loginPassword" placeholder="••••••••" required>
+        </div>
+        <div id="loginError" style="display: none; color: #f87171; font-size: 0.75rem; margin-bottom: 12px; text-align: center;"></div>
+        <button type="submit" class="btn btn-green" style="width: 100%; padding: 10px;">🔓 Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <header>
+    <div class="header-left">
+      <div class="logo">JJ</div>
+      <h1>🎤 Tours & Lineups Manager</h1>
+    </div>
+    <div class="header-actions">
+      <a href="edit_ticket_new.html" id="backToEditorBtn" class="btn">◄ Back to Editor</a>
+      <a href="admin_categories.html" id="backToCatBtn" class="btn">🏷️ Categories</a>
+      <button class="btn btn-danger" onclick="lockAdminSession()">🔒 Lock Admin</button>
+      <a href="index.html" id="backToMuseumBtn" class="btn" style="border-color: var(--accent-yellow); color: var(--accent-yellow);">Museum 🏠</a>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tabToursBtn" onclick="switchTab('tours')">🎸 Tours Management</button>
+    <button class="tab-btn" id="tabLineupsBtn" onclick="switchTab('lineups')">👥 Lineups Management</button>
+  </div>
+
+  <!-- TOURS TAB -->
+  <div id="toursTab" class="card">
+    <h3 style="color: var(--accent-yellow); margin-bottom: 10px; font-size: 0.95rem; text-transform: uppercase;">Existing Tour Names in Database</h3>
+    <div id="toursContent">⏳ Loading tours...</div>
+  </div>
+
+  <!-- LINEUPS TAB -->
+  <div id="lineupsTab" class="card" style="display: none;">
+    <h3 style="color: var(--accent-yellow); margin-bottom: 10px; font-size: 0.95rem; text-transform: uppercase;">Existing Lineups in Database</h3>
+    <div id="lineupsContent">⏳ Loading lineups...</div>
+  </div>
+
+  <script>
+    let rawTicketsData = [];
+    let toursGrouped = [];
+    let lineupsGrouped = [];
+
+    async function checkAuthSession() {
+      const modal = document.getElementById('gateModal');
+      if (typeof supabaseClient === 'undefined' || !supabaseClient.auth) {
+        if (modal) modal.style.display = 'flex';
+        return false;
+      }
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        if (modal) modal.style.display = 'none';
+        localStorage.setItem('jj_admin_mode', 'true');
+        return true;
+      } else {
+        if (modal) modal.style.display = 'flex';
+        localStorage.removeItem('jj_admin_mode');
+        return false;
+      }
+    }
+
+    async function handleSupabaseLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+      const errEl = document.getElementById('loginError');
+      if (errEl) errEl.style.display = 'none';
+
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) {
+        if (errEl) {
+          errEl.textContent = '❌ Invalid credentials: ' + error.message;
+          errEl.style.display = 'block';
+        }
+      } else {
+        localStorage.setItem('jj_admin_mode', 'true');
+        await checkAuthSession();
+        await loadDatabaseData();
+      }
+    }
+
+    async function lockAdminSession() {
+      if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
+        await supabaseClient.auth.signOut();
+      }
+      localStorage.removeItem('jj_admin_mode');
+      window.location.href = 'index.html';
+    }
+
+    function switchTab(tab) {
+      document.getElementById('tabToursBtn').classList.toggle('active', tab === 'tours');
+      document.getElementById('tabLineupsBtn').classList.toggle('active', tab === 'lineups');
+      document.getElementById('toursTab').style.display = tab === 'tours' ? 'block' : 'none';
+      document.getElementById('lineupsTab').style.display = tab === 'lineups' ? 'block' : 'none';
+    }
+
+    // NAČTENÍ VŠECH TICKETŮ A GROUPING PODLE TOUR / LINEUP
+    async function loadDatabaseData() {
+      try {
+        const { data, error } = await supabaseClient
+          .from('tickets')
+          .select('ID_MEMORABILIA, TOUR_NAME, TOUR_ID, LINEUP');
+
+        if (error) throw error;
+        rawTicketsData = data || [];
+
+        processToursData();
+        processLineupsData();
+
+        renderToursTable();
+        renderLineupsTable();
+      } catch (err) {
+        console.error("Error loading data:", err);
+        document.getElementById('toursContent').innerHTML = `<div style="color:#ef4444;">❌ Error: ${err.message}</div>`;
+      }
+    }
+
+    function processToursData() {
+      const map = new Map();
+      rawTicketsData.forEach(r => {
+        const name = (r.TOUR_NAME || '').trim();
+        if (!name) return;
+        const tourId = (r.TOUR_ID || '').trim();
+
+        if (!map.has(name)) {
+          map.set(name, { name, tourId, count: 0 });
+        }
+        const item = map.get(name);
+        item.count += 1;
+        if (!item.tourId && tourId) item.tourId = tourId;
+      });
+
+      toursGrouped = Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    function processLineupsData() {
+      const map = new Map();
+      rawTicketsData.forEach(r => {
+        const lineup = (r.LINEUP || '').trim();
+        if (!lineup) return;
+
+        if (!map.has(lineup)) {
+          map.set(lineup, { lineup, count: 0 });
+        }
+        map.get(lineup).count += 1;
+      });
+
+      lineupsGrouped = Array.from(map.values()).sort((a, b) => a.lineup.localeCompare(b.lineup));
+    }
+
+    function renderToursTable() {
+      const container = document.getElementById('toursContent');
+      if (toursGrouped.length === 0) {
+        container.innerHTML = '<div style="color: #888;">No tours found in records.</div>';
+        return;
+      }
+
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>Tour Name</th>
+              <th>Tour ID</th>
+              <th>Records</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      toursGrouped.forEach(item => {
+        html += `
+          <tr>
+            <td><strong>${escapeHtml(item.name)}</strong></td>
+            <td><code>${escapeHtml(item.tourId || '-')}</code></td>
+            <td><span class="badge">${item.count} items</span></td>
+            <td style="text-align: right;">
+              <button class="btn" onclick="renameTour('${escapeJsStr(item.name)}', '${escapeJsStr(item.tourId)}')">✏️ Rename / Edit ID</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    function renderLineupsTable() {
+      const container = document.getElementById('lineupsContent');
+      if (lineupsGrouped.length === 0) {
+        container.innerHTML = '<div style="color: #888;">No lineups found in records.</div>';
+        return;
+      }
+
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>Lineup Description</th>
+              <th>Records</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      lineupsGrouped.forEach(item => {
+        html += `
+          <tr>
+            <td><strong>${escapeHtml(item.lineup)}</strong></td>
+            <td><span class="badge">${item.count} items</span></td>
+            <td style="text-align: right;">
+              <button class="btn" onclick="renameLineup('${escapeJsStr(item.lineup)}')">✏️ Rename</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    // PŘEJMENOVÁNÍ TOUR V AŽ VŠECH ZÁZNAMECH
+    async function renameTour(oldName, oldTourId) {
+      const newName = prompt(`Rename Tour "${oldName}" across ALL ${getTourCount(oldName)} records to:`, oldName);
+      if (!newName || newName.trim() === '') return;
+
+      const newTourId = prompt(`Tour ID for "${newName.trim()}":`, oldTourId || generateTourId(newName.trim()));
+      if (newTourId === null) return;
+
+      if (!confirm(`Are you sure you want to update all records with Tour "${oldName}" to "${newName.trim()}"?`)) return;
+
+      try {
+        const { error } = await supabaseClient
+          .from('tickets')
+          .update({ 
+            TOUR_NAME: newName.trim(), 
+            TOUR_ID: newTourId.trim() || null 
+          })
+          .eq('TOUR_NAME', oldName);
+
+        if (error) throw error;
+        alert(`✅ Successfully updated records!`);
+        await loadDatabaseData();
+      } catch (err) {
+        alert('❌ Error updating tour: ' + err.message);
+      }
+    }
+
+    // PŘEJMENOVÁNÍ LINEUP V AŽ VŠECH ZÁZNAMECH
+    async function renameLineup(oldLineup) {
+      const newLineup = prompt(`Rename Lineup across ALL records to:`, oldLineup);
+      if (!newLineup || newLineup.trim() === '' || newLineup.trim() === oldLineup) return;
+
+      if (!confirm(`Are you sure you want to update all records with this lineup?`)) return;
+
+      try {
+        const { error } = await supabaseClient
+          .from('tickets')
+          .update({ LINEUP: newLineup.trim() })
+          .eq('LINEUP', oldLineup);
+
+        if (error) throw error;
+        alert(`✅ Successfully updated lineup!`);
+        await loadDatabaseData();
+      } catch (err) {
+        alert('❌ Error updating lineup: ' + err.message);
+      }
+    }
+
+    function getTourCount(name) {
+      const found = toursGrouped.find(t => t.name === name);
+      return found ? found.count : 0;
+    }
+
+    function generateTourId(tourName) {
+      if (!tourName) return '';
+      const slug = tourName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      return slug ? `tour-${slug}` : '';
+    }
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function escapeJsStr(str) {
+      return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      const currentParams = window.location.search;
+      if (currentParams) {
+        document.getElementById('backToEditorBtn').href = `edit_ticket_new.html${currentParams}`;
+        document.getElementById('backToCatBtn').href = `admin_categories.html${currentParams}`;
+        document.getElementById('backToMuseumBtn').href = `index.html${currentParams}`;
+      }
+
+      const isAuthenticated = await checkAuthSession();
+      if (isAuthenticated) {
+        await loadDatabaseData();
+      }
+    });
+  </script>
+</body>
+</html>
