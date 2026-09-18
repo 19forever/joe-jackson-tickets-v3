@@ -737,16 +737,16 @@
             </div>
           </div>
           <div class="form-group">
-  <label for="edit_CONTRIBUTOR">Donor / Contributor (CONTRIBUTOR)</label>
-  <input type="text" id="edit_CONTRIBUTOR" name="CONTRIBUTOR" list="donorsList" placeholder="e.g. Bert Bos, Netherlands">
-  <datalist id="donorsList"></datalist>
-  
-  <label style="display: flex; align-items: center; gap: 8px; margin-top: 6px; cursor: pointer; text-transform: none; font-size: 0.8rem;">
-    <input type="checkbox" id="edit_CONTRIBUTOR_CONSENT" name="CONTRIBUTOR_CONSENT" checked style="width: 16px; height: 16px; accent-color: var(--accent-yellow);">
-    <span>Public consent granted (Show donor name on museum card)</span>
-  </label>
-</div>
-      </div>
+            <label for="edit_CONTRIBUTOR">Donor / Contributor (CONTRIBUTOR)</label>
+            <input type="text" id="edit_CONTRIBUTOR" name="CONTRIBUTOR" list="donorsList" placeholder="e.g. Bert Bos, Netherlands">
+            <datalist id="donorsList"></datalist>
+            
+            <label style="display: flex; align-items: center; gap: 8px; margin-top: 6px; cursor: pointer; text-transform: none; font-size: 0.8rem;">
+              <input type="checkbox" id="edit_CONTRIBUTOR_CONSENT" name="CONTRIBUTOR_CONSENT" checked style="width: 16px; height: 16px; accent-color: var(--accent-yellow);">
+              <span>Public consent granted (Show donor name on museum card)</span>
+            </label>
+          </div>
+        </div>
       </div>
 
       <div class="form-panel">
@@ -791,7 +791,7 @@
 
       <div id="statusMessage"></div>
 
-            <div class="form-panel">
+      <div class="form-panel" style="margin-top: 20px;">
         <h3 style="display: flex; justify-content: space-between; align-items: center;">
           <span>📜 Audit Log (changes)</span>
           <span id="auditLogCount" style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">0 records</span>
@@ -800,14 +800,14 @@
           <!-- Sem se dynamicky načtou změny -->
         </div>
       </div>
-      
+        
     </form>
 
   </div>
 
   <!-- Načtení modulu pro klientskou kompresi obrázků -->
   <script src="image-compressor.js"></script>
-<script src="utils.js"></script>
+  <script src="utils.js"></script>
   <script src="auth.js"></script>
   <script>
     // URL vašeho Cloudflare Workeru pro ukládání do /scans/
@@ -828,32 +828,47 @@
 
     let SUBCATEGORY_MAP = {};
 
+    // Výchozí mapa podkategorií jako záloha
+    function getFallbackSubcategories() {
+      return {
+        'Tickets': ['Stub', 'Full Ticket', 'VIP Pass', 'E-Ticket', 'Press Ticket'],
+        'Passes': ['Backstage Pass', 'VIP Pass', 'Crew Pass', 'Guest Pass', 'Aftershow Pass', 'Photo Pass'],
+        'Programs': ['Tour Program', 'Souvenir Book', 'Press Kit', 'Flyer', 'Handbill'],
+        'Posters': ['Promo Poster', 'Gig Poster', 'Tour Poster', 'Billboard Poster'],
+        'T-shirts': ['Tour Shirt', 'Promo Shirt', 'Crew Shirt'],
+        'Tour Items': ['Laminate', 'Itinerary', 'Stage Setlist', 'Guitar Pick', 'Drumstick'],
+        'Memorabilia': ['Autograph', 'Ticket Envelope', 'Promo Photo', 'Badge / Pin', 'Vinyl / CD Item']
+      };
+    }
+
     // Dynamické načtení kategorií a podkategorií ze Supabase
     async function loadDynamicCategories() {
       try {
         const { data, error } = await supabaseClient.from('categories').select('*').order('name');
-        if (error) throw error;
+        
+        if (error || !data || data.length === 0) {
+          SUBCATEGORY_MAP = getFallbackSubcategories();
+          return;
+        }
 
         const katSelect = getField('KATEGORIE');
+        SUBCATEGORY_MAP = {};
+
         if (katSelect) {
           katSelect.innerHTML = '';
-          SUBCATEGORY_MAP = {};
-
-          (data || []).forEach(cat => {
+          data.forEach(cat => {
             const opt = document.createElement('option');
             opt.value = cat.name;
             opt.textContent = cat.name;
             katSelect.appendChild(opt);
 
             // Namapování podkategorií
-            SUBCATEGORY_MAP[cat.name] = (cat.subcategories || []).map(sub => ({
-              value: sub,
-              label: sub
-            }));
+            SUBCATEGORY_MAP[cat.name] = (cat.subcategories || []).map(sub => typeof sub === 'object' ? sub.value || sub.name : sub);
           });
         }
       } catch (err) {
-        console.error("Error loading categories from DB:", err);
+        console.warn("Error/missing categories table in DB, using fallback:", err);
+        SUBCATEGORY_MAP = getFallbackSubcategories();
       }
     }
     
@@ -865,15 +880,18 @@
       if (!katEl || !wrapper || !subkatEl) return;
 
       const mainCategory = katEl.value;
-      const options = SUBCATEGORY_MAP[mainCategory];
+      const options = SUBCATEGORY_MAP[mainCategory] || [];
 
       if (options && options.length > 0) {
         subkatEl.innerHTML = '<option value="">-- Select Subcategory --</option>';
-        options.forEach(opt => {
+        options.forEach(optVal => {
+          const val = typeof optVal === 'object' ? optVal.value : optVal;
+          const label = typeof optVal === 'object' ? optVal.label || optVal.value : optVal;
+          
           const el = document.createElement('option');
-          el.value = opt.value;
-          el.textContent = opt.label;
-          if (opt.value === selectedSubcategory) el.selected = true;
+          el.value = val;
+          el.textContent = label;
+          if (String(val).toLowerCase() === String(selectedSubcategory).toLowerCase()) el.selected = true;
           subkatEl.appendChild(el);
         });
         wrapper.style.display = 'flex';
@@ -1005,7 +1023,9 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (typeof supabaseClient === 'undefined') {
           throw new Error("Supabase client is not properly initialized in supabase-client.js!");
         }
-
+        
+        await loadDynamicCategories();
+        
         const { data, error } = await supabaseClient
           .from('tickets')
           .select('*')
@@ -1328,58 +1348,57 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     function loadRecordByIndex(index) {
-  if (!fullDbData || fullDbData.length === 0) return;
-  if (index < 0) index = 0;
-  if (index >= fullDbData.length) index = fullDbData.length - 1;
+      if (!fullDbData || fullDbData.length === 0) return;
+      if (index < 0) index = 0;
+      if (index >= fullDbData.length) index = fullDbData.length - 1;
 
-  currentRecordIndex = index;
-  const r = fullDbData[index] || {};
+      currentRecordIndex = index;
+      const r = fullDbData[index] || {};
 
-  const posInActive = activeIndices.indexOf(index);
-  document.getElementById('recordCounter').textContent = `Record ${posInActive + 1} of ${activeIndices.length}`;
-  document.getElementById('recordIdTitle').textContent = r.ID_MEMORABILIA || r.ID_LISTKU || `#${index + 1}`;
+      const posInActive = activeIndices.indexOf(index);
+      document.getElementById('recordCounter').textContent = `Record ${posInActive + 1} of ${activeIndices.length}`;
+      document.getElementById('recordIdTitle').textContent = r.ID_MEMORABILIA || r.ID_LISTKU || `#${index + 1}`;
 
-  const select = document.getElementById('recordSelect');
-  if (select) select.value = index;
+      const select = document.getElementById('recordSelect');
+      if (select) select.value = index;
 
-  document.getElementById('prevBtn').disabled = (posInActive <= 0);
-  document.getElementById('nextBtn').disabled = (posInActive >= activeIndices.length - 1);
+      document.getElementById('prevBtn').disabled = (posInActive <= 0);
+      document.getElementById('nextBtn').disabled = (posInActive >= activeIndices.length - 1);
 
-  fields.forEach(f => {
-    const el = getField(f);
-    if (el) {
-      let val = r[f] !== undefined && r[f] !== null ? String(r[f]).trim() : '';
+      fields.forEach(f => {
+        const el = getField(f);
+        if (el) {
+          let val = r[f] !== undefined && r[f] !== null ? String(r[f]).trim() : '';
 
-      // Ošetření pro Checkbox souhlasu donora
-      if (f === 'CONTRIBUTOR_CONSENT' && el.type === 'checkbox') {
-        // Výchozí hodnota je true (pokud v DB není výslovně false)
-        el.checked = r.CONTRIBUTOR_CONSENT !== false && r.CONTRIBUTOR_CONSENT !== 'false';
-      } 
-      // Ošetření pro výberovou kategorii (SELECT)
-      else if (f === 'KATEGORIE' && el.tagName === 'SELECT') {
-        const matchingOpt = Array.from(el.options).find(opt => 
-          opt.value.toLowerCase() === val.toLowerCase()
-        );
-        el.value = matchingOpt ? matchingOpt.value : (val || 'Tickets');
-        handleCategoryChange(r.SUBCATEGORY ? String(r.SUBCATEGORY).trim() : '');
-      } 
-      // Ostatní běžná textová/číselná pole (mimo SUBCATEGORY, kterou řeší handleCategoryChange)
-      else if (f !== 'SUBCATEGORY') {
-        el.value = val;
+          // Ošetření pro Checkbox souhlasu donora
+          if (f === 'CONTRIBUTOR_CONSENT' && el.type === 'checkbox') {
+            el.checked = r.CONTRIBUTOR_CONSENT !== false && r.CONTRIBUTOR_CONSENT !== 'false';
+          } 
+          // Ošetření pro výběrovou kategorii (SELECT)
+          else if (f === 'KATEGORIE' && el.tagName === 'SELECT') {
+            const matchingOpt = Array.from(el.options).find(opt => 
+              opt.value.toLowerCase() === val.toLowerCase()
+            );
+            el.value = matchingOpt ? matchingOpt.value : (val || 'Tickets');
+            handleCategoryChange(r.SUBCATEGORY ? String(r.SUBCATEGORY).trim() : '');
+          } 
+          // Ostatní běžná textová/číselná pole (mimo SUBCATEGORY)
+          else if (f !== 'SUBCATEGORY') {
+            el.value = val;
+          }
+        }
+      });
+
+      // Pomocné aktualizace výběrových dropdownů a náhledů
+      const existingSelect = document.getElementById('existingToursSelect');
+      if (existingSelect) {
+        existingSelect.value = r.TOUR_NAME ? r.TOUR_NAME.trim() : '';
       }
+
+      updateImageFromInput();
+      updateYtPreview();
+      populateLineupDropdown();
     }
-  });
-
-  // Pomocné aktualizace výběrových dropdownů a náhledů
-  const existingSelect = document.getElementById('existingToursSelect');
-  if (existingSelect) {
-    existingSelect.value = r.TOUR_NAME ? r.TOUR_NAME.trim() : '';
-  }
-
-  updateImageFromInput();
-  updateYtPreview();
-  populateLineupDropdown();
-}
 
     function navigateRecord(delta) {
       saveCurrentFormToMemory();
@@ -1414,24 +1433,21 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     function saveCurrentFormToMemory() {
-  if (currentRecordIndex < 0 || !fullDbData[currentRecordIndex]) return;
-  syncShowId();
+      if (currentRecordIndex < 0 || !fullDbData[currentRecordIndex]) return;
+      syncShowId();
 
-  fields.forEach(f => {
-    const el = getField(f);
-    if (el) {
-      // Ošetření pro Checkbox (uložení boolean hodnota true/false)
-      if (el.type === 'checkbox') {
-        fullDbData[currentRecordIndex][f] = el.checked;
-      } 
-      // Ošetření pro běžná textová/select políčka
-      else {
-        const val = el.value.trim();
-        fullDbData[currentRecordIndex][f] = val !== '' ? val : null;
-      }
+      fields.forEach(f => {
+        const el = getField(f);
+        if (el) {
+          if (el.type === 'checkbox') {
+            fullDbData[currentRecordIndex][f] = el.checked;
+          } else {
+            const val = el.value.trim();
+            fullDbData[currentRecordIndex][f] = val !== '' ? val : null;
+          }
+        }
+      });
     }
-  });
-}
 
     function updateImageFromInput() {
       const skenVal = getField('SOUBOR_SKEN')?.value || '';
@@ -1468,20 +1484,20 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     function updateYtPreview() {
-  const url = getField('YOUTUBE_URL')?.value.trim();
-  const prevEl = document.getElementById('ytPreview');
-  if (!prevEl) return;
-  
-  prevEl.innerHTML = '';
-  if (url) {
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    a.textContent = '▶️ Test YouTube Video Link';
-    prevEl.appendChild(a);
-  }
-}
+      const url = getField('YOUTUBE_URL')?.value.trim();
+      const prevEl = document.getElementById('ytPreview');
+      if (!prevEl) return;
+      
+      prevEl.innerHTML = '';
+      if (url) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = '▶️ Test YouTube Video Link';
+        prevEl.appendChild(a);
+      }
+    }
 
     function recalculateSongCount() {
       const val = getField('SETLIST')?.value || '';
@@ -1529,10 +1545,8 @@ window.addEventListener('DOMContentLoaded', async () => {
             currentScans.push(result.fileName);
             skenInput.value = currentScans.join(', ');
             
-            // 1. Zápis do pole a generování miniatury
             updateImageFromInput();
 
-            // 2. OKAMŽITÝ NÁHLED: Přepíšeme zdroj hlavního náhledu lokálním DataURL
             const previewImg = document.getElementById('previewImg');
             if (previewImg && compressedResult.dataUrl) {
               previewImg.src = compressedResult.dataUrl;
@@ -1552,7 +1566,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    // === SETLIST.FM INTEGRATION (Cloudflare Worker Proxy) ===
+    // === SETLIST.FM INTEGRATION ===
     function extractSetlistId(urlOrId) {
       if (!urlOrId) return '';
       const trimmed = urlOrId.trim();
@@ -1881,10 +1895,10 @@ window.addEventListener('DOMContentLoaded', async () => {
       } catch (err) {
         console.error("Scan folder error:", err);
         container.innerHTML = '';
-const errDiv = document.createElement('div');
-errDiv.style.cssText = 'font-size: 0.75rem; color: #f87171; padding: 8px; background: rgba(220,38,38,0.1); border-radius: 4px; line-height: 1.4;';
-errDiv.textContent = `❌ ${err.message}`;
-container.appendChild(errDiv);
+        const errDiv = document.createElement('div');
+        errDiv.style.cssText = 'font-size: 0.75rem; color: #f87171; padding: 8px; background: rgba(220,38,38,0.1); border-radius: 4px; line-height: 1.4;';
+        errDiv.textContent = `❌ ${err.message}`;
+        container.appendChild(errDiv);
         showStatus('❌ Failed to scan /scans/ folder: ' + err.message, 'red');
       } finally {
         if (scanBtn) scanBtn.disabled = false;
@@ -2089,100 +2103,96 @@ container.appendChild(errDiv);
       }
     }
 
-// Načtení posledních změn ze všech záznamů
-async function loadGlobalAuditLogs() {
-  const container = document.getElementById('auditLogContainer');
-  const countBadge = document.getElementById('auditLogCount');
-  if (!container) return;
+    // Načtení posledních změn ze všech záznamů
+    async function loadGlobalAuditLogs() {
+      const container = document.getElementById('auditLogContainer');
+      const countBadge = document.getElementById('auditLogCount');
+      if (!container) return;
 
-  container.innerHTML = '<div style="font-size: 0.8rem; color: var(--accent-yellow);">⏳ Reading history of changes...</div>';
+      container.innerHTML = '<div style="font-size: 0.8rem; color: var(--accent-yellow);">⏳ Reading history of changes...</div>';
 
-  try {
-    const { data: logs, error } = await supabaseClient
-      .from('audit_logs')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(100);
+      try {
+        const { data: logs, error } = await supabaseClient
+          .from('audit_logs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100);
 
-    if (error) throw error;
+        if (error) throw error;
 
-    if (countBadge) countBadge.textContent = `${logs ? logs.length : 0} last changes`;
+        if (countBadge) countBadge.textContent = `${logs ? logs.length : 0} last changes`;
 
-    if (!logs || logs.length === 0) {
-      container.innerHTML = '<div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">No edit changes so far.</div>';
-      return;
-    }
+        if (!logs || logs.length === 0) {
+          container.innerHTML = '<div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">No edit changes so far.</div>';
+          return;
+        }
 
-    container.innerHTML = '';
+        container.innerHTML = '';
 
-    logs.forEach(log => {
-      const logItem = document.createElement('div');
-      logItem.style.cssText = 'background: #0d0d0d; border: 1px solid var(--border-color-light); border-radius: 6px; padding: 8px 10px; font-size: 0.78rem; text-align: left;';
+        logs.forEach(log => {
+          const logItem = document.createElement('div');
+          logItem.style.cssText = 'background: #0d0d0d; border: 1px solid var(--border-color-light); border-radius: 6px; padding: 8px 10px; font-size: 0.78rem; text-align: left;';
 
-      const dateObj = new Date(log.created_at);
-      const formattedDate = dateObj.toLocaleString('cs-CZ', { dateStyle: 'short', timeStyle: 'short' });
-      
-      const user = log.user_email || log.user_id || 'Unknown user';
-      const recId = log.record_id ? `#${log.record_id}` : '';
+          const dateObj = new Date(log.created_at);
+          const formattedDate = dateObj.toLocaleString('cs-CZ', { dateStyle: 'short', timeStyle: 'short' });
+          
+          const user = log.user_email || log.user_id || 'Unknown user';
+          const recId = log.record_id ? `#${log.record_id}` : '';
 
-      const oldData = log.old_data || {};
-      const newData = log.new_data || {};
+          const oldData = log.old_data || {};
+          const newData = log.new_data || {};
 
-      let changesList = [];
+          let changesList = [];
 
-      if (log.action === 'INSERT') {
-        changesList.push('<span style="color: #4ade80; font-weight: 600;">➕ New record created</span>');
-      } else if (log.action === 'DELETE') {
-        changesList.push('<span style="color: #ef4444; font-weight: 600;">🗑️ Record deleted</span>');
-      } else {
-        // Porovnání old_data vs new_data a nalezení konkrétních změn
-        const allKeys = new Set([...Object.keys(oldData), ...Object.keys(newData)]);
+          if (log.action === 'INSERT') {
+            changesList.push('<span style="color: #4ade80; font-weight: 600;">➕ New record created</span>');
+          } else if (log.action === 'DELETE') {
+            changesList.push('<span style="color: #ef4444; font-weight: 600;">🗑️ Record deleted</span>');
+          } else {
+            const allKeys = new Set([...Object.keys(oldData), ...Object.keys(newData)]);
 
-        allKeys.forEach(key => {
-          // Ignorujeme systémové klíče nebo časová razítka, pokud v tabulce jsou
-          if (['created_at', 'updated_at'].includes(key)) return;
+            allKeys.forEach(key => {
+              if (['created_at', 'updated_at'].includes(key)) return;
 
-          const oldVal = oldData[key];
-          const newVal = newData[key];
+              const oldVal = oldData[key];
+              const newVal = newData[key];
 
-          // Kontrola, zda se hodnota skutečně změnila
-          if (String(oldVal ?? '') !== String(newVal ?? '')) {
-            const formatVal = (v) => (v === null || v === undefined || v === '') ? '<i>empty</i>' : v;
-            changesList.push(
-              `<span style="color: var(--text-muted);">${key}:</span> ` +
-              `<span style="color: #ef4444; text-decoration: line-through;">${formatVal(oldVal)}</span> ➔ ` +
-              `<span style="color: #4ade80;">${formatVal(newVal)}</span>`
-            );
+              if (String(oldVal ?? '') !== String(newVal ?? '')) {
+                const formatVal = (v) => (v === null || v === undefined || v === '') ? '<i>empty</i>' : v;
+                changesList.push(
+                  `<span style="color: var(--text-muted);">${key}:</span> ` +
+                  `<span style="color: #ef4444; text-decoration: line-through;">${formatVal(oldVal)}</span> ➔ ` +
+                  `<span style="color: #4ade80;">${formatVal(newVal)}</span>`
+                );
+              }
+            });
           }
+
+          const diffHtml = changesList.length > 0 
+            ? changesList.join(' | ') 
+            : `<span style="color: var(--text-muted);">${log.action || 'No field changes detected'}</span>`;
+
+          logItem.innerHTML = `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 3px;">
+              <div>
+                <span style="color: var(--accent-yellow); font-weight: 600;">👤 ${user}</span>
+                <span style="color: #888; font-size: 0.72rem; margin-left: 6px;">${recId}</span>
+              </div>
+              <span style="color: var(--text-muted); font-size: 0.72rem;">⏱️ ${formattedDate}</span>
+            </div>
+            <div style="line-height: 1.35; word-break: break-word;">
+              ${diffHtml}
+            </div>
+          `;
+
+          container.appendChild(logItem);
         });
+
+      } catch (err) {
+        console.error('Error loading audit_logs:', err);
+        container.innerHTML = `<div style="font-size: 0.78rem; color: #f87171;">❌ Unable to load history: ${err.message}</div>`;
       }
-
-      const diffHtml = changesList.length > 0 
-        ? changesList.join(' | ') 
-        : `<span style="color: var(--text-muted);">${log.action || 'No field changes detected'}</span>`;
-
-      logItem.innerHTML = `
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 3px;">
-          <div>
-            <span style="color: var(--accent-yellow); font-weight: 600;">👤 ${user}</span>
-            <span style="color: #888; font-size: 0.72rem; margin-left: 6px;">${recId}</span>
-          </div>
-          <span style="color: var(--text-muted); font-size: 0.72rem;">⏱️ ${formattedDate}</span>
-        </div>
-        <div style="line-height: 1.35; word-break: break-word;">
-          ${diffHtml}
-        </div>
-      `;
-
-      container.appendChild(logItem);
-    });
-
-  } catch (err) {
-    console.error('Error loading audit_logs:', err);
-    container.innerHTML = `<div style="font-size: 0.78rem; color: #f87171;">❌ Unable to load history: ${err.message}</div>`;
-  }
-}
-    
+    }
   </script>
 </body>
 </html>
