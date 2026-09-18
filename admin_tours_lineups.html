@@ -34,14 +34,16 @@
     .tab-btn.active { background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); }
 
     .card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
-    input { background: #0d0d0d; border: 1px solid #333; color: #fff; padding: 8px 12px; border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 0.85rem; outline: none; }
-    input:focus { border-color: var(--accent-yellow); }
+    input, textarea { background: #0d0d0d; border: 1px solid #333; color: #fff; padding: 8px 12px; border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 0.85rem; outline: none; font-family: inherit; }
+    input:focus, textarea:focus { border-color: var(--accent-yellow); }
+    textarea { resize: vertical; min-height: 65px; }
     
     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
+    th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; vertical-align: top; }
     th { color: var(--accent-yellow); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
     tr:hover { background: rgba(255,255,255,0.02); }
-    .badge { background: #222; border: 1px solid #333; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; color: #aaa; }
+    .badge { background: #222; border: 1px solid #333; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; color: #aaa; white-space: nowrap; }
+    .edit-actions { display: flex; gap: 6px; justify-content: flex-end; }
   </style>
 </head>
 <body>
@@ -100,6 +102,8 @@
     let rawTicketsData = [];
     let toursGrouped = [];
     let lineupsGrouped = [];
+    let editingTourIdx = -1;
+    let editingLineupIdx = -1;
 
     async function checkAuthSession() {
       const modal = document.getElementById('gateModal');
@@ -153,7 +157,6 @@
       document.getElementById('lineupsTab').style.display = tab === 'lineups' ? 'block' : 'none';
     }
 
-    // NAČTENÍ VŠECH TICKETŮ A GROUPING PODLE TOUR / LINEUP
     async function loadDatabaseData() {
       try {
         const { data, error } = await supabaseClient
@@ -218,26 +221,50 @@
         <table>
           <thead>
             <tr>
-              <th>Tour Name</th>
-              <th>Tour ID</th>
-              <th>Records</th>
-              <th style="text-align: right;">Actions</th>
+              <th style="width: 40%;">Tour Name</th>
+              <th style="width: 30%;">Tour ID</th>
+              <th style="width: 10%;">Records</th>
+              <th style="text-align: right; width: 20%;">Actions</th>
             </tr>
           </thead>
           <tbody>
       `;
 
-      toursGrouped.forEach(item => {
-        html += `
-          <tr>
-            <td><strong>${escapeHtml(item.name)}</strong></td>
-            <td><code>${escapeHtml(item.tourId || '-')}</code></td>
-            <td><span class="badge">${item.count} items</span></td>
-            <td style="text-align: right;">
-              <button class="btn" onclick="renameTour('${escapeJsStr(item.name)}', '${escapeJsStr(item.tourId)}')">✏️ Rename / Edit ID</button>
-            </td>
-          </tr>
-        `;
+      toursGrouped.forEach((item, idx) => {
+        if (editingTourIdx === idx) {
+          // INLINE EDITING REŽIM PRO TOUR
+          html += `
+            <tr style="background: rgba(245, 158, 11, 0.05);">
+              <td>
+                <input type="text" id="edit_tour_name_${idx}" value="${escapeHtml(item.name)}">
+              </td>
+              <td>
+                <input type="text" id="edit_tour_id_${idx}" value="${escapeHtml(item.tourId)}">
+              </td>
+              <td><span class="badge">${item.count} items</span></td>
+              <td>
+                <div class="edit-actions">
+                  <button class="btn btn-green" onclick="saveTourEdit(${idx})">💾 Save</button>
+                  <button class="btn" onclick="cancelTourEdit()">❌ Cancel</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        } else {
+          // BĚŽNÝ REŽIM
+          html += `
+            <tr>
+              <td><strong>${escapeHtml(item.name)}</strong></td>
+              <td><code>${escapeHtml(item.tourId || '-')}</code></td>
+              <td><span class="badge">${item.count} items</span></td>
+              <td>
+                <div class="edit-actions">
+                  <button class="btn" onclick="enableTourEdit(${idx})">✏️ Edit</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }
       });
 
       html += '</tbody></table>';
@@ -255,95 +282,136 @@
         <table>
           <thead>
             <tr>
-              <th>Lineup Description</th>
-              <th>Records</th>
-              <th style="text-align: right;">Actions</th>
+              <th style="width: 70%;">Lineup Description</th>
+              <th style="width: 10%;">Records</th>
+              <th style="text-align: right; width: 20%;">Actions</th>
             </tr>
           </thead>
           <tbody>
       `;
 
-      lineupsGrouped.forEach(item => {
-        html += `
-          <tr>
-            <td><strong>${escapeHtml(item.lineup)}</strong></td>
-            <td><span class="badge">${item.count} items</span></td>
-            <td style="text-align: right;">
-              <button class="btn" onclick="renameLineup('${escapeJsStr(item.lineup)}')">✏️ Rename</button>
-            </td>
-          </tr>
-        `;
+      lineupsGrouped.forEach((item, idx) => {
+        if (editingLineupIdx === idx) {
+          // INLINE EDITING REŽIM PRO LINEUP (Textarea pro pohodlnou editaci)
+          html += `
+            <tr style="background: rgba(245, 158, 11, 0.05);">
+              <td>
+                <textarea id="edit_lineup_${idx}">${escapeHtml(item.lineup)}</textarea>
+              </td>
+              <td><span class="badge">${item.count} items</span></td>
+              <td>
+                <div class="edit-actions">
+                  <button class="btn btn-green" onclick="saveLineupEdit(${idx})">💾 Save</button>
+                  <button class="btn" onclick="cancelLineupEdit()">❌ Cancel</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        } else {
+          // BĚŽNÝ REŽIM
+          html += `
+            <tr>
+              <td><strong>${escapeHtml(item.lineup)}</strong></td>
+              <td><span class="badge">${item.count} items</span></td>
+              <td>
+                <div class="edit-actions">
+                  <button class="btn" onclick="enableLineupEdit(${idx})">✏️ Edit</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }
       });
 
       html += '</tbody></table>';
       container.innerHTML = html;
     }
 
-    // PŘEJMENOVÁNÍ TOUR V AŽ VŠECH ZÁZNAMECH
-    async function renameTour(oldName, oldTourId) {
-      const newName = prompt(`Rename Tour "${oldName}" across ALL ${getTourCount(oldName)} records to:`, oldName);
-      if (!newName || newName.trim() === '') return;
+    // SPRAVA EDITACE TOUR
+    function enableTourEdit(idx) {
+      editingTourIdx = idx;
+      renderToursTable();
+    }
 
-      const newTourId = prompt(`Tour ID for "${newName.trim()}":`, oldTourId || generateTourId(newName.trim()));
-      if (newTourId === null) return;
+    function cancelTourEdit() {
+      editingTourIdx = -1;
+      renderToursTable();
+    }
 
-      if (!confirm(`Are you sure you want to update all records with Tour "${oldName}" to "${newName.trim()}"?`)) return;
+    async function saveTourEdit(idx) {
+      const oldItem = toursGrouped[idx];
+      const newName = document.getElementById(`edit_tour_name_${idx}`).value.trim();
+      const newTourId = document.getElementById(`edit_tour_id_${idx}`).value.trim();
+
+      if (!newName) {
+        alert("Tour name cannot be empty!");
+        return;
+      }
+
+      if (!confirm(`Are you sure you want to update all ${oldItem.count} records with Tour "${oldItem.name}" to "${newName}"?`)) return;
 
       try {
         const { error } = await supabaseClient
           .from('tickets')
           .update({ 
-            TOUR_NAME: newName.trim(), 
-            TOUR_ID: newTourId.trim() || null 
+            TOUR_NAME: newName, 
+            TOUR_ID: newTourId || null 
           })
-          .eq('TOUR_NAME', oldName);
+          .eq('TOUR_NAME', oldItem.name);
 
         if (error) throw error;
-        alert(`✅ Successfully updated records!`);
+        
+        editingTourIdx = -1;
         await loadDatabaseData();
       } catch (err) {
         alert('❌ Error updating tour: ' + err.message);
       }
     }
 
-    // PŘEJMENOVÁNÍ LINEUP V AŽ VŠECH ZÁZNAMECH
-    async function renameLineup(oldLineup) {
-      const newLineup = prompt(`Rename Lineup across ALL records to:`, oldLineup);
-      if (!newLineup || newLineup.trim() === '' || newLineup.trim() === oldLineup) return;
+    // SPRAVA EDITACE LINEUP
+    function enableLineupEdit(idx) {
+      editingLineupIdx = idx;
+      renderLineupsTable();
+    }
 
-      if (!confirm(`Are you sure you want to update all records with this lineup?`)) return;
+    function cancelLineupEdit() {
+      editingLineupIdx = -1;
+      renderLineupsTable();
+    }
+
+    async function saveLineupEdit(idx) {
+      const oldItem = lineupsGrouped[idx];
+      const newLineup = document.getElementById(`edit_lineup_${idx}`).value.trim();
+
+      if (!newLineup) {
+        alert("Lineup cannot be empty!");
+        return;
+      }
+
+      if (newLineup === oldItem.lineup) {
+        cancelLineupEdit();
+        return;
+      }
+
+      if (!confirm(`Are you sure you want to update this lineup across ALL ${oldItem.count} records in database?`)) return;
 
       try {
         const { error } = await supabaseClient
           .from('tickets')
-          .update({ LINEUP: newLineup.trim() })
-          .eq('LINEUP', oldLineup);
+          .update({ LINEUP: newLineup })
+          .eq('LINEUP', oldItem.lineup);
 
         if (error) throw error;
-        alert(`✅ Successfully updated lineup!`);
+
+        editingLineupIdx = -1;
         await loadDatabaseData();
       } catch (err) {
         alert('❌ Error updating lineup: ' + err.message);
       }
     }
 
-    function getTourCount(name) {
-      const found = toursGrouped.find(t => t.name === name);
-      return found ? found.count : 0;
-    }
-
-    function generateTourId(tourName) {
-      if (!tourName) return '';
-      const slug = tourName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-      return slug ? `tour-${slug}` : '';
-    }
-
     function escapeHtml(str) {
       return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    }
-
-    function escapeJsStr(str) {
-      return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
