@@ -1970,20 +1970,18 @@ a[href^="mailto:"]:hover {
     display: inline-block !important;
     font-style: normal !important;
     position: relative !important;
-    left: -48px !important; /* Ořízne pouze slovo "Donor:" a nechá ikonu panáčka i jméno */
+    left: -48px !important;
     color: var(--text-muted) !important;
   }
 
   .tickets-container.grid-view .card-donor::before {
-    display: none !important; /* Odstraní jakékoliv vkládané "by" */
+    display: none !important;
   }
 
-  /* 1. Schování odznaku kategorie (TICKET/PASS) v mobilní mřížce */
   .tickets-container.grid-view .category-badge {
     display: none !important;
   }
 
-  /* 2. Zjednodušení setlist tlačítka (schováme notu, necháme jen číslo) */
   .tickets-container.grid-view .badge-setlist,
   .tickets-container.grid-view .btn-action-setlist {
     min-width: 26px !important;
@@ -1991,7 +1989,6 @@ a[href^="mailto:"]:hover {
     font-size: 0.72rem !important;
   }
 
-  /* Schováme emoji/text noty uvnitř tlačítka setlistu */
   .tickets-container.grid-view .badge-setlist::first-letter,
   .tickets-container.grid-view .btn-action-setlist::first-letter {
     font-size: 0 !important;
@@ -2006,7 +2003,6 @@ a[href^="mailto:"]:hover {
     box-sizing: border-box !important;
   }
 
-  /* Všechna políčka a řádky ve formuláři pod sebe */
   .form-row, 
   .form-group-inline {
     flex-direction: column !important;
@@ -2023,7 +2019,6 @@ a[href^="mailto:"]:hover {
     box-sizing: border-box !important;
   }
 
-  /* Tlačítka akcí v editoru přehledně pod sebe / do mřížky */
   .editor-actions, 
   .editor-top-bar {
     display: flex !important;
@@ -2033,12 +2028,17 @@ a[href^="mailto:"]:hover {
 
   .editor-actions button, 
   .editor-top-bar button {
-    flex: 1 1 calc(50% - 4px) !important; /* Tlačítka 2 vedle sebe na mobilu */
+    flex: 1 1 calc(50% - 4px) !important;
     height: 36px !important;
     font-size: 0.78rem !important;
   }
+} /* <--- ZDE SE SPRÁVNĚ UATVÍRÁ MOBILNÍ MEDIA QUERY */
 
-  /* Přenastavení křížku Viewer.js v pravém horním rohu na Back button */
+/* ==========================================
+   GLOBAL VIEWER OVERRIDES (Platí pro mobil i desktop)
+   ========================================== */
+
+/* Přenastavení křížku Viewer.js v pravém horním rohu na Back button */
 .viewer-button.viewer-close {
   top: 16px !important;
   right: 20px !important;
@@ -2053,7 +2053,6 @@ a[href^="mailto:"]:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
 }
 
-/* Skrytí původní ikony křížku a vložení textu */
 .viewer-button.viewer-close::before {
   content: "◄ Back to Museum" !important;
   font-family: var(--font-primary, -apple-system, sans-serif) !important;
@@ -2069,7 +2068,6 @@ a[href^="mailto:"]:hover {
   line-height: 1 !important;
 }
 
-/* Hover stav */
 .viewer-button.viewer-close:hover {
   background-color: var(--accent-yellow, #f59e0b) !important;
 }
@@ -2077,7 +2075,7 @@ a[href^="mailto:"]:hover {
 .viewer-button.viewer-close:hover::before {
   color: #000000 !important;
 }
-  
+
 /* Tlačítko Back to Museum ve spodní liště Viewer.js */
 .viewer-back-btn {
   display: inline-flex !important;
@@ -2103,5 +2101,3 @@ a[href^="mailto:"]:hover {
   color: #000000 !important;
   box-shadow: 0 0 8px rgba(245, 158, 11, 0.4) !important;
 }
-  
-  
