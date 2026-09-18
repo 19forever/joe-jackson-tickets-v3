@@ -1022,6 +1022,7 @@ function checkOnThisDayAnniversary() {
   const currentMonth = today.getMonth();
 
   const anniversaries = allTickets.filter(t => {
+    if (getTicketCategory(t) !== 'Tickets') return false;
     if (!isValidValue(t.DATUM)) return false;
     const parts = t.DATUM.split('-');
     if (parts.length !== 3) return false;
