@@ -1511,45 +1511,56 @@ header {
   box-sizing: border-box !important;
 }
 
-/* Viewer.js Customization */
+/* Viewer.js Customization - Tlačítko Back v liště */
+.viewer-toolbar > li[data-viewer-action="close"],
 .viewer-toolbar > li[data-viewer-action="closeBtn"],
+.viewer-toolbar > li.viewer-close,
 .viewer-toolbar > li.viewer-closeBtn {
-  background-color: var(--accent-yellow-glow);
-  border: 1px solid var(--accent-yellow);
-  border-radius: 4px;
+  background-color: var(--accent-yellow-glow, rgba(245, 158, 11, 0.15)) !important;
+  border: 1px solid var(--accent-yellow, #f59e0b) !important;
+  border-radius: 4px !important;
   width: auto !important;
-  min-width: 65px;
-  height: 24px;
-  margin-left: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  min-width: 75px !important;
+  height: 28px !important;
+  margin-left: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  position: relative !important;
+  font-size: 0 !important; /* Schová původní systémovou ikonku Viewer.js */
 }
 
+/* Náhrada za text "✖ Back" nebo "◄ Back" */
+.viewer-toolbar > li[data-viewer-action="close"]::before,
 .viewer-toolbar > li[data-viewer-action="closeBtn"]::before,
+.viewer-toolbar > li.viewer-close::before,
 .viewer-toolbar > li.viewer-closeBtn::before {
-  content: "✖ Back";
-  font-family: var(--font-primary, -apple-system, sans-serif);
-  font-size: 11px;
-  font-weight: 700;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  width: 100%;
-  padding: 0 8px;
-  white-space: nowrap;
+  content: "◄ Back" !important; /* Nebo "✖ Back" podle preferencí */
+  font-family: var(--font-primary, -apple-system, sans-serif) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100% !important;
+  width: 100% !important;
+  padding: 0 10px !important;
+  white-space: nowrap !important;
 }
 
+/* Hover efekt */
+.viewer-toolbar > li[data-viewer-action="close"]:hover,
 .viewer-toolbar > li[data-viewer-action="closeBtn"]:hover,
+.viewer-toolbar > li.viewer-close:hover,
 .viewer-toolbar > li.viewer-closeBtn:hover {
-  background-color: var(--accent-yellow) !important;
-  color: #000000 !important;
+  background-color: var(--accent-yellow, #f59e0b) !important;
 }
 
+.viewer-toolbar > li[data-viewer-action="close"]:hover::before,
 .viewer-toolbar > li[data-viewer-action="closeBtn"]:hover::before,
+.viewer-toolbar > li.viewer-close:hover::before,
 .viewer-toolbar > li.viewer-closeBtn:hover::before {
-  color: #000000;
+  color: #000000 !important;
 }
 
 .scan-count-badge {
