@@ -941,31 +941,47 @@
       window.location.href = 'index.html';
     }
     
-    window.addEventListener('DOMContentLoaded', async () => {
-      if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
-        supabaseClient.auth.onAuthStateChange(async (event, session) => {
-          if (event === 'PASSWORD_RECOVERY') {
-            const newPassword = prompt("Please enter your new admin password:");
-            if (newPassword && newPassword.trim() !== '') {
-              const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-              if (error) {
-                showStatus('❌ Error updating password: ' + error.message, 'red');
-              } else {
-                showStatus('✅ Password updated successfully! You are logged in.', 'green');
-              }
-            }
+window.addEventListener('DOMContentLoaded', async () => {
+  // 1. Nastavení odkazů zpět do muzea podle akt. parametrů v URL
+  const currentParams = window.location.search;
+  if (currentParams) {
+    const backBtn = document.getElementById('backToMuseumBtn');
+    if (backBtn) {
+      backBtn.href = `index.html${currentParams}`;
+    }
+
+    const modalBackBtn = document.querySelector('.modal-overlay a[href="index.html"]') || document.querySelector('a[href="index.html"]');
+    if (modalBackBtn) {
+      modalBackBtn.href = `index.html${currentParams}`;
+    }
+  }
+
+  // 2. Auth logika pro Supabase
+  if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        const newPassword = prompt("Please enter your new admin password:");
+        if (newPassword && newPassword.trim() !== '') {
+          const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+          if (error) {
+            showStatus('❌ Error updating password: ' + error.message, 'red');
+          } else {
+            showStatus('✅ Password updated successfully! You are logged in.', 'green');
           }
-        });
-      }
-
-      const isAuthenticated = await checkAuthSession();
-
-      if (isAuthenticated) {
-        await loadDataFromSupabase();
-        await loadGlobalAuditLogs();
+        }
       }
     });
+  }
 
+  // 3. Kontrola přihlášení a načtení dat
+  const isAuthenticated = await checkAuthSession();
+
+  if (isAuthenticated) {
+    await loadDataFromSupabase();
+    await loadGlobalAuditLogs();
+  }
+});
+    
     // LOAD DATA FROM SUPABASE
     async function loadDataFromSupabase() {
       showStatus('🔄 Loading data from Supabase...', 'yellow');
