@@ -632,15 +632,9 @@
           </div>
           <div class="form-group">
             <label for="edit_KATEGORIE">Category (KATEGORIE)</label>
-            <select id="edit_KATEGORIE" name="KATEGORIE" onchange="handleCategoryChange()">
-              <option value="Tickets">Tickets</option>
-              <option value="Passes">Passes</option>
-              <option value="Programs">Programs</option>
-              <option value="Posters">Posters</option>
-              <option value="T-shirts">T-shirts</option>
-              <option value="Tour Items">Tour Items</option>
-              <option value="Memorabilia">Memorabilia</option>
-            </select>
+           <select id="edit_KATEGORIE" name="KATEGORIE" onchange="handleCategoryChange()">
+               <!-- Dynamicky naplní JavaScript ze Supabase podle display_order -->
+           </select>
           </div>
           <div class="form-group" id="subcategoryWrapper" style="display: none;">
             <label for="edit_SUBCATEGORY">Subcategory (SUBCATEGORY)</label>
@@ -843,35 +837,59 @@
     }
 
     // Dynamické načtení kategorií a podkategorií ze Supabase
-    async function loadDynamicCategories() {
-      try {
-        const { data, error } = await supabaseClient.from('categories').select('*').order('name');
-        
-        if (error || !data || data.length === 0) {
-          SUBCATEGORY_MAP = getFallbackSubcategories();
-          return;
-        }
+    // Dynamické načtení kategorií a podkategorií ze Supabase podle určeného pořadí (display_order)
+async function loadDynamicCategories() {
+  const katSelect = getField('KATEGORIE');
 
-        const katSelect = getField('KATEGORIE');
-        SUBCATEGORY_MAP = {};
+  try {
+    const { data, error } = await supabaseClient
+      .from('categories')
+      .select('*')
+      .order('display_order', { ascending: true, nullsFirst: false })
+      .order('id', { ascending: true });
 
-        if (katSelect) {
-          katSelect.innerHTML = '';
-          data.forEach(cat => {
-            const opt = document.createElement('option');
-            opt.value = cat.name;
-            opt.textContent = cat.name;
-            katSelect.appendChild(opt);
-
-            // Namapování podkategorií
-            SUBCATEGORY_MAP[cat.name] = (cat.subcategories || []).map(sub => typeof sub === 'object' ? sub.value || sub.name : sub);
-          });
-        }
-      } catch (err) {
-        console.warn("Error/missing categories table in DB, using fallback:", err);
-        SUBCATEGORY_MAP = getFallbackSubcategories();
-      }
+    if (error || !data || data.length === 0) {
+      SUBCATEGORY_MAP = getFallbackSubcategories();
+      populateCategorySelectFromMap();
+      return;
     }
+
+    SUBCATEGORY_MAP = {};
+
+    if (katSelect) {
+      katSelect.innerHTML = '';
+      data.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.name;
+        opt.textContent = cat.name;
+        katSelect.appendChild(opt);
+
+        // Namapování podkategorií
+        SUBCATEGORY_MAP[cat.name] = (cat.subcategories || []).map(sub => 
+          typeof sub === 'object' ? (sub.value || sub.name) : sub
+        );
+      });
+    }
+  } catch (err) {
+    console.warn("Chyba při načítání kategorií z DB, používám fallback:", err);
+    SUBCATEGORY_MAP = getFallbackSubcategories();
+    populateCategorySelectFromMap();
+  }
+}
+
+// Pomocná funkce pro naplnění rozevírací nabídky ze záložní mapy (pokud selže DB)
+function populateCategorySelectFromMap() {
+  const katSelect = getField('KATEGORIE');
+  if (!katSelect) return;
+
+  katSelect.innerHTML = '';
+  Object.keys(SUBCATEGORY_MAP).forEach(catName => {
+    const opt = document.createElement('option');
+    opt.value = catName;
+    opt.textContent = catName;
+    katSelect.appendChild(opt);
+  });
+}
     
     function handleCategoryChange(selectedSubcategory = '') {
       const katEl = getField('KATEGORIE');
