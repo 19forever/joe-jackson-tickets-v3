@@ -173,7 +173,7 @@ function formatLocationText(t) {
 
 let allTickets = [];
 let filteredTickets = [];
-let dbCategories = []; // Dynamicky načtené kategorie ze Supabase
+let publicCategoriesList = []; // Dynamicky načtené kategorie ze Supabase
 let currentLayout = 'grid';
 
 const savedPage = safeGetStorage('jj_museum_page');
@@ -222,8 +222,8 @@ function resolveCategoryFromUrl(catParam) {
   if (c === 'videos' || c === 'video' || c === 'youtube') return 'Videos';
   if (c === 'all' || c === 'vše' || c === 'vse') return 'ALL';
 
-  if (Array.isArray(dbCategories) && dbCategories.length > 0) {
-    const matched = dbCategories.find(cat => cat.name.toLowerCase() === c);
+  if (Array.isArray(publicCategoriesList) && publicCategoriesList.length > 0) {
+    const matched = publicCategoriesList.find(cat => cat.name.toLowerCase() === c);
     if (matched) return matched.name;
   }
 
@@ -419,6 +419,39 @@ function initTheme() {
   }
 }
 
+async function loadDataFromSupabase() {
+  try {
+    if (typeof supabaseClient === 'undefined') {
+      throw new Error("Supabase klient není načten!");
+    }
+
+    const [ticketsRes, categoriesRes] = await Promise.all([
+      supabaseClient.from('tickets').select('*'),
+      supabaseClient.from('categories').select('*').order('display_order', { ascending: true, nullsFirst: false })
+    ]);
+
+    if (ticketsRes.error) throw ticketsRes.error;
+
+    if (!categoriesRes.error && categoriesRes.data) {
+      publicCategoriesList = categoriesRes.data;
+    }
+
+    if (!ticketsRes.data || ticketsRes.data.length === 0) {
+      console.warn("Databáze Supabase neobsahuje žádné řádky.");
+      return;
+    }
+
+    allTickets = shuffleArray(ticketsRes.data);
+    updateYearBadge();
+    populateFilters();
+    initializeStateFromUrlAndStorage();
+    filterData(true);
+    checkOnThisDayAnniversary();
+  } catch (err) {
+    console.error("Chyba při načítání ze Supabase:", err.message);
+  }
+}
+
 // INICIALIZACE PO NAČTENÍ DOM
 window.addEventListener('DOMContentLoaded', () => {
   initTheme();
@@ -437,39 +470,6 @@ window.addEventListener('DOMContentLoaded', () => {
     if (adminEditorLink) adminEditorLink.style.display = 'none';
     if (adminLockBtn) adminLockBtn.style.display = 'none';
     if (adminLoginLink) adminLoginLink.style.display = 'inline-flex';
-  }
-
-  async function loadDataFromSupabase() {
-    try {
-      if (typeof supabaseClient === 'undefined') {
-        throw new Error("Supabase klient není načten! Zkontrolujte import supabase-client.js v HTML.");
-      }
-
-      // Načtení lístků i spravovaných kategorií paralelně
-      const [ticketsRes, categoriesRes] = await Promise.all([
-        supabaseClient.from('tickets').select('*'),
-        supabaseClient.from('categories').select('*').order('name')
-      ]);
-
-      if (ticketsRes.error) throw ticketsRes.error;
-
-      const data = ticketsRes.data;
-      dbCategories = categoriesRes.data || [];
-
-      if (!data || data.length === 0) {
-        console.warn("Databáze Supabase je prázdná nebo tabulka 'tickets' neobsahuje žádné řádky.");
-        return;
-      }
-
-      allTickets = shuffleArray(data);
-      updateYearBadge();
-      populateFilters();
-      initializeStateFromUrlAndStorage();
-      filterData(true);
-      checkOnThisDayAnniversary();
-    } catch (err) {
-      console.error("Chyba při načítání ze Supabase:", err.message);
-    }
   }
 
   loadDataFromSupabase();
@@ -942,9 +942,8 @@ function getTicketCategory(t) {
   if (t.KATEGORIE && t.KATEGORIE.trim()) {
     const cat = t.KATEGORIE.trim().toLowerCase();
 
-    // Pokusíme se najít přesnou shodu s dynamickou kategorií v DB
-    if (Array.isArray(dbCategories) && dbCategories.length > 0) {
-      const match = dbCategories.find(c => c.name.toLowerCase() === cat);
+    if (Array.isArray(publicCategoriesList) && publicCategoriesList.length > 0) {
+      const match = publicCategoriesList.find(c => c.name.toLowerCase() === cat);
       if (match) return match.name;
     }
 
@@ -1503,52 +1502,44 @@ function renderCategoryTabs(matchesBeforeCategoryFilter) {
 
   const isAdmin = checkIsAdmin();
 
-  // 1. Získání dynamických kategorií
-  let categoriesList = [];
-  if (Array.isArray(dbCategories) && dbCategories.length > 0) {
-    categoriesList = dbCategories.map(c => c.name);
-  } else {
-    categoriesList = ['Tickets', 'Passes', 'Programs', 'Posters', 'T-shirts', 'Tour Items', 'Memorabilia'];
-  }
-
-  // 2. Výpočet počtů
-  const counts = { 'Videos': 0, 'ALL': matchesBeforeCategoryFilter.length };
-  categoriesList.forEach(catName => { counts[catName] = 0; });
+  const counts = { 
+    'Tickets': 0, 'Passes': 0, 'Programs': 0, 'Posters': 0, 
+    'T-shirts': 0, 'Tour Items': 0, 'Memorabilia': 0, 'Videos': 0, 'ALL': matchesBeforeCategoryFilter.length 
+  };
 
   matchesBeforeCategoryFilter.forEach(t => {
     const cat = getTicketCategory(t);
-    if (counts[cat] !== undefined) {
-      counts[cat]++;
-    } else {
-      counts[cat] = (counts[cat] || 0) + 1;
-    }
+    if (counts[cat] !== undefined) counts[cat]++;
     if (isValidValue(t.YOUTUBE_URL)) counts['Videos']++;
   });
 
-  // 3. Pořadí záložek
-  let categoryOrder = [];
-  if (isAdmin) {
-    categoryOrder = [...categoriesList, 'Videos', 'ALL'];
-  } else {
-    categoryOrder = categoriesList.filter(catName => counts[catName] > 0);
-  }
-
-  // 4. Mapování ikon
-  const categoryIconMap = { 
-    'Tickets': '🎫', 'Passes': '🪪', 'Programs': '📖', 
-    'Posters': '🖼️', 'T-shirts': '🎽', 'Tour Items': '🎸',
-    'Memorabilia': '⭐', 'Videos': '🎬', 'ALL': '✨' 
+  const categoryLabels = { 
+    'Tickets': '🎫 Tickets', 'Passes': '🪪 Passes', 'Programs': '📖 Programs', 
+    'Posters': '🖼️ Posters', 'T-shirts': '🎽 T-shirts', 'Tour Items': '🎸 Tour Items',
+    'Memorabilia': '⭐ Memorabilia', 'Videos': '🎬 Videos', 'ALL': '✨ All Records' 
   };
 
-  categoryOrder.forEach(catKey => {
-    const count = counts[catKey] || 0;
-    if (count > 0 || catKey === 'ALL' || catKey === 'Tickets') {
-      const icon = categoryIconMap[catKey] || '🏷️';
-      const label = catKey === 'ALL' ? 'All Records' : catKey;
+  const allPossibleCategories = ['Tickets', 'Passes', 'Programs', 'Posters', 'T-shirts', 'Tour Items', 'Memorabilia', 'Videos', 'ALL'];
 
+  let hiddenCategoryNames = [];
+  if (Array.isArray(publicCategoriesList) && publicCategoriesList.length > 0) {
+    hiddenCategoryNames = publicCategoriesList
+      .filter(c => c.is_public === false)
+      .map(c => (c.name || '').trim().toLowerCase());
+  }
+
+  const categoryOrder = allPossibleCategories.filter(catKey => {
+    if (isAdmin) return true;
+    if (catKey === 'ALL') return true;
+    return !hiddenCategoryNames.includes(catKey.toLowerCase());
+  });
+
+  categoryOrder.forEach(catKey => {
+    const count = counts[catKey];
+    if (count > 0 || catKey === 'ALL' || catKey === 'Tickets') {
       const btn = document.createElement('button');
       btn.className = `tab-btn ${currentCategory === catKey ? 'active' : ''}`;
-      btn.innerHTML = `${icon} ${escapeHtml(label)} <span style="opacity: 0.75; font-size: 0.8em;">(${count})</span>`;
+      btn.innerHTML = `${categoryLabels[catKey]} <span style="opacity: 0.75; font-size: 0.8em;">(${count})</span>`;
       btn.onclick = () => { 
         currentCategory = catKey; 
         updateUrlParams();
@@ -1594,11 +1585,24 @@ function filterData(keepSavedPage = false) {
   const sort = document.getElementById('sortFilter')?.value || 'random';
   const isAdminUser = checkIsAdmin();
 
+  let hiddenCategoryNames = [];
+  if (!isAdminUser && Array.isArray(publicCategoriesList) && publicCategoriesList.length > 0) {
+    hiddenCategoryNames = publicCategoriesList
+      .filter(c => c.is_public === false)
+      .map(c => (c.name || '').trim().toLowerCase());
+  }
+
   const dateCandidates = parseDateCandidates(rawQuery);
 
   const matchesBase = allTickets.filter(t => {
-    if (!isAdminUser && !isValidValue(t.SOUBOR_SKEN)) {
-      return false;
+    if (!isAdminUser) {
+      const itemCat = getTicketCategory(t).toLowerCase();
+      if (hiddenCategoryNames.includes(itemCat)) {
+        return false;
+      }
+      if (!isValidValue(t.SOUBOR_SKEN)) {
+        return false;
+      }
     }
 
     const locationText = formatLocationText(t).toLowerCase();
