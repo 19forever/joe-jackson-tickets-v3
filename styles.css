@@ -2090,3 +2090,37 @@ a[href^="mailto:"]:hover {
   color: #000000 !important;
   box-shadow: 0 0 8px rgba(245, 158, 11, 0.4) !important;
 }
+
+/* Vynucení nového řádku pro obal tlačítka ve Viewer.js */
+.viewer-back-block {
+  display: block !important;
+  width: 100% !important;
+  margin-top: 8px !important;
+  text-align: center !important;
+  clear: both !important;
+}
+
+/* Tlačítko Back to Museum */
+.viewer-back-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+  background-color: #1a1a1a !important;
+  border: 1px solid var(--accent-yellow, #f59e0b) !important;
+  color: var(--accent-yellow, #f59e0b) !important;
+  padding: 4px 12px !important;
+  border-radius: 4px !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.viewer-back-btn:hover {
+  background-color: var(--accent-yellow, #f59e0b) !important;
+  color: #000000 !important;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.4) !important;
+}
