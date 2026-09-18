@@ -173,6 +173,7 @@ function formatLocationText(t) {
 
 let allTickets = [];
 let filteredTickets = [];
+let dbCategories = []; // Dynamicky načtené kategorie ze Supabase
 let currentLayout = 'grid';
 
 const savedPage = safeGetStorage('jj_museum_page');
@@ -217,6 +218,15 @@ const isAdmin = checkIsAdmin();
 function resolveCategoryFromUrl(catParam) {
   if (!catParam) return null;
   const c = catParam.trim().toLowerCase();
+  
+  if (c === 'videos' || c === 'video' || c === 'youtube') return 'Videos';
+  if (c === 'all' || c === 'vše' || c === 'vse') return 'ALL';
+
+  if (Array.isArray(dbCategories) && dbCategories.length > 0) {
+    const matched = dbCategories.find(cat => cat.name.toLowerCase() === c);
+    if (matched) return matched.name;
+  }
+
   if (c === 'tickets' || c === 'ticket' || c === 'lístek' || c === 'listek') return 'Tickets';
   if (c === 'passes' || c === 'pass' || c === 'backstage') return 'Passes';
   if (c === 'programs' || c === 'program' || c === 'programme' || c === 'programmes') return 'Programs';
@@ -224,8 +234,7 @@ function resolveCategoryFromUrl(catParam) {
   if (c === 't-shirts' || c === 't-shirt' || c === 'tshirt' || c === 'tshirts' || c === 'shirts' || c === 'tričko' || c === 'tricko') return 'T-shirts';
   if (c === 'tour items' || c === 'tour_items' || c === 'tour' || c === 'touritems') return 'Tour Items';
   if (c === 'memorabilia' || c === 'memo' || c === 'memorabilie') return 'Memorabilia';
-  if (c === 'videos' || c === 'video' || c === 'youtube') return 'Videos';
-  if (c === 'all' || c === 'vše' || c === 'vse') return 'ALL';
+
   return null;
 }
 
@@ -436,13 +445,16 @@ window.addEventListener('DOMContentLoaded', () => {
         throw new Error("Supabase klient není načten! Zkontrolujte import supabase-client.js v HTML.");
       }
 
-      const { data, error } = await supabaseClient
-        .from('tickets')
-        .select('*');
+      // Načtení lístků i spravovaných kategorií paralelně
+      const [ticketsRes, categoriesRes] = await Promise.all([
+        supabaseClient.from('tickets').select('*'),
+        supabaseClient.from('categories').select('*').order('name')
+      ]);
 
-      if (error) {
-        throw error;
-      }
+      if (ticketsRes.error) throw ticketsRes.error;
+
+      const data = ticketsRes.data;
+      dbCategories = categoriesRes.data || [];
 
       if (!data || data.length === 0) {
         console.warn("Databáze Supabase je prázdná nebo tabulka 'tickets' neobsahuje žádné řádky.");
@@ -929,6 +941,13 @@ window.closeNoteModal = closeNoteModal;
 function getTicketCategory(t) {
   if (t.KATEGORIE && t.KATEGORIE.trim()) {
     const cat = t.KATEGORIE.trim().toLowerCase();
+
+    // Pokusíme se najít přesnou shodu s dynamickou kategorií v DB
+    if (Array.isArray(dbCategories) && dbCategories.length > 0) {
+      const match = dbCategories.find(c => c.name.toLowerCase() === cat);
+      if (match) return match.name;
+    }
+
     if (cat.includes('pass')) return 'Passes';
     if (cat.includes('program')) return 'Programs';
     if (cat.includes('poster')) return 'Posters';
@@ -1052,21 +1071,17 @@ function checkOnThisDayAnniversary() {
     banner.classList.add('active');
 
     btn.onclick = () => {
-      // 1. Resetujeme vyhledávací pole a filtry měst
       clearSearchInput();
       const cityFilter = document.getElementById('cityFilter');
       if (cityFilter) cityFilter.value = '';
 
-      // 2. Do filteredTickets dáme POUZE dnešní výroční akce
       filteredTickets = [...anniversaries];
       currentCategory = 'Tickets';
 
-      // 3. Vykreslíme pouze tato výročí (předáme pole do renderTickets, aby nespadlo na undefined)
       if (typeof renderTickets === 'function') {
         renderTickets(filteredTickets);
       }
 
-      // 4. Otevřeme Viewer.js – ten teď uvidí pole pouze o 2 položkách [1/2]
       setTimeout(() => {
         openDirectImagePreview(0);
       }, 50);
@@ -1222,14 +1237,12 @@ function openDirectImagePreview(startIndex) {
         return;
       }
 
-   setTimeout(() => {
+      setTimeout(() => {
         const titleEl = document.querySelector('.viewer-title');
         if (titleEl && t) {
-          // Odstranění případného předchozího bloku s tlačítkem
           const oldBackBtnBlock = titleEl.querySelector('.viewer-back-block');
           if (oldBackBtnBlock) oldBackBtnBlock.remove();
 
-          // Vytvoření bloku a tlačítka Zpět
           const backBlock = document.createElement('div');
           backBlock.className = 'viewer-back-block';
 
@@ -1244,7 +1257,6 @@ function openDirectImagePreview(startIndex) {
           backBlock.appendChild(backBtn);
           titleEl.appendChild(backBlock);
 
-          // Odstranění starého bloku s poznámkou
           const oldNoteBlock = titleEl.querySelector('.viewer-note-block');
           if (oldNoteBlock) oldNoteBlock.remove();
           
@@ -1491,33 +1503,52 @@ function renderCategoryTabs(matchesBeforeCategoryFilter) {
 
   const isAdmin = checkIsAdmin();
 
-  const counts = { 
-    'Tickets': 0, 'Passes': 0, 'Programs': 0, 'Posters': 0, 
-    'T-shirts': 0, 'Tour Items': 0, 'Memorabilia': 0, 'Videos': 0, 'ALL': matchesBeforeCategoryFilter.length 
-  };
+  // 1. Získání dynamických kategorií
+  let categoriesList = [];
+  if (Array.isArray(dbCategories) && dbCategories.length > 0) {
+    categoriesList = dbCategories.map(c => c.name);
+  } else {
+    categoriesList = ['Tickets', 'Passes', 'Programs', 'Posters', 'T-shirts', 'Tour Items', 'Memorabilia'];
+  }
+
+  // 2. Výpočet počtů
+  const counts = { 'Videos': 0, 'ALL': matchesBeforeCategoryFilter.length };
+  categoriesList.forEach(catName => { counts[catName] = 0; });
 
   matchesBeforeCategoryFilter.forEach(t => {
     const cat = getTicketCategory(t);
-    if (counts[cat] !== undefined) counts[cat]++;
+    if (counts[cat] !== undefined) {
+      counts[cat]++;
+    } else {
+      counts[cat] = (counts[cat] || 0) + 1;
+    }
     if (isValidValue(t.YOUTUBE_URL)) counts['Videos']++;
   });
 
-  const categoryOrder = isAdmin 
-    ? ['Tickets', 'Passes', 'Programs', 'Posters', 'T-shirts', 'Tour Items', 'Memorabilia', 'Videos', 'ALL']
-    : ['Tickets', 'Passes'];
+  // 3. Pořadí záložek
+  let categoryOrder = [];
+  if (isAdmin) {
+    categoryOrder = [...categoriesList, 'Videos', 'ALL'];
+  } else {
+    categoryOrder = categoriesList.filter(catName => counts[catName] > 0);
+  }
 
-  const categoryLabels = { 
-    'Tickets': '🎫 Tickets', 'Passes': '🪪 Passes', 'Programs': '📖 Programs', 
-    'Posters': '🖼️ Posters', 'T-shirts': '🎽 T-shirts', 'Tour Items': '🎸 Tour Items',
-    'Memorabilia': '⭐ Memorabilia', 'Videos': '🎬 Videos', 'ALL': '✨ All Records' 
+  // 4. Mapování ikon
+  const categoryIconMap = { 
+    'Tickets': '🎫', 'Passes': '🪪', 'Programs': '📖', 
+    'Posters': '🖼️', 'T-shirts': '🎽', 'Tour Items': '🎸',
+    'Memorabilia': '⭐', 'Videos': '🎬', 'ALL': '✨' 
   };
 
   categoryOrder.forEach(catKey => {
-    const count = counts[catKey];
+    const count = counts[catKey] || 0;
     if (count > 0 || catKey === 'ALL' || catKey === 'Tickets') {
+      const icon = categoryIconMap[catKey] || '🏷️';
+      const label = catKey === 'ALL' ? 'All Records' : catKey;
+
       const btn = document.createElement('button');
       btn.className = `tab-btn ${currentCategory === catKey ? 'active' : ''}`;
-      btn.innerHTML = `${categoryLabels[catKey]} <span style="opacity: 0.75; font-size: 0.8em;">(${count})</span>`;
+      btn.innerHTML = `${icon} ${escapeHtml(label)} <span style="opacity: 0.75; font-size: 0.8em;">(${count})</span>`;
       btn.onclick = () => { 
         currentCategory = catKey; 
         updateUrlParams();
@@ -1730,7 +1761,7 @@ function renderTickets(tickets) {
       'Memorabilia': '⭐',
       'Videos': '🎬'
     };
-    const catIcon = categoryIconMap[catName] || '🎫';
+    const catIcon = categoryIconMap[catName] || '🏷️';
 
     let singleCat = catName;
     if (catName === 'Passes') {
