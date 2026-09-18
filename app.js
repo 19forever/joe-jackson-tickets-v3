@@ -1200,7 +1200,11 @@ function openDirectImagePreview(startIndex) {
         topRow.push(`👤 Contributed by ${displayDonor}`);
       }
 
-      return topRow.join(' | ');
+      // Vložení HTML s tlačítkem přímo na konec spodního řádku
+      const baseInfo = topRow.join(' | ');
+      const backBtnHtml = `<button class="viewer-back-btn" onclick="if(activeViewerInstance) activeViewerInstance.hide();">◄ Back to Museum</button>`;
+
+      return `${baseInfo} ${backBtnHtml}`;
     },
     viewed: function() {
       const activeImgIndex = activeViewerInstance ? activeViewerInstance.index : initialImageIndex;
