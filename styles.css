@@ -2037,4 +2037,43 @@ a[href^="mailto:"]:hover {
     height: 36px !important;
     font-size: 0.78rem !important;
   }
-  
+
+  /* Přenastavení křížku Viewer.js v pravém horním rohu na Back button */
+.viewer-button.viewer-close {
+  top: 16px !important;
+  right: 20px !important;
+  width: auto !important;
+  height: 34px !important;
+  background-color: #1a1a1a !important;
+  border: 1px solid var(--accent-yellow, #f59e0b) !important;
+  border-radius: 6px !important;
+  padding: 0 14px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Skrytí původní ikony křížku a vložení textu */
+.viewer-button.viewer-close::before {
+  content: "◄ Back to Museum" !important;
+  font-family: var(--font-primary, -apple-system, sans-serif) !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  color: var(--accent-yellow, #f59e0b) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100% !important;
+  line-height: 1 !important;
+}
+
+/* Hover stav */
+.viewer-button.viewer-close:hover {
+  background-color: var(--accent-yellow, #f59e0b) !important;
+}
+
+.viewer-button.viewer-close:hover::before {
+  color: #000000 !important;
+}
