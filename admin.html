@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -61,7 +61,7 @@
     <div style="background: #141414; border: 1px solid #2a2a2a; border-radius: 12px; padding: 30px; width: 100%; max-width: 380px;">
       <div style="text-align: center; font-size: 2rem; margin-bottom: 10px;">🔒</div>
       <h2 style="text-align: center; color: #fff; margin-bottom: 6px; font-size: 1.25rem;">Admin Sign In</h2>
-      <p style="text-align: center; color: #9ca3af; font-size: 0.8rem; margin-bottom: 20px;">Zadejte přihlašovací údaje pro přístup do administrace.</p>
+      <p style="text-align: center; color: #9ca3af; font-size: 0.8rem; margin-bottom: 20px;">Enter your credentials to access the admin panel.</p>
 
       <form onsubmit="event.preventDefault(); handleSupabaseLogin();">
         <div style="margin-bottom: 12px;">
@@ -71,7 +71,7 @@
           <input type="password" id="loginPassword" placeholder="••••••••" required>
         </div>
         <div id="loginError" style="display: none; color: #f87171; font-size: 0.75rem; margin-bottom: 12px; text-align: center;"></div>
-        <button type="submit" class="btn btn-green" style="width: 100%; padding: 10px;">🔓 Přihlásit se</button>
+        <button type="submit" class="btn btn-green" style="width: 100%; padding: 10px;">🔓 Sign In</button>
       </form>
     </div>
   </div>
@@ -82,40 +82,40 @@
       <h1>⚙️ Museum Administration</h1>
     </div>
     <div class="header-actions">
-      <a href="edit_ticket_new.html" id="backToEditorBtn" class="btn">◄ Zpět do Editoru</a>
-      <button class="btn btn-danger" onclick="lockAdminSession()">🔒 Zamknout Admina</button>
-      <a href="index.html" id="backToMuseumBtn" class="btn" style="border-color: var(--accent-yellow); color: var(--accent-yellow);">Muzeum 🏠</a>
+      <a href="edit_ticket_new.html" id="backToEditorBtn" class="btn">◄ Back to Editor</a>
+      <button class="btn btn-danger" onclick="lockAdminSession()">🔒 Lock Admin</button>
+      <a href="index.html" id="backToMuseumBtn" class="btn" style="border-color: var(--accent-yellow); color: var(--accent-yellow);">Museum 🏠</a>
     </div>
   </header>
 
   <div class="tabs">
-    <button class="tab-btn active" id="tabToursBtn" onclick="switchTab('tours')">🎸 Správa Tours</button>
-    <button class="tab-btn" id="tabLineupsBtn" onclick="switchTab('lineups')">👥 Správa Line-upů</button>
-    <button class="tab-btn" id="tabCategoriesBtn" onclick="switchTab('categories')">🏷️ Správa Kategorií & Podkategorií</button>
+    <button class="tab-btn active" id="tabToursBtn" onclick="switchTab('tours')">🎸 Tours Management</button>
+    <button class="tab-btn" id="tabLineupsBtn" onclick="switchTab('lineups')">👥 Lineups Management</button>
+    <button class="tab-btn" id="tabCategoriesBtn" onclick="switchTab('categories')">🏷️ Categories & Subcategories</button>
   </div>
 
-  <!-- ZÁLOŽKA 1: TOURS -->
+  <!-- TAB 1: TOURS -->
   <div id="toursTab" class="card">
-    <h3 style="color: var(--accent-yellow); margin-bottom: 10px; font-size: 0.95rem; text-transform: uppercase;">Existující Názvy Tour v Databázi</h3>
-    <div id="toursContent">⏳ Načítám tours...</div>
+    <h3 style="color: var(--accent-yellow); margin-bottom: 10px; font-size: 0.95rem; text-transform: uppercase;">Existing Tour Names in Database</h3>
+    <div id="toursContent">⏳ Loading tours...</div>
   </div>
 
-  <!-- ZÁLOŽKA 2: LINEUPS -->
+  <!-- TAB 2: LINEUPS -->
   <div id="lineupsTab" class="card" style="display: none;">
-    <h3 style="color: var(--accent-yellow); margin-bottom: 10px; font-size: 0.95rem; text-transform: uppercase;">Existující Line-upy v Databázi</h3>
-    <div id="lineupsContent">⏳ Načítám line-upy...</div>
+    <h3 style="color: var(--accent-yellow); margin-bottom: 10px; font-size: 0.95rem; text-transform: uppercase;">Existing Lineups in Database</h3>
+    <div id="lineupsContent">⏳ Loading lineups...</div>
   </div>
 
-  <!-- ZÁLOŽKA 3: CATEGORIES & SUBCATEGORIES -->
+  <!-- TAB 3: CATEGORIES & SUBCATEGORIES -->
   <div id="categoriesTab" style="display: none;">
     <div class="card">
-      <h3 style="color: var(--accent-yellow); margin-bottom: 10px; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em;">➕ Přidat Novou Kategorii</h3>
+      <h3 style="color: var(--accent-yellow); margin-bottom: 10px; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em;">➕ Add New Category</h3>
       <div style="display: flex; gap: 10px;">
-        <input type="text" id="newCategoryInput" placeholder="Název kategorie (např. Programs)" style="margin-bottom: 0;">
-        <button class="btn btn-green" onclick="addCategory()" style="white-space: nowrap;">Přidat Kategorii</button>
+        <input type="text" id="newCategoryInput" placeholder="Category Name (e.g. Programs)" style="margin-bottom: 0;">
+        <button class="btn btn-green" onclick="addCategory()" style="white-space: nowrap;">Add Category</button>
       </div>
     </div>
-    <div id="categoriesContent">⏳ Načítám kategorie...</div>
+    <div id="categoriesContent">⏳ Loading categories...</div>
   </div>
 
   <script>
@@ -127,7 +127,7 @@
     let editingTourIdx = -1;
     let editingLineupIdx = -1;
 
-    // AUTH / SESSION LOGIKA
+    // AUTH / SESSION LOGIC
     async function checkAuthSession() {
       const modal = document.getElementById('gateModal');
       if (typeof supabaseClient === 'undefined' || !supabaseClient.auth) {
@@ -155,7 +155,7 @@
       const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
       if (error) {
         if (errEl) {
-          errEl.textContent = '❌ Neplatné údaje: ' + error.message;
+          errEl.textContent = '❌ Invalid credentials: ' + error.message;
           errEl.style.display = 'block';
         }
       } else {
@@ -173,7 +173,7 @@
       window.location.href = 'index.html';
     }
 
-    // PŘEPÍNÁNÍ ZÁLOŽEK
+    // TAB SWITCHING
     function switchTab(tab) {
       document.getElementById('tabToursBtn').classList.toggle('active', tab === 'tours');
       document.getElementById('tabLineupsBtn').classList.toggle('active', tab === 'lineups');
@@ -184,7 +184,7 @@
       document.getElementById('categoriesTab').style.display = tab === 'categories' ? 'block' : 'none';
     }
 
-    // NAČTENÍ VŠECH DAT
+    // LOAD ALL DATA
     async function loadAllAdminData() {
       await Promise.all([
         loadTicketsData(),
@@ -210,8 +210,8 @@
         renderToursTable();
         renderLineupsTable();
       } catch (err) {
-        console.error("Chyba při načítání ticketů:", err);
-        document.getElementById('toursContent').innerHTML = `<div style="color:#ef4444;">❌ Chyba: ${err.message}</div>`;
+        console.error("Error loading tickets data:", err);
+        document.getElementById('toursContent').innerHTML = `<div style="color:#ef4444;">❌ Error: ${err.message}</div>`;
       }
     }
 
@@ -251,7 +251,7 @@
     function renderToursTable() {
       const container = document.getElementById('toursContent');
       if (toursGrouped.length === 0) {
-        container.innerHTML = '<div style="color: #888;">Nebyly nalezeny žádné tours.</div>';
+        container.innerHTML = '<div style="color: #888;">No tours found in database.</div>';
         return;
       }
 
@@ -259,10 +259,10 @@
         <table>
           <thead>
             <tr>
-              <th style="width: 40%;">Název Tour</th>
+              <th style="width: 40%;">Tour Name</th>
               <th style="width: 30%;">Tour ID</th>
-              <th style="width: 10%;">Záznamy</th>
-              <th style="text-align: right; width: 20%;">Akce</th>
+              <th style="width: 10%;">Records</th>
+              <th style="text-align: right; width: 20%;">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -274,11 +274,11 @@
             <tr style="background: rgba(245, 158, 11, 0.05);">
               <td><input type="text" id="edit_tour_name_${idx}" value="${escapeHtml(item.name)}"></td>
               <td><input type="text" id="edit_tour_id_${idx}" value="${escapeHtml(item.tourId)}"></td>
-              <td><span class="badge">${item.count} položek</span></td>
+              <td><span class="badge">${item.count} items</span></td>
               <td>
                 <div class="edit-actions">
-                  <button class="btn btn-green" onclick="saveTourEdit(${idx})">💾 Uložit</button>
-                  <button class="btn" onclick="cancelTourEdit()">❌ Zrušit</button>
+                  <button class="btn btn-green" onclick="saveTourEdit(${idx})">💾 Save</button>
+                  <button class="btn" onclick="cancelTourEdit()">❌ Cancel</button>
                 </div>
               </td>
             </tr>
@@ -288,10 +288,10 @@
             <tr>
               <td><strong>${escapeHtml(item.name)}</strong></td>
               <td><code>${escapeHtml(item.tourId || '-')}</code></td>
-              <td><span class="badge">${item.count} položek</span></td>
+              <td><span class="badge">${item.count} items</span></td>
               <td>
                 <div class="edit-actions">
-                  <button class="btn" onclick="enableTourEdit(${idx})">✏️ Upravit</button>
+                  <button class="btn" onclick="enableTourEdit(${idx})">✏️ Edit</button>
                 </div>
               </td>
             </tr>
@@ -306,7 +306,7 @@
     function renderLineupsTable() {
       const container = document.getElementById('lineupsContent');
       if (lineupsGrouped.length === 0) {
-        container.innerHTML = '<div style="color: #888;">Nebyly nalezeny žádné line-upy.</div>';
+        container.innerHTML = '<div style="color: #888;">No lineups found in database.</div>';
         return;
       }
 
@@ -314,9 +314,9 @@
         <table>
           <thead>
             <tr>
-              <th style="width: 70%;">Složení kapely (Line-up)</th>
-              <th style="width: 10%;">Záznamy</th>
-              <th style="text-align: right; width: 20%;">Akce</th>
+              <th style="width: 70%;">Lineup Description</th>
+              <th style="width: 10%;">Records</th>
+              <th style="text-align: right; width: 20%;">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -327,11 +327,11 @@
           html += `
             <tr style="background: rgba(245, 158, 11, 0.05);">
               <td><textarea id="edit_lineup_${idx}">${escapeHtml(item.lineup)}</textarea></td>
-              <td><span class="badge">${item.count} položek</span></td>
+              <td><span class="badge">${item.count} items</span></td>
               <td>
                 <div class="edit-actions">
-                  <button class="btn btn-green" onclick="saveLineupEdit(${idx})">💾 Uložit</button>
-                  <button class="btn" onclick="cancelLineupEdit()">❌ Zrušit</button>
+                  <button class="btn btn-green" onclick="saveLineupEdit(${idx})">💾 Save</button>
+                  <button class="btn" onclick="cancelLineupEdit()">❌ Cancel</button>
                 </div>
               </td>
             </tr>
@@ -340,10 +340,10 @@
           html += `
             <tr>
               <td><strong>${escapeHtml(item.lineup)}</strong></td>
-              <td><span class="badge">${item.count} položek</span></td>
+              <td><span class="badge">${item.count} items</span></td>
               <td>
                 <div class="edit-actions">
-                  <button class="btn" onclick="enableLineupEdit(${idx})">✏️ Upravit</button>
+                  <button class="btn" onclick="enableLineupEdit(${idx})">✏️ Edit</button>
                 </div>
               </td>
             </tr>
@@ -363,15 +363,15 @@
       const newName = document.getElementById(`edit_tour_name_${idx}`).value.trim();
       const newTourId = document.getElementById(`edit_tour_id_${idx}`).value.trim();
 
-      if (!newName) { alert("Název Tour nemůže být prázdný!"); return; }
-      if (!confirm(`Opravdu chcete aktualizovat všech ${oldItem.count} záznamů Tour "${oldItem.name}" na "${newName}"?`)) return;
+      if (!newName) { alert("Tour name cannot be empty!"); return; }
+      if (!confirm(`Are you sure you want to update all ${oldItem.count} records with Tour "${oldItem.name}" to "${newName}"?`)) return;
 
       try {
         const { error } = await supabaseClient.from('tickets').update({ TOUR_NAME: newName, TOUR_ID: newTourId || null }).eq('TOUR_NAME', oldItem.name);
         if (error) throw error;
         editingTourIdx = -1;
         await loadTicketsData();
-      } catch (err) { alert('❌ Chyba při ukládání tour: ' + err.message); }
+      } catch (err) { alert('❌ Error updating tour: ' + err.message); }
     }
 
     function enableLineupEdit(idx) { editingLineupIdx = idx; renderLineupsTable(); }
@@ -381,16 +381,16 @@
       const oldItem = lineupsGrouped[idx];
       const newLineup = document.getElementById(`edit_lineup_${idx}`).value.trim();
 
-      if (!newLineup) { alert("Line-up nemůže být prázdný!"); return; }
+      if (!newLineup) { alert("Lineup cannot be empty!"); return; }
       if (newLineup === oldItem.lineup) { cancelLineupEdit(); return; }
-      if (!confirm(`Opravdu chcete aktualizovat tento line-up napříč všemi ${oldItem.count} záznamy?`)) return;
+      if (!confirm(`Are you sure you want to update this lineup across ALL ${oldItem.count} records in database?`)) return;
 
       try {
         const { error } = await supabaseClient.from('tickets').update({ LINEUP: newLineup }).eq('LINEUP', oldItem.lineup);
         if (error) throw error;
         editingLineupIdx = -1;
         await loadTicketsData();
-      } catch (err) { alert('❌ Chyba při ukládání line-upu: ' + err.message); }
+      } catch (err) { alert('❌ Error updating lineup: ' + err.message); }
     }
 
 
@@ -410,14 +410,14 @@
         categoriesData = data || [];
         renderCategoriesList();
       } catch (err) {
-        container.innerHTML = `<div style="color:#ef4444; padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: 6px;">❌ Chyba načítání kategorií: ${err.message}</div>`;
+        container.innerHTML = `<div style="color:#ef4444; padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: 6px;">❌ Error loading categories: ${err.message}</div>`;
       }
     }
 
     function renderCategoriesList() {
       const container = document.getElementById('categoriesContent');
       if (categoriesData.length === 0) {
-        container.innerHTML = '<div class="card" style="color: #888;">Nebyly nalezeny žádné kategorie.</div>';
+        container.innerHTML = '<div class="card" style="color: #888;">No categories found in database.</div>';
         return;
       }
 
@@ -430,17 +430,17 @@
           <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <button class="btn" onclick="moveCategory(${idx}, -1)" ${isFirst ? 'disabled style="opacity:0.3;cursor:default;"' : ''} title="Posunout nahoru">⬆️</button>
-                <button class="btn" onclick="moveCategory(${idx}, 1)" ${isLast ? 'disabled style="opacity:0.3;cursor:default;"' : ''} title="Posunout dolů">⬇️</button>
+                <button class="btn" onclick="moveCategory(${idx}, -1)" ${isFirst ? 'disabled style="opacity:0.3;cursor:default;"' : ''} title="Move Up">⬆️</button>
+                <button class="btn" onclick="moveCategory(${idx}, 1)" ${isLast ? 'disabled style="opacity:0.3;cursor:default;"' : ''} title="Move Down">⬇️</button>
                 <strong style="font-size: 1.1rem; color: #fff; margin-left: 6px;">${escapeHtml(cat.name)}</strong>
               </div>
               <div style="display: flex; gap: 6px;">
-                <button class="btn" onclick="renameCategory('${cat.id}', '${escapeJsStr(cat.name)}')">✏️ Přejmenovat</button>
-                <button class="btn btn-danger" onclick="deleteCategory('${cat.id}', '${escapeJsStr(cat.name)}')">🗑️ Smazat</button>
+                <button class="btn" onclick="renameCategory('${cat.id}', '${escapeJsStr(cat.name)}')">✏️ Rename</button>
+                <button class="btn btn-danger" onclick="deleteCategory('${cat.id}', '${escapeJsStr(cat.name)}')">🗑️ Delete</button>
               </div>
             </div>
 
-            <label style="font-size: 0.75rem; color: #888; font-weight: 600; text-transform: uppercase;">PODKATEGORIE:</label>
+            <label style="font-size: 0.75rem; color: #888; font-weight: 600; text-transform: uppercase;">SUBCATEGORIES:</label>
             <div class="subcat-list">
               ${subList.length > 0 ? subList.map((sub, sIdx) => {
                 const subVal = typeof sub === 'object' ? (sub.value || sub.name) : sub;
@@ -449,18 +449,18 @@
 
                 return `
                   <div class="subcat-chip">
-                    <span class="arrow" onclick="moveSubcategory('${cat.id}', ${sIdx}, -1)" style="${isSubFirst ? 'visibility:hidden;' : ''}" title="Posunout vlevo">◀</span>
+                    <span class="arrow" onclick="moveSubcategory('${cat.id}', ${sIdx}, -1)" style="${isSubFirst ? 'visibility:hidden;' : ''}" title="Move left">◀</span>
                     <span>${escapeHtml(subVal)}</span>
-                    <span class="arrow" onclick="moveSubcategory('${cat.id}', ${sIdx}, 1)" style="${isSubLast ? 'visibility:hidden;' : ''}" title="Posunout vpravo">▶</span>
-                    <span class="delete-btn" onclick="removeSubcategory('${cat.id}', '${escapeJsStr(subVal)}')" title="Odstranit podkategorii">×</span>
+                    <span class="arrow" onclick="moveSubcategory('${cat.id}', ${sIdx}, 1)" style="${isSubLast ? 'visibility:hidden;' : ''}" title="Move right">▶</span>
+                    <span class="delete-btn" onclick="removeSubcategory('${cat.id}', '${escapeJsStr(subVal)}')" title="Remove subcategory">×</span>
                   </div>
                 `;
-              }).join('') : '<span style="font-size: 0.8rem; color: #555; font-style: italic;">Bez podkategorií</span>'}
+              }).join('') : '<span style="font-size: 0.8rem; color: #555; font-style: italic;">No subcategories</span>'}
             </div>
 
             <div style="display: flex; gap: 8px; margin-top: 14px;">
-              <input type="text" id="sub_input_${cat.id}" placeholder="Název nové podkategorie..." style="margin-bottom: 0;" onkeydown="if(event.key==='Enter') addSubcategory('${cat.id}')">
-              <button class="btn" onclick="addSubcategory('${cat.id}')" style="white-space: nowrap;">+ Přidat podkategorii</button>
+              <input type="text" id="sub_input_${cat.id}" placeholder="New subcategory name..." style="margin-bottom: 0;" onkeydown="if(event.key==='Enter') addSubcategory('${cat.id}')">
+              <button class="btn" onclick="addSubcategory('${cat.id}')" style="white-space: nowrap;">+ Add Subcategory</button>
             </div>
           </div>
         `;
@@ -486,7 +486,7 @@
           supabaseClient.from('categories').update({ display_order: newOrderB }).eq('id', catB.id)
         ]);
         await loadCategoriesData();
-      } catch (err) { alert('Chyba při změně pořadí: ' + err.message); }
+      } catch (err) { alert('Error updating category order: ' + err.message); }
     }
 
     async function moveSubcategory(catId, subIndex, direction) {
@@ -502,7 +502,7 @@
       subs[targetIndex] = temp;
 
       const { error } = await supabaseClient.from('categories').update({ subcategories: subs }).eq('id', catId);
-      if (error) alert('Chyba změny pořadí podkategorie: ' + error.message);
+      if (error) alert('Error updating subcategory order: ' + error.message);
       else loadCategoriesData();
     }
 
@@ -513,24 +513,24 @@
 
       const nextOrder = categoriesData.length > 0 ? (Math.max(...categoriesData.map(c => c.display_order || 0)) + 1) : 1;
       const { error } = await supabaseClient.from('categories').insert([{ name, subcategories: [], display_order: nextOrder }]);
-      if (error) alert('Chyba při přidávání kategorie: ' + error.message);
+      if (error) alert('Error adding category: ' + error.message);
       else { input.value = ''; loadCategoriesData(); }
     }
 
     async function renameCategory(id, currentName) {
-      const newName = prompt('Nový název kategorie:', currentName);
+      const newName = prompt('New name for category:', currentName);
       if (!newName || newName.trim() === '' || newName === currentName) return;
 
       const { error } = await supabaseClient.from('categories').update({ name: newName.trim() }).eq('id', id);
-      if (error) alert('Chyba přejmenování: ' + error.message);
+      if (error) alert('Error renaming category: ' + error.message);
       else loadCategoriesData();
     }
 
     async function deleteCategory(id, name) {
-      if (!confirm(`Opravdu chcete smazat kategorii "${name}"?`)) return;
+      if (!confirm(`Are you sure you want to delete category "${name}"?`)) return;
 
       const { error } = await supabaseClient.from('categories').delete().eq('id', id);
-      if (error) alert('Chyba mazání: ' + error.message);
+      if (error) alert('Error deleting category: ' + error.message);
       else loadCategoriesData();
     }
 
@@ -543,11 +543,11 @@
       if (!cat) return;
 
       const currentSubs = Array.isArray(cat.subcategories) ? cat.subcategories.map(s => typeof s === 'object' ? s.value : s) : [];
-      if (currentSubs.includes(val)) { alert('Tato podkategorie již existuje!'); return; }
+      if (currentSubs.includes(val)) { alert('Subcategory already exists!'); return; }
 
       const updatedSubs = [...currentSubs, val];
       const { error } = await supabaseClient.from('categories').update({ subcategories: updatedSubs }).eq('id', catId);
-      if (error) alert('Chyba přidání podkategorie: ' + error.message);
+      if (error) alert('Error adding subcategory: ' + error.message);
       else { input.value = ''; loadCategoriesData(); }
     }
 
@@ -559,7 +559,7 @@
       const updatedSubs = currentSubs.filter(s => String(s) !== String(subName));
 
       const { error } = await supabaseClient.from('categories').update({ subcategories: updatedSubs }).eq('id', catId);
-      if (error) alert('Chyba odebrání podkategorie: ' + error.message);
+      if (error) alert('Error removing subcategory: ' + error.message);
       else loadCategoriesData();
     }
 
@@ -572,7 +572,7 @@
       return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
     }
 
-    // INICIALIZACE STRÁNKY
+    // PAGE INITIALIZATION
     window.addEventListener('DOMContentLoaded', async () => {
       const currentParams = window.location.search;
       if (currentParams) {
