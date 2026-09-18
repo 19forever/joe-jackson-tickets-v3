@@ -2077,3 +2077,31 @@ a[href^="mailto:"]:hover {
 .viewer-button.viewer-close:hover::before {
   color: #000000 !important;
 }
+  
+/* Tlačítko Back to Museum ve spodní liště Viewer.js */
+.viewer-back-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-left: 10px !important;
+  background-color: #1a1a1a !important;
+  border: 1px solid var(--accent-yellow, #f59e0b) !important;
+  color: var(--accent-yellow, #f59e0b) !important;
+  padding: 3px 10px !important;
+  border-radius: 4px !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  cursor: pointer !important;
+  vertical-align: middle !important;
+  transition: all 0.2s ease !important;
+}
+
+.viewer-back-btn:hover {
+  background-color: var(--accent-yellow, #f59e0b) !important;
+  color: #000000 !important;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.4) !important;
+}
+  
+  
