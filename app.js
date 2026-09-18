@@ -1052,19 +1052,21 @@ function checkOnThisDayAnniversary() {
     banner.classList.add('active');
 
     btn.onclick = () => {
-      const targetIndex = filteredTickets.indexOf(selected);
-      if (targetIndex !== -1) {
-        openDirectImagePreview(targetIndex);
-      } else {
-        clearSearchInput();
-        const cityFilter = document.getElementById('cityFilter');
-        if (cityFilter) cityFilter.value = '';
-        currentCategory = 'ALL';
-        filterData(false);
-        setTimeout(() => {
-          openDirectImagePreview(filteredTickets.indexOf(selected));
-        }, 100);
-      }
+      // 1. Vyčištění filtrů a nastavení seznamu pouze na dnešní výroční akce
+      clearSearchInput();
+      const cityFilter = document.getElementById('cityFilter');
+      if (cityFilter) cityFilter.value = '';
+
+      filteredTickets = anniversaries;
+      currentCategory = 'Tickets';
+
+      // 2. Vykreslení seznamu v hlavním okně
+      renderTickets();
+
+      // 3. Otevření Viewer.js nad polem všech dnešních akcí (začínáme od indexu 0)
+      setTimeout(() => {
+        openDirectImagePreview(0);
+      }, 50);
     };
   }
 }
