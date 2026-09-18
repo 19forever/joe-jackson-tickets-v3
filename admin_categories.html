@@ -22,7 +22,7 @@
     .logo { background-color: var(--accent-yellow); color: #000; width: 40px; height: 40px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.3rem; }
     h1 { font-size: 1.3rem; color: #fff; margin: 0; }
     .header-actions { display: flex; gap: 10px; align-items: center; }
-    .btn { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 8px 14px; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .btn { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; }
     .btn:hover { border-color: var(--accent-yellow); color: var(--accent-yellow); }
     .btn-green { background: #16a34a; border: none; font-weight: bold; }
     .btn-green:hover { background: #15803d; color: #fff; }
@@ -33,8 +33,10 @@
     input:focus { border-color: var(--accent-yellow); }
     .subcat-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
     .subcat-chip { background: #222; border: 1px solid #333; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
-    .subcat-chip span { cursor: pointer; color: #f87171; font-weight: bold; margin-left: 4px; }
-    .subcat-chip span:hover { color: #ef4444; }
+    .subcat-chip .arrow { cursor: pointer; color: #888; font-size: 0.75rem; user-select: none; }
+    .subcat-chip .arrow:hover { color: var(--accent-yellow); }
+    .subcat-chip .delete-btn { cursor: pointer; color: #f87171; font-weight: bold; margin-left: 4px; }
+    .subcat-chip .delete-btn:hover { color: #ef4444; }
   </style>
 </head>
 <body>
@@ -95,7 +97,6 @@
   <script>
     let categoriesData = [];
 
-    // KONTROLA AUTH RELACE VIA SUPABASE
     async function checkAuthSession() {
       const modal = document.getElementById('gateModal');
       if (typeof supabaseClient === 'undefined' || !supabaseClient.auth) {
@@ -122,10 +123,7 @@
 
       if (errEl) errEl.style.display = 'none';
 
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
       if (error) {
         if (errEl) {
@@ -147,11 +145,16 @@
       window.location.href = 'index.html';
     }
 
-    // NAČTENÍ KATEGORIÍ Z DB
+    // NAČTENÍ KATEGORIÍ Z DB (Řazeno podle display_order, záložně podle id)
     async function loadCategories() {
       const container = document.getElementById('categoriesList');
       try {
-        const { data, error } = await supabaseClient.from('categories').select('*').order('name');
+        const { data, error } = await supabaseClient
+          .from('categories')
+          .select('*')
+          .order('display_order', { ascending: true, nullsFirst: false })
+          .order('id', { ascending: true });
+
         if (error) throw error;
         categoriesData = data || [];
         renderCategories();
@@ -167,13 +170,20 @@
         return;
       }
 
-      container.innerHTML = categoriesData.map(cat => {
+      container.innerHTML = categoriesData.map((cat, idx) => {
         const subList = Array.isArray(cat.subcategories) ? cat.subcategories : [];
-        
+        const isFirst = idx === 0;
+        const isLast = idx === categoriesData.length - 1;
+
         return `
           <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
-              <strong style="font-size: 1.1rem; color: #fff;">${escapeHtml(cat.name)}</strong>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <!-- Šipky pro posun celé kategorie -->
+                <button class="btn" onclick="moveCategory(${idx}, -1)" ${isFirst ? 'disabled style="opacity:0.3;cursor:default;"' : ''} title="Move Up">⬆️</button>
+                <button class="btn" onclick="moveCategory(${idx}, 1)" ${isLast ? 'disabled style="opacity:0.3;cursor:default;"' : ''} title="Move Down">⬇️</button>
+                <strong style="font-size: 1.1rem; color: #fff; margin-left: 6px;">${escapeHtml(cat.name)}</strong>
+              </div>
               <div style="display: flex; gap: 6px;">
                 <button class="btn" onclick="renameCategory('${cat.id}', '${escapeJsStr(cat.name)}')">✏️ Rename</button>
                 <button class="btn btn-danger" onclick="deleteCategory('${cat.id}', '${escapeJsStr(cat.name)}')">🗑️ Delete</button>
@@ -182,12 +192,17 @@
 
             <label style="font-size: 0.75rem; color: #888; font-weight: 600; text-transform: uppercase;">SUBCATEGORIES:</label>
             <div class="subcat-list">
-              ${subList.length > 0 ? subList.map(sub => {
+              ${subList.length > 0 ? subList.map((sub, sIdx) => {
                 const subVal = typeof sub === 'object' ? (sub.value || sub.name) : sub;
+                const isSubFirst = sIdx === 0;
+                const isSubLast = sIdx === subList.length - 1;
+
                 return `
                   <div class="subcat-chip">
-                    ${escapeHtml(subVal)}
-                    <span onclick="removeSubcategory('${cat.id}', '${escapeJsStr(subVal)}')" title="Remove subcategory">×</span>
+                    <span class="arrow" onclick="moveSubcategory('${cat.id}', ${sIdx}, -1)" style="${isSubFirst ? 'visibility:hidden;' : ''}" title="Move left">◀</span>
+                    <span>${escapeHtml(subVal)}</span>
+                    <span class="arrow" onclick="moveSubcategory('${cat.id}', ${sIdx}, 1)" style="${isSubLast ? 'visibility:hidden;' : ''}" title="Move right">▶</span>
+                    <span class="delete-btn" onclick="removeSubcategory('${cat.id}', '${escapeJsStr(subVal)}')" title="Remove subcategory">×</span>
                   </div>
                 `;
               }).join('') : '<span style="font-size: 0.8rem; color: #555; font-style: italic;">No subcategories</span>'}
@@ -202,12 +217,61 @@
       }).join('');
     }
 
+    // POSUN KATEGORIE NAHORU / DOLŮ (Prohození display_order)
+    async function moveCategory(index, direction) {
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= categoriesData.length) return;
+
+      const catA = categoriesData[index];
+      const catB = categoriesData[targetIndex];
+
+      // Určení nového pořadí (pokud ještě nemají display_order, použijeme indexy)
+      const orderA = catA.display_order ?? index;
+      const orderB = catB.display_order ?? targetIndex;
+
+      // Pokud jsou hodnoty stejné, přiřadíme jim jasné indexy
+      const newOrderA = orderA === orderB ? targetIndex : orderB;
+      const newOrderB = orderA === orderB ? index : orderA;
+
+      try {
+        await Promise.all([
+          supabaseClient.from('categories').update({ display_order: newOrderA }).eq('id', catA.id),
+          supabaseClient.from('categories').update({ display_order: newOrderB }).eq('id', catB.id)
+        ]);
+        await loadCategories();
+      } catch (err) {
+        alert('Error updating category order: ' + err.message);
+      }
+    }
+
+    // POSUN PODKATEGORIE DOLEVA / DOPRAVA V RÁMCI POLE
+    async function moveSubcategory(catId, subIndex, direction) {
+      const cat = categoriesData.find(c => String(c.id) === String(catId));
+      if (!cat) return;
+
+      const subs = Array.isArray(cat.subcategories) ? [...cat.subcategories] : [];
+      const targetIndex = subIndex + direction;
+
+      if (targetIndex < 0 || targetIndex >= subs.length) return;
+
+      // Prohození prvků v poli
+      const temp = subs[subIndex];
+      subs[subIndex] = subs[targetIndex];
+      subs[targetIndex] = temp;
+
+      const { error } = await supabaseClient.from('categories').update({ subcategories: subs }).eq('id', catId);
+      if (error) alert('Error updating subcategory order: ' + error.message);
+      else loadCategories();
+    }
+
     async function addCategory() {
       const input = document.getElementById('newCategoryInput');
       const name = input.value.trim();
       if (!name) return;
 
-      const { error } = await supabaseClient.from('categories').insert([{ name, subcategories: [] }]);
+      const nextOrder = categoriesData.length > 0 ? (Math.max(...categoriesData.map(c => c.display_order || 0)) + 1) : 1;
+
+      const { error } = await supabaseClient.from('categories').insert([{ name, subcategories: [], display_order: nextOrder }]);
       if (error) alert('Error adding category: ' + error.message);
       else { input.value = ''; loadCategories(); }
     }
@@ -261,7 +325,6 @@
       else loadCategories();
     }
 
-    // UTILS
     function escapeHtml(str) {
       return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
@@ -270,9 +333,7 @@
       return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
     }
 
-    // INICIALIZACE STRÁNKY
     window.addEventListener('DOMContentLoaded', async () => {
-      // 1. Zachování URL parametrů pro návrat do editoru
       const currentParams = window.location.search;
       if (currentParams) {
         const backEditorBtn = document.getElementById('backToEditorBtn');
@@ -281,7 +342,6 @@
         if (backMuseumBtn) backMuseumBtn.href = `index.html${currentParams}`;
       }
 
-      // 2. Kontrola přihlášení a načtení dat
       const isAuthenticated = await checkAuthSession();
       if (isAuthenticated) {
         await loadCategories();
