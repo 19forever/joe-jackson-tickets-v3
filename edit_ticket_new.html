@@ -826,24 +826,37 @@
       'POCET_SKLADEB', 'SETLIST_URL', 'YOUTUBE_URL', 'REVIEW_URL'
     ];
 
-    const SUBCATEGORY_MAP = {
-      'Tickets': [
-        { value: 'Standard Ticket', label: 'Standard Ticket' },
-        { value: 'Fan Ticket', label: 'Fan Ticket' },
-        { value: 'Advance Ticket', label: 'Advance Ticket' },
-        { value: 'At-the-door Ticket', label: 'At-the-door Ticket' },
-        { value: 'E-Ticket', label: 'E-Ticket' },
-        { value: 'VIP Ticket', label: 'VIP Ticket' },
-      ],
-      'Passes': [
-       { value: 'Laminated', label: 'Laminated' },
-       { value: 'Satin / Cloth (Sticky)', label: 'Satin / Cloth (Sticky)' },
-       { value: 'Plastic / PVC Matrix', label: 'Plastic / PVC Matrix' },
-       { value: 'Paper / Cardboard', label: 'Paper / Cardboard' },
-       { value: 'Metal / Custom', label: 'Metal / Custom' }
-      ]
-    };
+    let SUBCATEGORY_MAP = {};
 
+    // Dynamické načtení kategorií a podkategorií ze Supabase
+    async function loadDynamicCategories() {
+      try {
+        const { data, error } = await supabaseClient.from('categories').select('*').order('name');
+        if (error) throw error;
+
+        const katSelect = getField('KATEGORIE');
+        if (katSelect) {
+          katSelect.innerHTML = '';
+          SUBCATEGORY_MAP = {};
+
+          (data || []).forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat.name;
+            opt.textContent = cat.name;
+            katSelect.appendChild(opt);
+
+            // Namapování podkategorií
+            SUBCATEGORY_MAP[cat.name] = (cat.subcategories || []).map(sub => ({
+              value: sub,
+              label: sub
+            }));
+          });
+        }
+      } catch (err) {
+        console.error("Error loading categories from DB:", err);
+      }
+    }
+    
     function handleCategoryChange(selectedSubcategory = '') {
       const katEl = getField('KATEGORIE');
       const wrapper = document.getElementById('subcategoryWrapper');
