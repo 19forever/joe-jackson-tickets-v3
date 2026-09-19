@@ -1598,10 +1598,12 @@ function renderCategoryTabs(matchesBeforeCategoryFilter) {
     return !hiddenCategoryNames.includes(catKey.toLowerCase());
   });
 
-  // 6. Seřazení podle display_order z publicCategoriesList (neznámé kategorie jdou na konec)
+  // 6. Seřazení podle display_order z publicCategoriesList ('ALL' bude vždy na konci)
   allowedCategories.sort((a, b) => {
-    if (a === 'ALL') return -1;
-    if (b === 'ALL') return 1;
+    // Pokud je "a" tlačítko ALL, posuneme ho doprava (vrátíme 1)
+    if (a === 'ALL') return 1;
+    // Pokud je "b" tlačítko ALL, posuneme "a" doleva (vrátíme -1)
+    if (b === 'ALL') return -1;
 
     // Najdeme index kategorie v načteném seznamu ze Supabase
     const indexA = publicCategoriesList.findIndex(
@@ -1611,7 +1613,7 @@ function renderCategoryTabs(matchesBeforeCategoryFilter) {
       c => (c.name || '').trim().toLowerCase() === b.toLowerCase()
     );
 
-    // Pokud kategorie v publicCategoriesList je, použije její pořadí, jinak dáme vysoké číslo (konec)
+    // Pokud kategorie v publicCategoriesList je, použijeme její pořadí, jinak dáme vysoké číslo
     const orderA = indexA !== -1 ? indexA : 999;
     const orderB = indexB !== -1 ? indexB : 999;
 
@@ -1619,7 +1621,7 @@ function renderCategoryTabs(matchesBeforeCategoryFilter) {
       return orderA - orderB;
     }
 
-    // Pokud obě kategorie chybí v číselníku (nebo mají stejný order), seřadíme je abecedně
+    // Abecední fallback pro neznámé kategorie se stejným orderem
     return a.localeCompare(b, undefined, { sensitivity: 'base' });
   });
   
