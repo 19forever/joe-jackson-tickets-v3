@@ -2,6 +2,8 @@
 // 1. SDÍLENÉ UTILITY A POMOCNÉ FUNKCE (Musí být definovány jako první)
 // ============================================================================
 
+let isViewerClosedByPopstate = false;
+
 function safeGetStorage(key, defaultVal = null) {
   if (typeof StorageService !== 'undefined') {
     return StorageService.get(key, defaultVal);
@@ -232,7 +234,7 @@ function resolveCategoryFromUrl(catParam) {
   if (c === 'programs' || c === 'program' || c === 'programme' || c === 'programmes') return 'Programs';
   if (c === 'posters' || c === 'poster' || c === 'plakát' || c === 'plakat') return 'Posters';
   if (c === 't-shirts' || c === 't-shirt' || c === 'tshirt' || c === 'tshirts' || c === 'shirts' || c === 'tričko' || c === 'tricko') return 'T-shirts';
-  if (c === 'tour items' || c === 'tour_items' || c === 'tour' || c === 'touritems') return 'Tour Items';
+  if (c === 'tour items' || c === 'tour_items' || c === 'tour' || c === 'touritems' || c === 'tour & concert merchandise' || c === 'merchandise') return 'Tour Items';
   if (c === 'memorabilia' || c === 'memo' || c === 'memorabilie') return 'Memorabilia';
 
   return null;
@@ -483,6 +485,18 @@ function setupEventListeners() {
     });
     searchInput.addEventListener('input', handleSearchInput);
   }
+
+  // ZACHYTÁVÁNÍ TLAČÍTKA ZPĚT PRO VIEWER.JS
+  window.addEventListener('popstate', (e) => {
+    if (activeViewerInstance) {
+      isViewerClosedByPopstate = true;
+      activeViewerInstance.hide();
+    }
+    if (quickViewerInstance) {
+      isViewerClosedByPopstate = true;
+      quickViewerInstance.hide();
+    }
+  });
 
   document.getElementById('searchClearBtn')?.addEventListener('click', clearSearchInput);
   (document.getElementById('reshuffleBtn') || document.getElementById('btnReshuffle'))?.addEventListener('click', reshuffleAndRender);
@@ -951,7 +965,7 @@ function getTicketCategory(t) {
     if (cat.includes('program')) return 'Programs';
     if (cat.includes('poster')) return 'Posters';
     if (cat.includes('shirt') || cat.includes('t-shirt') || cat.includes('tričko')) return 'T-shirts';
-    if (cat.includes('tour')) return 'Tour Items';
+    if (cat.includes('tour') || cat.includes('merchandise')) return 'Tour Items';
     if (cat.includes('memo')) return 'Memorabilia';
     if (cat.includes('ticket')) return 'Tickets';
   }
@@ -1167,7 +1181,14 @@ function openDirectImagePreview(startIndex) {
       zoomIn: 0, zoomOut: 0, oneToOne: 0, reset: 0, prev: 1, next: 1,
       rotateLeft: 0, rotateRight: 0, flipHorizontal: 0, flipVertical: 0
     },
+    show: function() {
+      isViewerClosedByPopstate = false;
+      history.pushState({ viewerOpen: true }, '', window.location.href);
+    },
     hidden: function() {
+      if (!isViewerClosedByPopstate && !isRebuilding) {
+        history.back();
+      }
       if (!isRebuilding) {
         if (activeViewerInstance) {
           activeViewerInstance.destroy();
@@ -1353,7 +1374,14 @@ function openQuickImageModal(scanFileName, ticketObj) {
       zoomIn: 0, zoomOut: 0, oneToOne: 0, reset: 0, prev: 1, next: 1,
       rotateLeft: 0, rotateRight: 0, flipHorizontal: 0, flipVertical: 0
     },
+    show: function() {
+      isViewerClosedByPopstate = false;
+      history.pushState({ viewerOpen: true }, '', window.location.href);
+    },
     hidden: function() {
+      if (!isViewerClosedByPopstate) {
+        history.back();
+      }
       if (quickViewerInstance) {
         quickViewerInstance.destroy();
         quickViewerInstance = null;
@@ -1500,7 +1528,14 @@ function renderCategoryTabs(matchesBeforeCategoryFilter) {
   if (!tabsContainer) return;
   tabsContainer.innerHTML = '';
 
-  const isAdmin = checkIsAdmin();
+  const isAdminUser = checkIsAdmin();
+
+  let hiddenCategoryNames = [];
+  if (!isAdminUser && Array.isArray(publicCategoriesList) && publicCategoriesList.length > 0) {
+    hiddenCategoryNames = publicCategoriesList
+      .filter(c => c.is_public === false)
+      .map(c => (c.name || '').trim().toLowerCase());
+  }
 
   const counts = { 
     'Tickets': 0, 'Passes': 0, 'Programs': 0, 'Posters': 0, 
@@ -1521,15 +1556,8 @@ function renderCategoryTabs(matchesBeforeCategoryFilter) {
 
   const allPossibleCategories = ['Tickets', 'Passes', 'Programs', 'Posters', 'T-shirts', 'Tour Items', 'Memorabilia', 'Videos', 'ALL'];
 
-  let hiddenCategoryNames = [];
-  if (Array.isArray(publicCategoriesList) && publicCategoriesList.length > 0) {
-    hiddenCategoryNames = publicCategoriesList
-      .filter(c => c.is_public === false)
-      .map(c => (c.name || '').trim().toLowerCase());
-  }
-
   const categoryOrder = allPossibleCategories.filter(catKey => {
-    if (isAdmin) return true;
+    if (isAdminUser) return true;
     if (catKey === 'ALL') return true;
     return !hiddenCategoryNames.includes(catKey.toLowerCase());
   });
@@ -1644,7 +1672,12 @@ function filterData(keepSavedPage = false) {
       if (hasFullSetlist) return false;
     }
     if (currentCategory === 'ALL') return true;
-    if (currentCategory === 'Videos') return isValidValue(t.YOUTUBE_URL);
+    if (currentCategory === 'Videos') {
+      if (!isAdminUser && hiddenCategoryNames.includes('videos')) {
+        return false;
+      }
+      return isValidValue(t.YOUTUBE_URL);
+    }
     return getTicketCategory(t).toLowerCase() === currentCategory.toLowerCase();
   });
 
