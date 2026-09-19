@@ -1,608 +1,451 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="cs">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard - JJ Museum</title>
+  <title>Affiche - Admin Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-client.js"></script>
-  <script src="storage-service.js"></script>
-  <script src="auth.js"></script>
   <style>
     :root {
-      --bg-main: #0f0f0f;
-      --bg-panel: #141414;
-      --accent-yellow: #f59e0b;
-      --text-main: #e0e0e0;
-      --border-color: #2a2a2a;
+      --bg-color: #f4f6f8;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --primary-color: #2563eb;
+      --border-color: #e2e8f0;
+      --danger-color: #ef4444;
     }
-    body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: var(--bg-main); color: var(--text-main); padding: 20px; max-width: 1100px; margin: 0 auto; }
-    header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 20px; }
-    .header-left { display: flex; align-items: center; gap: 12px; }
-    .logo { background-color: var(--accent-yellow); color: #000; width: 40px; height: 40px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.3rem; }
-    h1 { font-size: 1.3rem; color: #fff; margin: 0; }
-    .header-actions { display: flex; gap: 10px; align-items: center; }
-    .btn { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 6px 12px; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; }
-    .btn:hover { border-color: var(--accent-yellow); color: var(--accent-yellow); }
-    .btn-green { background: #16a34a; border: none; font-weight: bold; }
-    .btn-green:hover { background: #15803d; color: #fff; }
-    .btn-danger { background: #ef4444; border: none; font-weight: bold; }
-    .btn-danger:hover { background: #dc2626; color: #fff; }
-    
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; flex-wrap: wrap; }
-    .tab-btn { background: #141414; border: 1px solid var(--border-color); color: #888; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: all 0.2s; }
-    .tab-btn.active { background: var(--accent-yellow); color: #000; border-color: var(--accent-yellow); }
 
-    .card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
-    input, textarea { background: #0d0d0d; border: 1px solid #333; color: #fff; padding: 8px 12px; border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 0.85rem; outline: none; font-family: inherit; }
-    input:focus, textarea:focus { border-color: var(--accent-yellow); }
-    textarea { resize: vertical; min-height: 65px; }
-    
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; vertical-align: top; }
-    th { color: var(--accent-yellow); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
-    tr:hover { background: rgba(255,255,255,0.02); }
-    .badge { background: #222; border: 1px solid #333; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; color: #aaa; white-space: nowrap; }
-    .edit-actions { display: flex; gap: 6px; justify-content: flex-end; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
+    }
 
-    /* Styles for Categories */
-    .subcat-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-    .subcat-chip { background: #222; border: 1px solid #333; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
-    .subcat-chip .arrow { cursor: pointer; color: #888; font-size: 0.75rem; user-select: none; }
-    .subcat-chip .arrow:hover { color: var(--accent-yellow); }
-    .subcat-chip .delete-btn { cursor: pointer; color: #f87171; font-weight: bold; margin-left: 4px; }
-    .subcat-chip .delete-btn:hover { color: #ef4444; }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
 
-    .visibility-btn { font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; font-weight: 600; cursor: pointer; }
-    .visibility-btn.public { background: rgba(22, 163, 74, 0.15); color: #4ade80; border: 1px solid #16a34a; }
-    .visibility-btn.hidden { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid #ef4444; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .tab-btn {
+      padding: 10px 20px;
+      background: #e2e8f0;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .tab-btn.active {
+      background: var(--primary-color);
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    input[type="text"], textarea, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 8px 16px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #64748b;
+    }
+
+    button.danger {
+      background: var(--danger-color);
+    }
+
+    .category-item {
+      border: 1px solid var(--border-color);
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      background: #fafafa;
+    }
+
+    .subcat-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .subcat-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #e2e8f0;
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-size: 14px;
+    }
+
+    .subcat-chip .arrow, .subcat-chip .delete-btn {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .subcat-chip .delete-btn {
+      color: var(--danger-color);
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
 
-  <!-- AUTH GATE MODAL -->
-  <div id="gateModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 9999;">
-    <div style="background: #141414; border: 1px solid #2a2a2a; border-radius: 12px; padding: 30px; width: 100%; max-width: 380px;">
-      <div style="text-align: center; font-size: 2rem; margin-bottom: 10px;">🔒</div>
-      <h2 style="text-align: center; color: #fff; margin-bottom: 6px; font-size: 1.25rem;">Admin Sign In</h2>
-      <p style="text-align: center; color: #9ca3af; font-size: 0.8rem; margin-bottom: 20px;">Enter your credentials to access the admin panel.</p>
-
-      <form onsubmit="event.preventDefault(); handleSupabaseLogin();">
-        <div style="margin-bottom: 12px;">
-          <input type="email" id="loginEmail" placeholder="name@example.com" required>
-        </div>
-        <div style="margin-bottom: 18px;">
-          <input type="password" id="loginPassword" placeholder="••••••••" required>
-        </div>
-        <div id="loginError" style="display: none; color: #f87171; font-size: 0.75rem; margin-bottom: 12px; text-align: center;"></div>
-        <button type="submit" class="btn btn-green" style="width: 100%; padding: 10px;">🔓 Sign In</button>
-      </form>
-    </div>
-  </div>
-
+<div class="container">
   <header>
-    <div class="header-left">
-      <div class="logo">JJ</div>
-      <h1>⚙️ Museum Administration</h1>
-    </div>
-    <div class="header-actions">
-      <a href="edit_ticket_new.html" id="backToEditorBtn" class="btn">◄ Back to Editor</a>
-      <button class="btn btn-danger" onclick="lockAdminSession()">🔒 Lock Admin</button>
-      <a href="index.html" id="backToMuseumBtn" class="btn" style="border-color: var(--accent-yellow); color: var(--accent-yellow);">Museum 🏠</a>
-    </div>
+    <h1>Affiche Administration</h1>
+    <button onclick="handleLogout()" class="secondary">Odhlásit se</button>
   </header>
 
   <div class="tabs">
-    <button class="tab-btn active" id="tabToursBtn" onclick="switchTab('tours')">🎸 Tours Management</button>
-    <button class="tab-btn" id="tabLineupsBtn" onclick="switchTab('lineups')">👥 Lineups Management</button>
-    <button class="tab-btn" id="tabCategoriesBtn" onclick="switchTab('categories')">🏷️ Categories & Subcategories</button>
+    <button class="tab-btn active" onclick="switchTab('posters')">Plakáty</button>
+    <button class="tab-btn" onclick="switchTab('categories')">Kategorie a Podkategorie</button>
   </div>
 
-  <!-- TAB 1: TOURS -->
-  <div id="toursTab" class="card">
-    <h3 style="color: var(--accent-yellow); margin-bottom: 10px; font-size: 0.95rem; text-transform: uppercase;">Existing Tour Names in Database</h3>
-    <div id="toursContent">⏳ Loading tours...</div>
+  <!-- TAB 1: POSTERS -->
+  <div id="tab-posters" class="tab-content active">
+    <h2>Správa plakátů</h2>
+    <p>Zde můžete spravovat existující plakáty v databázi.</p>
+    <div id="posters-list">
+      <em>Načítání plakátů...</em>
+    </div>
   </div>
 
-  <!-- TAB 2: LINEUPS -->
-  <div id="lineupsTab" class="card" style="display: none;">
-    <h3 style="color: var(--accent-yellow); margin-bottom: 10px; font-size: 0.95rem; text-transform: uppercase;">Existing Lineups in Database</h3>
-    <div id="lineupsContent">⏳ Loading lineups...</div>
-  </div>
-
-  <!-- TAB 3: CATEGORIES & SUBCATEGORIES -->
-  <div id="categoriesTab" style="display: none;">
-    <div class="card">
-      <h3 style="color: var(--accent-yellow); margin-bottom: 10px; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em;">➕ Add New Category</h3>
-      <div style="display: flex; gap: 10px;">
-        <input type="text" id="newCategoryInput" placeholder="Category Name (e.g. Programs)" style="margin-bottom: 0;">
-        <button class="btn btn-green" onclick="addCategory()" style="white-space: nowrap;">Add Category</button>
+  <!-- TAB 2: CATEGORIES -->
+  <div id="tab-categories" class="tab-content">
+    <h2>Kategorie a Podkategorie</h2>
+    
+    <div class="form-group" style="max-width: 400px; margin-bottom: 25px;">
+      <label for="new-cat-name">Přidat novou kategorii:</label>
+      <div style="display:flex; gap: 10px;">
+        <input type="text" id="new-cat-name" placeholder="Název kategorie">
+        <button onclick="addCategory()">Přidat</button>
       </div>
     </div>
-    <div id="categoriesContent">⏳ Loading categories...</div>
+
+    <div id="categories-list">
+      <em>Načítání kategorií...</em>
+    </div>
   </div>
+</div>
 
-  <script>
-    let rawTicketsData = [];
-    let toursGrouped = [];
-    let lineupsGrouped = [];
-    let categoriesData = [];
+<script>
+  // ==========================================
+  // SECTION 1: SUPABASE INIT & AUTH
+  // ==========================================
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let editingTourIdx = -1;
-    let editingLineupIdx = -1;
+  let categoriesData = [];
 
-    // AUTH / SESSION LOGIC
-    async function checkAuthSession() {
-      const modal = document.getElementById('gateModal');
-      if (typeof supabaseClient === 'undefined' || !supabaseClient.auth) {
-        if (modal) modal.style.display = 'flex';
-        return false;
-      }
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (session) {
-        if (modal) modal.style.display = 'none';
-        localStorage.setItem('jj_admin_mode', 'true');
-        return true;
-      } else {
-        if (modal) modal.style.display = 'flex';
-        localStorage.removeItem('jj_admin_mode');
-        return false;
-      }
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function escapeJsStr(str) {
+    if (!str) return '';
+    return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  }
+
+  function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+    if (tabName === 'posters') {
+      document.querySelectorAll('.tab-btn')[0].classList.add('active');
+      document.getElementById('tab-posters').classList.add('active');
+    } else {
+      document.querySelectorAll('.tab-btn')[1].classList.add('active');
+      document.getElementById('tab-categories').classList.add('active');
+      loadCategoriesData();
+    }
+  }
+
+  async function handleLogout() {
+    await supabaseClient.auth.signOut();
+    window.location.href = 'index.html';
+  }
+
+  // ==========================================
+  // SECTION 2: CATEGORIES & SUBCATEGORIES LOGIC
+  // ==========================================
+
+  async function loadCategoriesData() {
+    const listContainer = document.getElementById('categories-list');
+    listContainer.innerHTML = '<em>Načítání...</em>';
+
+    const { data, error } = await supabaseClient
+      .from('categories')
+      .select('*')
+      .order('id', { ascending: true });
+
+    if (error) {
+      listContainer.innerHTML = '<p style="color:red;">Chyba při načítání kategorií: ' + error.message + '</p>';
+      return;
     }
 
-    async function handleSupabaseLogin() {
-      const email = document.getElementById('loginEmail').value.trim();
-      const password = document.getElementById('loginPassword').value.trim();
-      const errEl = document.getElementById('loginError');
-      if (errEl) errEl.style.display = 'none';
+    categoriesData = data || [];
+    renderCategoriesList();
+  }
 
-      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      if (error) {
-        if (errEl) {
-          errEl.textContent = '❌ Invalid credentials: ' + error.message;
-          errEl.style.display = 'block';
-        }
-      } else {
-        localStorage.setItem('jj_admin_mode', 'true');
-        await checkAuthSession();
-        await loadAllAdminData();
-      }
+  function renderCategoriesList() {
+    const listContainer = document.getElementById('categories-list');
+    if (categoriesData.length === 0) {
+      listContainer.innerHTML = '<p>Žádné kategorie nenalezeny.</p>';
+      return;
     }
 
-    async function lockAdminSession() {
-      if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
-        await supabaseClient.auth.signOut();
-      }
-      localStorage.removeItem('jj_admin_mode');
-      window.location.href = 'index.html';
-    }
-
-    // TAB SWITCHING
-    function switchTab(tab) {
-      document.getElementById('tabToursBtn').classList.toggle('active', tab === 'tours');
-      document.getElementById('tabLineupsBtn').classList.toggle('active', tab === 'lineups');
-      document.getElementById('tabCategoriesBtn').classList.toggle('active', tab === 'categories');
-
-      document.getElementById('toursTab').style.display = tab === 'tours' ? 'block' : 'none';
-      document.getElementById('lineupsTab').style.display = tab === 'lineups' ? 'block' : 'none';
-      document.getElementById('categoriesTab').style.display = tab === 'categories' ? 'block' : 'none';
-    }
-
-    // LOAD ALL DATA
-    async function loadAllAdminData() {
-      await Promise.all([
-        loadTicketsData(),
-        loadCategoriesData()
-      ]);
-    }
-
-    /* ==========================================================================
-       SECTION 1 & 2: TOURS & LINEUPS LOGIC
-       ========================================================================== */
-    async function loadTicketsData() {
-      try {
-        const { data, error } = await supabaseClient
-          .from('tickets')
-          .select('ID_MEMORABILIA, TOUR_NAME, TOUR_ID, LINEUP');
-
-        if (error) throw error;
-        rawTicketsData = data || [];
-
-        processToursData();
-        processLineupsData();
-
-        renderToursTable();
-        renderLineupsTable();
-      } catch (err) {
-        console.error("Error loading tickets data:", err);
-        document.getElementById('toursContent').innerHTML = `<div style="color:#ef4444;">❌ Error: ${err.message}</div>`;
-      }
-    }
-
-    function processToursData() {
-      const map = new Map();
-      rawTicketsData.forEach(r => {
-        const name = (r.TOUR_NAME || '').trim();
-        if (!name) return;
-        const tourId = (r.TOUR_ID || '').trim();
-
-        if (!map.has(name)) {
-          map.set(name, { name, tourId, count: 0 });
-        }
-        const item = map.get(name);
-        item.count += 1;
-        if (!item.tourId && tourId) item.tourId = tourId;
-      });
-
-      toursGrouped = Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    function processLineupsData() {
-      const map = new Map();
-      rawTicketsData.forEach(r => {
-        const lineup = (r.LINEUP || '').trim();
-        if (!lineup) return;
-
-        if (!map.has(lineup)) {
-          map.set(lineup, { lineup, count: 0 });
-        }
-        map.get(lineup).count += 1;
-      });
-
-      lineupsGrouped = Array.from(map.values()).sort((a, b) => a.lineup.localeCompare(b.lineup));
-    }
-
-    function renderToursTable() {
-      const container = document.getElementById('toursContent');
-      if (toursGrouped.length === 0) {
-        container.innerHTML = '<div style="color: #888;">No tours found in database.</div>';
-        return;
-      }
-
-      let html = `
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 40%;">Tour Name</th>
-              <th style="width: 30%;">Tour ID</th>
-              <th style="width: 10%;">Records</th>
-              <th style="text-align: right; width: 20%;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      toursGrouped.forEach((item, idx) => {
-        if (editingTourIdx === idx) {
-          html += `
-            <tr style="background: rgba(245, 158, 11, 0.05);">
-              <td><input type="text" id="edit_tour_name_${idx}" value="${escapeHtml(item.name)}"></td>
-              <td><input type="text" id="edit_tour_id_${idx}" value="${escapeHtml(item.tourId)}"></td>
-              <td><span class="badge">${item.count} items</span></td>
-              <td>
-                <div class="edit-actions">
-                  <button class="btn btn-green" onclick="saveTourEdit(${idx})">💾 Save</button>
-                  <button class="btn" onclick="cancelTourEdit()">❌ Cancel</button>
-                </div>
-              </td>
-            </tr>
-          `;
-        } else {
-          html += `
-            <tr>
-              <td><strong>${escapeHtml(item.name)}</strong></td>
-              <td><code>${escapeHtml(item.tourId || '-')}</code></td>
-              <td><span class="badge">${item.count} items</span></td>
-              <td>
-                <div class="edit-actions">
-                  <button class="btn" onclick="enableTourEdit(${idx})" title="Edit Tour">✏️</button>
-                </div>
-              </td>
-            </tr>
-          `;
-        }
-      });
-
-      html += '</tbody></table>';
-      container.innerHTML = html;
-    }
-
-    function renderLineupsTable() {
-      const container = document.getElementById('lineupsContent');
-      if (lineupsGrouped.length === 0) {
-        container.innerHTML = '<div style="color: #888;">No lineups found in database.</div>';
-        return;
-      }
-
-      let html = `
-        <table>
-          <thead>
-            <tr>
-              <th style="width: 70%;">Lineup Description</th>
-              <th style="width: 10%;">Records</th>
-              <th style="text-align: right; width: 20%;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      lineupsGrouped.forEach((item, idx) => {
-        if (editingLineupIdx === idx) {
-          html += `
-            <tr style="background: rgba(245, 158, 11, 0.05);">
-              <td><textarea id="edit_lineup_${idx}">${escapeHtml(item.lineup)}</textarea></td>
-              <td><span class="badge">${item.count} items</span></td>
-              <td>
-                <div class="edit-actions">
-                  <button class="btn btn-green" onclick="saveLineupEdit(${idx})">💾 Save</button>
-                  <button class="btn" onclick="cancelLineupEdit()">❌ Cancel</button>
-                </div>
-              </td>
-            </tr>
-          `;
-        } else {
-          html += `
-            <tr>
-              <td><strong>${escapeHtml(item.lineup)}</strong></td>
-              <td><span class="badge">${item.count} items</span></td>
-              <td>
-                <div class="edit-actions">
-                  <button class="btn" onclick="enableLineupEdit(${idx})" title="Edit Lineup">✏️</button>
-                </div>
-              </td>
-            </tr>
-          `;
-        }
-      });
-
-      html += '</tbody></table>';
-      container.innerHTML = html;
-    }
-
-    function enableTourEdit(idx) { editingTourIdx = idx; renderToursTable(); }
-    function cancelTourEdit() { editingTourIdx = -1; renderToursTable(); }
-
-    async function saveTourEdit(idx) {
-      const oldItem = toursGrouped[idx];
-      const newName = document.getElementById(`edit_tour_name_${idx}`).value.trim();
-      const newTourId = document.getElementById(`edit_tour_id_${idx}`).value.trim();
-
-      if (!newName) { alert("Tour name cannot be empty!"); return; }
-      if (!confirm(`Are you sure you want to update all ${oldItem.count} records with Tour "${oldItem.name}" to "${newName}"?`)) return;
-
-      try {
-        const { error } = await supabaseClient.from('tickets').update({ TOUR_NAME: newName, TOUR_ID: newTourId || null }).eq('TOUR_NAME', oldItem.name);
-        if (error) throw error;
-        editingTourIdx = -1;
-        await loadTicketsData();
-      } catch (err) { alert('❌ Error updating tour: ' + err.message); }
-    }
-
-    function enableLineupEdit(idx) { editingLineupIdx = idx; renderLineupsTable(); }
-    function cancelLineupEdit() { editingLineupIdx = -1; renderLineupsTable(); }
-
-    async function saveLineupEdit(idx) {
-      const oldItem = lineupsGrouped[idx];
-      const newLineup = document.getElementById(`edit_lineup_${idx}`).value.trim();
-
-      if (!newLineup) { alert("Lineup cannot be empty!"); return; }
-      if (newLineup === oldItem.lineup) { cancelLineupEdit(); return; }
-      if (!confirm(`Are you sure you want to update this lineup across ALL ${oldItem.count} records in database?`)) return;
-
-      try {
-        const { error } = await supabaseClient.from('tickets').update({ LINEUP: newLineup }).eq('LINEUP', oldItem.lineup);
-        if (error) throw error;
-        editingLineupIdx = -1;
-        await loadTicketsData();
-      } catch (err) { alert('❌ Error updating lineup: ' + err.message); }
-    }
-
-
-    /* ==========================================================================
-       SECTION 3: CATEGORIES & SUBCATEGORIES LOGIC (WITH PUBLIC VISIBILITY)
-       ========================================================================== */
-    async function loadCategoriesData() {
-      const container = document.getElementById('categoriesContent');
-      try {
-        const { data, error } = await supabaseClient
-          .from('categories')
-          .select('*')
-          .order('display_order', { ascending: true, nullsFirst: false })
-          .order('id', { ascending: true });
-
-        if (error) throw error;
-        categoriesData = data || [];
-        renderCategoriesList();
-      } catch (err) {
-        container.innerHTML = `<div style="color:#ef4444; padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: 6px;">❌ Error loading categories: ${err.message}</div>`;
-      }
-    }
-
-    function renderCategoriesList() {
-      const container = document.getElementById('categoriesContent');
-      if (categoriesData.length === 0) {
-        container.innerHTML = '<div class="card" style="color: #888;">No categories found in database.</div>';
-        return;
-      }
-
-      container.innerHTML = categoriesData.map((cat, idx) => {
-        const subList = Array.isArray(cat.subcategories) ? cat.subcategories : [];
-        const isFirst = idx === 0;
-        const isLast = idx === categoriesData.length - 1;
-        const isPublic = cat.is_public !== false;
+    let html = '';
+    categoriesData.forEach(cat => {
+      const subs = Array.isArray(cat.subcategories) ? cat.subcategories : [];
+      
+      const subChipsHtml = subs.map((subItem, sIdx) => {
+        const subVal = typeof subItem === 'object' ? (subItem.value || subItem.name) : subItem;
+        const isSubFirst = sIdx === 0;
+        const isSubLast = sIdx === subs.length - 1;
 
         return `
-          <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <button class="btn" onclick="moveCategory(${idx}, -1)" ${isFirst ? 'disabled style="opacity:0.3;cursor:default;"' : ''} title="Move Up">⬆️</button>
-                <button class="btn" onclick="moveCategory(${idx}, 1)" ${isLast ? 'disabled style="opacity:0.3;cursor:default;"' : ''} title="Move Down">⬇️</button>
-                <strong style="font-size: 1.1rem; color: #fff; margin-left: 6px;">${escapeHtml(cat.name)}</strong>
-              </div>
-              <div style="display: flex; gap: 8px; align-items: center;">
-                <button class="visibility-btn ${isPublic ? 'public' : 'hidden'}" onclick="toggleCategoryVisibility('${cat.id}', ${isPublic})" title="Click to toggle public status">
-                  ${isPublic ? '👁️ Public' : '🙈 Hidden'}
-                </button>
-                <button class="btn" onclick="renameCategory('${cat.id}', '${escapeJsStr(cat.name)}')">✏️ Rename</button>
-                <button class="btn btn-danger" onclick="deleteCategory('${cat.id}', '${escapeJsStr(cat.name)}')">🗑️ Delete</button>
-              </div>
-            </div>
-
-            <label style="font-size: 0.75rem; color: #888; font-weight: 600; text-transform: uppercase;">SUBCATEGORIES:</label>
-            <div class="subcat-list">
-              ${subList.length > 0 ? subList.map((sub, sIdx) => {
-                const subVal = typeof sub === 'object' ? (sub.value || sub.name) : sub;
-                const isSubFirst = sIdx === 0;
-                const isSubLast = sIdx === subList.length - 1;
-
-                return `
-                  <div class="subcat-chip">
-                    <span class="arrow" onclick="moveSubcategory('${cat.id}', ${sIdx}, -1)" style="${isSubFirst ? 'visibility:hidden;' : ''}" title="Move left">◀</span>
-                    <span>${escapeHtml(subVal)}</span>
-                    <span class="arrow" onclick="moveSubcategory('${cat.id}', ${sIdx}, 1)" style="${isSubLast ? 'visibility:hidden;' : ''}" title="Move right">▶</span>
-                    <span class="delete-btn" onclick="removeSubcategory('${cat.id}', '${escapeJsStr(subVal)}')" title="Remove subcategory">×</span>
-                  </div>
-                `;
-              }).join('') : '<span style="font-size: 0.8rem; color: #555; font-style: italic;">No subcategories</span>'}
-            </div>
-
-            <div style="display: flex; gap: 8px; margin-top: 14px;">
-              <input type="text" id="sub_input_${cat.id}" placeholder="New subcategory name..." style="margin-bottom: 0;" onkeydown="if(event.key==='Enter') addSubcategory('${cat.id}')">
-              <button class="btn" onclick="addSubcategory('${cat.id}')" style="white-space: nowrap;">+ Add Subcategory</button>
-            </div>
+          <div class="subcat-chip">
+            <span class="arrow" onclick="moveSubcategory('${cat.id}', ${sIdx}, -1)" style="${isSubFirst ? 'visibility:hidden;' : ''}" title="Move left">◀</span>
+            <span onclick="renameSubcategory('${cat.id}', '${escapeJsStr(subVal)}')" style="cursor: pointer;" title="Klikněte pro přejmenování">
+              ${escapeHtml(subVal)} ✏️
+            </span>
+            <span class="arrow" onclick="moveSubcategory('${cat.id}', ${sIdx}, 1)" style="${isSubLast ? 'visibility:hidden;' : ''}" title="Move right">▶</span>
+            <span class="delete-btn" onclick="removeSubcategory('${cat.id}', '${escapeJsStr(subVal)}')" title="Remove subcategory">×</span>
           </div>
         `;
       }).join('');
-    }
 
-    async function toggleCategoryVisibility(catId, currentStatus) {
-      const newStatus = !currentStatus;
-      const { error } = await supabaseClient.from('categories').update({ is_public: newStatus }).eq('id', catId);
-      if (error) {
-        alert('Error changing category visibility: ' + error.message);
-      } else {
-        await loadCategoriesData();
-      }
-    }
+      html += `
+        <div class="category-item">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3>${escapeHtml(cat.name)}</h3>
+            <button class="danger" onclick="deleteCategory('${cat.id}')">Smazat kategorii</button>
+          </div>
+          
+          <div style="margin-top: 10px;">
+            <strong>Podkategorie:</strong>
+            <div class="subcat-chips">
+              ${subChipsHtml || '<em>Žádné podkategorie</em>'}
+            </div>
+          </div>
 
-    async function moveCategory(index, direction) {
-      const targetIndex = index + direction;
-      if (targetIndex < 0 || targetIndex >= categoriesData.length) return;
-
-      const catA = categoriesData[index];
-      const catB = categoriesData[targetIndex];
-
-      const orderA = catA.display_order ?? index;
-      const orderB = catB.display_order ?? targetIndex;
-
-      const newOrderA = orderA === orderB ? targetIndex : orderB;
-      const newOrderB = orderA === orderB ? index : orderA;
-
-      try {
-        await Promise.all([
-          supabaseClient.from('categories').update({ display_order: newOrderA }).eq('id', catA.id),
-          supabaseClient.from('categories').update({ display_order: newOrderB }).eq('id', catB.id)
-        ]);
-        await loadCategoriesData();
-      } catch (err) { alert('Error updating category order: ' + err.message); }
-    }
-
-    async function moveSubcategory(catId, subIndex, direction) {
-      const cat = categoriesData.find(c => String(c.id) === String(catId));
-      if (!cat) return;
-
-      const subs = Array.isArray(cat.subcategories) ? [...cat.subcategories] : [];
-      const targetIndex = subIndex + direction;
-      if (targetIndex < 0 || targetIndex >= subs.length) return;
-
-      const temp = subs[subIndex];
-      subs[subIndex] = subs[targetIndex];
-      subs[targetIndex] = temp;
-
-      const { error } = await supabaseClient.from('categories').update({ subcategories: subs }).eq('id', catId);
-      if (error) alert('Error updating subcategory order: ' + error.message);
-      else loadCategoriesData();
-    }
-
-    async function addCategory() {
-      const input = document.getElementById('newCategoryInput');
-      const name = input.value.trim();
-      if (!name) return;
-
-      const nextOrder = categoriesData.length > 0 ? (Math.max(...categoriesData.map(c => c.display_order || 0)) + 1) : 1;
-      const { error } = await supabaseClient.from('categories').insert([{ name, subcategories: [], display_order: nextOrder, is_public: true }]);
-      if (error) alert('Error adding category: ' + error.message);
-      else { input.value = ''; loadCategoriesData(); }
-    }
-
-    async function renameCategory(id, currentName) {
-      const newName = prompt('New name for category:', currentName);
-      if (!newName || newName.trim() === '' || newName === currentName) return;
-
-      const { error } = await supabaseClient.from('categories').update({ name: newName.trim() }).eq('id', id);
-      if (error) alert('Error renaming category: ' + error.message);
-      else loadCategoriesData();
-    }
-
-    async function deleteCategory(id, name) {
-      if (!confirm(`Are you sure you want to delete category "${name}"?`)) return;
-
-      const { error } = await supabaseClient.from('categories').delete().eq('id', id);
-      if (error) alert('Error deleting category: ' + error.message);
-      else loadCategoriesData();
-    }
-
-    async function addSubcategory(catId) {
-      const input = document.getElementById(`sub_input_${catId}`);
-      const val = input.value.trim();
-      if (!val) return;
-
-      const cat = categoriesData.find(c => String(c.id) === String(catId));
-      if (!cat) return;
-
-      const currentSubs = Array.isArray(cat.subcategories) ? cat.subcategories.map(s => typeof s === 'object' ? s.value : s) : [];
-      if (currentSubs.includes(val)) { alert('Subcategory already exists!'); return; }
-
-      const updatedSubs = [...currentSubs, val];
-      const { error } = await supabaseClient.from('categories').update({ subcategories: updatedSubs }).eq('id', catId);
-      if (error) alert('Error adding subcategory: ' + error.message);
-      else { input.value = ''; loadCategoriesData(); }
-    }
-
-    async function removeSubcategory(catId, subName) {
-      const cat = categoriesData.find(c => String(c.id) === String(catId));
-      if (!cat) return;
-
-      const currentSubs = Array.isArray(cat.subcategories) ? cat.subcategories.map(s => typeof s === 'object' ? s.value : s) : [];
-      const updatedSubs = currentSubs.filter(s => String(s) !== String(subName));
-
-      const { error } = await supabaseClient.from('categories').update({ subcategories: updatedSubs }).eq('id', catId);
-      if (error) alert('Error removing subcategory: ' + error.message);
-      else loadCategoriesData();
-    }
-
-    // UTILS
-    function escapeHtml(str) {
-      return String(str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    }
-
-    function escapeJsStr(str) {
-      return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
-    }
-
-    // PAGE INITIALIZATION
-    window.addEventListener('DOMContentLoaded', async () => {
-      const currentParams = window.location.search;
-      if (currentParams) {
-        document.getElementById('backToEditorBtn').href = `edit_ticket_new.html${currentParams}`;
-        document.getElementById('backToMuseumBtn').href = `index.html${currentParams}`;
-      }
-
-      const isAuthenticated = await checkAuthSession();
-      if (isAuthenticated) {
-        await loadAllAdminData();
-      }
+          <div style="margin-top: 15px; display:flex; gap: 10px; max-width: 350px;">
+            <input type="text" id="add-sub-${cat.id}" placeholder="Nová podkategorie">
+            <button onclick="addSubcategory('${cat.id}')">Přidat</button>
+          </div>
+        </div>
+      `;
     });
-  </script>
+
+    listContainer.innerHTML = html;
+  }
+
+  async function addCategory() {
+    const input = document.getElementById('new-cat-name');
+    const name = input.value.trim();
+    if (!name) return;
+
+    const { error } = await supabaseClient
+      .from('categories')
+      .insert([{ name: name, subcategories: [] }]);
+
+    if (error) {
+      alert('Chyba při přidávání kategorie: ' + error.message);
+    } else {
+      input.value = '';
+      await loadCategoriesData();
+    }
+  }
+
+  async function deleteCategory(catId) {
+    if (!confirm('Opravdu chcete smazat tuto kategorii?')) return;
+
+    const { error } = await supabaseClient
+      .from('categories')
+      .delete()
+      .eq('id', catId);
+
+    if (error) {
+      alert('Chyba při mazání kategorie: ' + error.message);
+    } else {
+      await loadCategoriesData();
+    }
+  }
+
+  async function addSubcategory(catId) {
+    const input = document.getElementById(`add-sub-${catId}`);
+    const subName = input.value.trim();
+    if (!subName) return;
+
+    const cat = categoriesData.find(c => String(c.id) === String(catId));
+    if (!cat) return;
+
+    const currentSubs = Array.isArray(cat.subcategories) 
+      ? cat.subcategories.map(s => typeof s === 'object' ? (s.value || s.name) : s)
+      : [];
+
+    if (currentSubs.includes(subName)) {
+      alert('Tato podkategorie již existuje.');
+      return;
+    }
+
+    const updatedSubs = [...currentSubs, subName];
+
+    const { error } = await supabaseClient
+      .from('categories')
+      .update({ subcategories: updatedSubs })
+      .eq('id', catId);
+
+    if (error) {
+      alert('Chyba při přidávání podkategorie: ' + error.message);
+    } else {
+      input.value = '';
+      await loadCategoriesData();
+    }
+  }
+
+  async function renameSubcategory(catId, currentSubName) {
+    const newName = prompt('Zadejte nový název podkategorie:', currentSubName);
+    if (!newName || newName.trim() === '' || newName.trim() === currentSubName) return;
+
+    const cat = categoriesData.find(c => String(c.id) === String(catId));
+    if (!cat) return;
+
+    const currentSubs = Array.isArray(cat.subcategories)
+      ? cat.subcategories.map(s => typeof s === 'object' ? (s.value || s.name) : s)
+      : [];
+
+    if (currentSubs.includes(newName.trim())) {
+      alert('Podkategorie s tímto názvem již v této kategorii existuje!');
+      return;
+    }
+
+    const updatedSubs = currentSubs.map(s => String(s) === String(currentSubName) ? newName.trim() : s);
+
+    const { error } = await supabaseClient
+      .from('categories')
+      .update({ subcategories: updatedSubs })
+      .eq('id', catId);
+
+    if (error) {
+      alert('Chyba při přejmenování podkategorie: ' + error.message);
+    } else {
+      await loadCategoriesData();
+    }
+  }
+
+  async function removeSubcategory(catId, subName) {
+    const cat = categoriesData.find(c => String(c.id) === String(catId));
+    if (!cat) return;
+
+    const currentSubs = Array.isArray(cat.subcategories)
+      ? cat.subcategories.map(s => typeof s === 'object' ? (s.value || s.name) : s)
+      : [];
+
+    const updatedSubs = currentSubs.filter(s => String(s) !== String(subName));
+
+    const { error } = await supabaseClient
+      .from('categories')
+      .update({ subcategories: updatedSubs })
+      .eq('id', catId);
+
+    if (error) {
+      alert('Chyba při mazání podkategorie: ' + error.message);
+    } else {
+      await loadCategoriesData();
+    }
+  }
+
+  async function moveSubcategory(catId, index, direction) {
+    const cat = categoriesData.find(c => String(c.id) === String(catId));
+    if (!cat) return;
+
+    const currentSubs = Array.isArray(cat.subcategories)
+      ? [...cat.subcategories.map(s => typeof s === 'object' ? (s.value || s.name) : s)]
+      : [];
+
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= currentSubs.length) return;
+
+    const temp = currentSubs[index];
+    currentSubs[index] = currentSubs[newIndex];
+    currentSubs[newIndex] = temp;
+
+    const { error } = await supabaseClient
+      .from('categories')
+      .update({ subcategories: currentSubs })
+      .eq('id', catId);
+
+    if (error) {
+      alert('Chyba při posunu podkategorie: ' + error.message);
+    } else {
+      await loadCategoriesData();
+    }
+  }
+
+  // Inicializace po načtení
+  document.addEventListener('DOMContentLoaded', () => {
+    loadCategoriesData();
+  });
+</script>
 </body>
 </html>
