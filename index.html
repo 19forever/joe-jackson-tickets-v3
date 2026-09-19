@@ -121,10 +121,7 @@
         <button class="search-clear-btn" id="searchClearBtn" title="Clear search">✕</button>
       </div>
 
-      <select id="tourFilter" title="Filter by Concert Tour">
-        <option value="">All Tours</option>
-      </select>
-
+      <select id="tourFilter" title="Filter by Concert Tour"><option value="">All Tours</option></select>
       <select id="cityFilter" class="admin-only-control"><option value="">All Cities</option></select>
       <select id="sortFilter" title="Sort and filter tickets">
         <option value="random">🎲 Random / Shuffled</option>
@@ -314,15 +311,11 @@
           el.style.display = isAdmin ? 'inline-block' : 'none';
         });
 
-        const tourFilter = document.getElementById('tourFilter');
-        if (tourFilter) {
-          if (isAdmin) {
-            tourFilter.style.display = 'inline-block';
-          } else {
-            tourFilter.style.display = 'none';
-            if (tourFilter.value) tourFilter.value = '';
-          }
-        }
+        // OPRAVENÝ KÓD (tourFilter je vždy viditelný veřejně):
+const tourFilter = document.getElementById('tourFilter');
+if (tourFilter) {
+  tourFilter.style.display = 'inline-block';
+}
       }
       window.updateAdminSortAndControls = updateAdminSortAndControls;
 
