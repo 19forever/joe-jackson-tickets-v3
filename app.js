@@ -220,15 +220,17 @@ const isAdmin = checkIsAdmin();
 function resolveCategoryFromUrl(catParam) {
   if (!catParam) return null;
   const c = catParam.trim().toLowerCase();
-  
+
   if (c === 'videos' || c === 'video' || c === 'youtube') return 'Videos';
   if (c === 'all' || c === 'vše' || c === 'vse') return 'ALL';
 
+  // Dynamická kontrola ze Supabase kategorií
   if (Array.isArray(publicCategoriesList) && publicCategoriesList.length > 0) {
-    const matched = publicCategoriesList.find(cat => cat.name.toLowerCase() === c);
+    const matched = publicCategoriesList.find(cat => (cat.name || '').trim().toLowerCase() === c);
     if (matched) return matched.name;
   }
 
+  // Fallbacky pro běžné aliasy
   if (c === 'tickets' || c === 'ticket' || c === 'lístek' || c === 'listek') return 'Tickets';
   if (c === 'passes' || c === 'pass' || c === 'backstage') return 'Passes';
   if (c === 'programs' || c === 'program' || c === 'programme' || c === 'programmes') return 'Programs';
@@ -954,24 +956,32 @@ window.closeNoteModal = closeNoteModal;
 
 function getTicketCategory(t) {
   if (t.KATEGORIE && t.KATEGORIE.trim()) {
-    const cat = t.KATEGORIE.trim().toLowerCase();
+    const rawCat = t.KATEGORIE.trim();
+    const lowerCat = rawCat.toLowerCase();
 
+    // 1. Přednostní shoda s dynamicky načtenými kategoriemi ze Supabase
     if (Array.isArray(publicCategoriesList) && publicCategoriesList.length > 0) {
-      const match = publicCategoriesList.find(c => c.name.toLowerCase() === cat);
+      const match = publicCategoriesList.find(c => (c.name || '').trim().toLowerCase() === lowerCat);
       if (match) return match.name;
     }
 
-    if (cat.includes('pass')) return 'Passes';
-    if (cat.includes('program')) return 'Programs';
-    if (cat.includes('poster')) return 'Posters';
-    if (cat.includes('shirt') || cat.includes('t-shirt') || cat.includes('tričko')) return 'T-shirts';
-    if (cat.includes('tour') || cat.includes('merchandise')) return 'Tour Items';
-    if (cat.includes('memo')) return 'Memorabilia';
-    if (cat.includes('ticket')) return 'Tickets';
+    // 2. Fallbacky pro starší nebo alternativní zápisy
+    if (lowerCat.includes('pass')) return 'Passes';
+    if (lowerCat.includes('program')) return 'Programs';
+    if (lowerCat.includes('poster')) return 'Posters';
+    if (lowerCat.includes('shirt') || lowerCat.includes('t-shirt') || lowerCat.includes('tričko')) return 'T-shirts';
+    if (lowerCat.includes('tour') || lowerCat.includes('merchandise')) return 'Tour Items';
+    if (lowerCat.includes('memo')) return 'Memorabilia';
+    if (lowerCat.includes('ticket') || lowerCat.includes('lístek')) return 'Tickets';
+
+    // Pokud je to neznámá kategorie, vrátíme ji s původním Casingem
+    return rawCat;
   }
+
   if (isValidValue(t.TOUR_ID) && !isValidValue(t.DATUM)) {
     return 'Tour Items';
   }
+
   return 'Tickets';
 }
 
@@ -1537,48 +1547,31 @@ function renderCategoryTabs(matchesBeforeCategoryFilter) {
       .map(c => (c.name || '').trim().toLowerCase());
   }
 
-  // 2. Dynamické počítání položek v jednotlivých kategoriích
+  // 2. Inicializace čítačů pro známé/databázové kategorie
   const counts = { 'ALL': matchesBeforeCategoryFilter.length };
   
-  // Mapa pro zachování původního casing jména kategorie (např. "T-Shirts" vs "t-shirts")
-  const categoryNameMap = { 'ALL': 'ALL' };
-
-  matchesBeforeCategoryFilter.forEach(t => {
-    const cat = getTicketCategory(t);
-    if (cat) {
-      const lowerCat = cat.toLowerCase();
-      
-      if (!counts[cat]) {
-        counts[cat] = 0;
-        categoryNameMap[lowerCat] = cat;
-      }
-      counts[cat]++;
-    }
-
-    // Speciální dynamický čítač pro videa
-    if (isValidValue(t.YOUTUBE_URL)) {
-      counts['Videos'] = (counts['Videos'] || 0) + 1;
-      categoryNameMap['videos'] = 'Videos';
-    }
-  });
-
-  // 3. Získání všech unikátních kategorií (předchozí + z číselníku publicCategoriesList)
-  let detectedCategories = Object.keys(counts);
-
+  // Připravíme klíče ze zadaných kategorií v DB, aby měly inicializovaný počet 0
   if (Array.isArray(publicCategoriesList)) {
     publicCategoriesList.forEach(c => {
       if (c && c.name) {
-        const catName = c.name.trim();
-        if (!detectedCategories.includes(catName)) {
-          detectedCategories.push(catName);
-          counts[catName] = counts[catName] || 0;
-          categoryNameMap[catName.toLowerCase()] = catName;
-        }
+        counts[c.name.trim()] = 0;
       }
     });
   }
 
-  // 4. Seznam ikonek pro známé kategorie (neznámé dostanou výchozí 🏷️)
+  // 3. Spočítání výskytů podle reálných dat
+  matchesBeforeCategoryFilter.forEach(t => {
+    const cat = getTicketCategory(t);
+    if (cat) {
+      counts[cat] = (counts[cat] || 0) + 1;
+    }
+
+    if (isValidValue(t.YOUTUBE_URL)) {
+      counts['Videos'] = (counts['Videos'] || 0) + 1;
+    }
+  });
+
+  // 4. Seznam ikonek pro známé kategorie
   const defaultIcons = {
     'tickets': '🎫',
     'passes': '🪪',
@@ -1598,50 +1591,49 @@ function renderCategoryTabs(matchesBeforeCategoryFilter) {
     return `${icon} ${catKey}`;
   };
 
-  // 5. Filtrování kategorií podle práv (Admin vs Public)
+  // 5. Filtrování podle oprávnění
+  const detectedCategories = Object.keys(counts);
   const allowedCategories = detectedCategories.filter(catKey => {
     if (isAdminUser || catKey === 'ALL') return true;
     return !hiddenCategoryNames.includes(catKey.toLowerCase());
   });
 
-  // 6. Seřazení: 'ALL' první, zbytek abecedně
+  // 6. Abecední řazení ('ALL' vždy na začátku)
   allowedCategories.sort((a, b) => {
     if (a === 'ALL') return -1;
     if (b === 'ALL') return 1;
     return a.localeCompare(b, undefined, { sensitivity: 'base' });
   });
 
-  // 7. Vykreslení do DOMu přes DocumentFragment
+  // 7. Bezpečné vykreslení do DOM
   const fragment = document.createDocumentFragment();
 
   allowedCategories.forEach(catKey => {
     const count = counts[catKey] || 0;
 
-    // Vykreslíme, pokud má položky > 0, nebo jde o 'ALL' či výchozí 'Tickets'
-    if (count > 0 || catKey === 'ALL' || catKey === 'Tickets') {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = `tab-btn ${currentCategory === catKey ? 'active' : ''}`;
-      
-      const labelSpan = document.createElement('span');
-      labelSpan.textContent = getCategoryLabel(catKey) + ' ';
+    // Vykreslíme všechny povolené záložky
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `tab-btn ${currentCategory === catKey ? 'active' : ''}`;
+    
+    const labelSpan = document.createElement('span');
+    labelSpan.textContent = getCategoryLabel(catKey) + ' ';
 
-      const countSpan = document.createElement('span');
-      countSpan.style.opacity = '0.75';
-      countSpan.style.fontSize = '0.8em';
-      countSpan.textContent = `(${count})`;
+    const countSpan = document.createElement('span');
+    countSpan.style.opacity = '0.75';
+    countSpan.style.fontSize = '0.8em';
+    countSpan.textContent = `(${count})`;
 
-      btn.appendChild(labelSpan);
-      btn.appendChild(countSpan);
+    btn.appendChild(labelSpan);
+    btn.appendChild(countSpan);
 
-      btn.onclick = () => {
-        currentCategory = catKey;
-        updateUrlParams();
-        filterData(false);
-      };
+    btn.onclick = () => {
+      currentCategory = catKey;
+      updateUrlParams();
+      filterData(false);
+    };
 
-      fragment.appendChild(btn);
-    }
+    fragment.appendChild(btn);
   });
 
   tabsContainer.replaceChildren(fragment);
@@ -1857,18 +1849,20 @@ function renderTickets(tickets) {
     }
 
     const catName = getTicketCategory(t);
-    const categoryIconMap = {
-      'Tickets': '🎫',
-      'Passes': '🪪',
-      'Programs': '📖',
-      'Posters': '🖼️',
-      'T-shirts': '🎽',
-      'Tour Items': '🎸',
-      'Memorabilia': '⭐',
-      'Videos': '🎬'
-    };
-    const catIcon = categoryIconMap[catName] || '🏷️';
 
+const categoryIconMap = {
+  'tickets': '🎫',
+  'passes': '🪪',
+  'programs': '📖',
+  'posters': '🖼️',
+  't-shirts': '🎽',
+  'tour items': '🎸',
+  'memorabilia': '⭐',
+  'videos': '🎬'
+};
+    // Vyhledání podle lowercase klíče, neznámé kategorie dostanou 🏷️
+const catIcon = categoryIconMap[catName.toLowerCase()] || '🏷️';
+    
     let singleCat = catName;
     if (catName === 'Passes') {
       singleCat = 'Pass';
