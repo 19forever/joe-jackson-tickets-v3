@@ -1598,13 +1598,31 @@ function renderCategoryTabs(matchesBeforeCategoryFilter) {
     return !hiddenCategoryNames.includes(catKey.toLowerCase());
   });
 
-  // 6. Abecední řazení ('ALL' vždy na začátku)
+  // 6. Seřazení podle display_order z publicCategoriesList (neznámé kategorie jdou na konec)
   allowedCategories.sort((a, b) => {
     if (a === 'ALL') return -1;
     if (b === 'ALL') return 1;
+
+    // Najdeme index kategorie v načteném seznamu ze Supabase
+    const indexA = publicCategoriesList.findIndex(
+      c => (c.name || '').trim().toLowerCase() === a.toLowerCase()
+    );
+    const indexB = publicCategoriesList.findIndex(
+      c => (c.name || '').trim().toLowerCase() === b.toLowerCase()
+    );
+
+    // Pokud kategorie v publicCategoriesList je, použije její pořadí, jinak dáme vysoké číslo (konec)
+    const orderA = indexA !== -1 ? indexA : 999;
+    const orderB = indexB !== -1 ? indexB : 999;
+
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+
+    // Pokud obě kategorie chybí v číselníku (nebo mají stejný order), seřadíme je abecedně
     return a.localeCompare(b, undefined, { sensitivity: 'base' });
   });
-
+  
   // 7. Bezpečné vykreslení do DOM
   const fragment = document.createDocumentFragment();
 
